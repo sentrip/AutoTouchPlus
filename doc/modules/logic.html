@@ -1,0 +1,550 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Logic">Logic </a></li>
+<li><a href="#Math">Math </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/argcheck.html">argcheck</a></li>
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><strong>logic</strong></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/requests.html">requests</a></li>
+  <li><a href="../modules/screen.html">screen</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>logic</code></h1>
+<p>Logic and math operations.</p>
+<p></p>
+
+
+<h2><a href="#Logic">Logic </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#isType">isType (input, _type)</a></td>
+	<td class="summary">Check if input IS of given type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isNotType">isNotType (input, _type)</a></td>
+	<td class="summary">Check if input IS NOT of given type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isBool">isBool (input)</a></td>
+	<td class="summary">Check if input is boolean</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isNil">isNil (input)</a></td>
+	<td class="summary">Check if input is nil</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isNotNil">isNotNil (input)</a></td>
+	<td class="summary">Check if input is not nil</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isNum">isNum (input)</a></td>
+	<td class="summary">Check if input is number</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isStr">isStr (input)</a></td>
+	<td class="summary">Check if input is string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isTable">isTable (input)</a></td>
+	<td class="summary">Check if input is table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requal">requal (value1, value2)</a></td>
+	<td class="summary">Check if all values in two tables are equal (recursive-equal)</td>
+	</tr>
+</table>
+<h2><a href="#Math">Math </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#count">count (value, input)</a></td>
+	<td class="summary">Count occurrences of value in input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#div">div (x, y)</a></td>
+	<td class="summary">Floor division of x by y</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#len">len (input)</a></td>
+	<td class="summary">Length of object (python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#round">round (num, places)</a></td>
+	<td class="summary">Round number to places (python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sign">sign (n)</a></td>
+	<td class="summary">Sign of a number</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sum">sum (object)</a></td>
+	<td class="summary">Sum of an object (python style!)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Logic"></a>Logic </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "isType"></a>
+    <strong>isType (input, _type)</strong>
+    </dt>
+    <dd>
+    Check if input IS of given type.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type of
+        </li>
+        <li><span class="parameter">_type</span>
+         type to check for
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isNotType"></a>
+    <strong>isNotType (input, _type)</strong>
+    </dt>
+    <dd>
+    Check if input IS NOT of given type.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type of
+        </li>
+        <li><span class="parameter">_type</span>
+         type to check for
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isBool"></a>
+    <strong>isBool (input)</strong>
+    </dt>
+    <dd>
+    Check if input is boolean
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isNil"></a>
+    <strong>isNil (input)</strong>
+    </dt>
+    <dd>
+    Check if input is nil
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isNotNil"></a>
+    <strong>isNotNil (input)</strong>
+    </dt>
+    <dd>
+    Check if input is not nil
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isNum"></a>
+    <strong>isNum (input)</strong>
+    </dt>
+    <dd>
+    Check if input is number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isStr"></a>
+    <strong>isStr (input)</strong>
+    </dt>
+    <dd>
+    Check if input is string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isTable"></a>
+    <strong>isTable (input)</strong>
+    </dt>
+    <dd>
+    Check if input is table
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         object to check type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requal"></a>
+    <strong>requal (value1, value2)</strong>
+    </dt>
+    <dd>
+    Check if all values in two tables are equal (recursive-equal)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value1</span>
+         table for equality check
+        </li>
+        <li><span class="parameter">value2</span>
+         table for equality check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Math"></a>Math </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "count"></a>
+    <strong>count (value, input)</strong>
+    </dt>
+    <dd>
+    Count occurrences of value in input
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+        </li>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "div"></a>
+    <strong>div (x, y)</strong>
+    </dt>
+    <dd>
+    Floor division of x by y
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+        </li>
+        <li><span class="parameter">y</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "len"></a>
+    <strong>len (input)</strong>
+    </dt>
+    <dd>
+    Length of object (python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "round"></a>
+    <strong>round (num, places)</strong>
+    </dt>
+    <dd>
+    Round number to places (python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">num</span>
+
+        </li>
+        <li><span class="parameter">places</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sign"></a>
+    <strong>sign (n)</strong>
+    </dt>
+    <dd>
+    Sign of a number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sum"></a>
+    <strong>sum (object)</strong>
+    </dt>
+    <dd>
+    Sum of an object (python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-02-21 17:49:09 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

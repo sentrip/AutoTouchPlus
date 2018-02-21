@@ -1,0 +1,400 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/argcheck.html">argcheck</a></li>
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/requests.html">requests</a></li>
+  <li><a href="../modules/screen.html">screen</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><strong>test</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>test</code></h1>
+<p>Basic unit-testing framework</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#assertEqual">assertEqual (v1, v2, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertNotEqual">assertNotEqual (v1, v2, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertRequal">assertRequal (v1, v2, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertNotRequal">assertNotRequal (v1, v2, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertLessThan">assertLessThan (less, more, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertMoreThan">assertMoreThan (more, less, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertLessThanEqual">assertLessThanEqual (less, more, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertMoreThanEqual">assertMoreThanEqual (more, less, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#assertRaises">assertRaises (exception, func, msg)</a></td>
+	<td class="summary"></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#test">test (description, tests, setup, teardown)</a></td>
+	<td class="summary">Calls test functions in a table (indexed by name) and prints failures</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "assertEqual"></a>
+    <strong>assertEqual (v1, v2, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">v1</span>
+
+        </li>
+        <li><span class="parameter">v2</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertNotEqual"></a>
+    <strong>assertNotEqual (v1, v2, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">v1</span>
+
+        </li>
+        <li><span class="parameter">v2</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertRequal"></a>
+    <strong>assertRequal (v1, v2, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">v1</span>
+
+        </li>
+        <li><span class="parameter">v2</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertNotRequal"></a>
+    <strong>assertNotRequal (v1, v2, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">v1</span>
+
+        </li>
+        <li><span class="parameter">v2</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertLessThan"></a>
+    <strong>assertLessThan (less, more, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">less</span>
+
+        </li>
+        <li><span class="parameter">more</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertMoreThan"></a>
+    <strong>assertMoreThan (more, less, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">more</span>
+
+        </li>
+        <li><span class="parameter">less</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertLessThanEqual"></a>
+    <strong>assertLessThanEqual (less, more, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">less</span>
+
+        </li>
+        <li><span class="parameter">more</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertMoreThanEqual"></a>
+    <strong>assertMoreThanEqual (more, less, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">more</span>
+
+        </li>
+        <li><span class="parameter">less</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "assertRaises"></a>
+    <strong>assertRaises (exception, func, msg)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">exception</span>
+
+        </li>
+        <li><span class="parameter">func</span>
+
+        </li>
+        <li><span class="parameter">msg</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "test"></a>
+    <strong>test (description, tests, setup, teardown)</strong>
+    </dt>
+    <dd>
+    Calls test functions in a table (indexed by name) and prints failures
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">description</span>
+         general description of tests
+        </li>
+        <li><span class="parameter">tests</span>
+         table of test functions (function that makes assertions)
+        </li>
+        <li><span class="parameter">setup</span>
+         function that sets up the test environment
+        </li>
+        <li><span class="parameter">teardown</span>
+         function that tears down/cleans up the test environment
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> failed = <span class="keyword">false</span>
+failed = failed <span class="keyword">or</span> test(<span class="string">'my test description'</span>, {
+         myTest1 = <span class="keyword">function</span>() <span class="global">assert</span>(<span class="keyword">true</span>, <span class="string">"my error message1"</span>) <span class="keyword">end</span>,
+         myTest2 = <span class="keyword">function</span>() <span class="global">assert</span>(<span class="keyword">true</span>, <span class="string">"my error message2"</span>) <span class="keyword">end</span>,
+       })</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-02-21 17:49:09 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
