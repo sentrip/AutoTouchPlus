@@ -1,2 +1,2 @@
-./doc.sh
-./doc/config.ld
+*.sh
+*.ld
