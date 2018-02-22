@@ -13,55 +13,55 @@ local function format_ge(msg, more, less)
 end
 
 
-----
+---- Assert two values are equal
 -- @param v1
 -- @param v2
 -- @param msg
 function assertEqual(v1, v2, msg) assert(v1 == v2, format_ne(msg, v1, v2)) end
 
-----
+---- Assert two values not are equal
 -- @param v1
 -- @param v2
 -- @param msg
 function assertNotEqual(v1, v2, msg) assert(v1 ~= v2, format_ne(msg, v1, v2)) end
 
-----
+---- Assert two values are recursively equal
 -- @param v1
 -- @param v2
 -- @param msg
 function assertRequal(v1, v2, msg) assert(requal(v1, v2), format_ne(msg, v1, v2)) end
 
-----
+---- Assert two values are not recursively equal
 -- @param v1
 -- @param v2
 -- @param msg
 function assertNotRequal(v1, v2, msg) assert(not requal(v1, v2), format_ne(msg, v1, v2)) end
 
-----
+---- Assert a value is less than another value
 -- @param less
 -- @param more
 -- @param msg
 function assertLessThan(less, more, msg) assert(less < more, format_ge(msg, more, less)) end
 
-----
+---- Assert a value is more than another value
 -- @param more
 -- @param less
 -- @param msg
 function assertMoreThan(more, less, msg) assert(more > less, format_ge(msg, more, less)) end
 
-----
+---- Assert a value is less than or equal to another value
 -- @param less
 -- @param more
 -- @param msg
 function assertLessThanEqual(less, more, msg) assert(less <= more, format_ge(msg, more, less)) end
 
-----
+---- Assert a value is more than or equal to another value
 -- @param more
 -- @param less
 -- @param msg
 function assertMoreThanEqual(more, less, msg) assert(more >= less, format_ge(msg, more, less)) end
 
-----
+---- Assert a function raises an error mathing a pattern
 -- @param exception
 -- @param func
 -- @param msg

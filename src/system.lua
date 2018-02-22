@@ -8,7 +8,7 @@ local function _getType(name)
     name, name))
 end
 
----- PlaceHolder
+---- Execute a shell command and return the result
 -- @param cmd
 -- @param split_output
 function exe(cmd, split_output)
@@ -30,7 +30,7 @@ function exe(cmd, split_output)
   end
 end
 
----- PlaceHolder
+---- Copy a file or directory
 -- @param src
 -- @param dest
 -- @param overwrite
@@ -43,7 +43,7 @@ function fcopy(src, dest, overwrite)
   exe(cmd)
 end
 
----- PlaceHolder
+---- Find a file or directory
 -- @param name
 -- @param starting_directory
 function find(name, starting_directory) 
@@ -63,23 +63,23 @@ function find(name, starting_directory)
   return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
   end
 
----- PlaceHolder
+---- Check if a path is a directory
 -- @param name
 function isDir(name) return _getType(name) == 'DIR' end
 
----- PlaceHolder
+---- Check if a path is a file
 -- @param name
 function isFile(name) return _getType(name) == 'FILE' end
 
----- PlaceHolder
+---- List the contents of a directory
 -- @param dirname
 function listdir(dirname) return sorted(exe{'ls', dirname}) end
 
----- PlaceHolder
+---- Check if a path exists
 -- @param path
 function pathExists(path) return _getType(path) ~= 'INVALID' end
 
----- PlaceHolder
+---- Join one or more paths
 -- @param ...
 function pathJoin(...) 
   local values
@@ -89,7 +89,7 @@ function pathJoin(...)
   --('/'):join(values):replace('/+', '/') 
 end
 
----- PlaceHolder
+---- Read a single line from a file
 -- @param f
 -- @param lineNumber
 function readLine(f, lineNumber) 
@@ -97,7 +97,7 @@ function readLine(f, lineNumber)
   return lines[lineNumber] 
 end 
 
----- PlaceHolder
+---- Read all the lines in a file
 -- @param f
 function readLines(f) 
   local lines = list()
@@ -107,7 +107,7 @@ function readLines(f)
   return lines
 end
 
----- PlaceHolder
+---- Get size in bytes of file or directory
 -- @param name
 function sizeof(name) 
   local result = exe(string.format('du %s', name))
@@ -116,7 +116,7 @@ function sizeof(name)
   return size
   end
 
----- PlaceHolder
+---- Write a single line to a file
 -- @param line
 -- @param lineNumber
 -- @param filename
@@ -126,7 +126,7 @@ function writeLine(line, lineNumber, filename)
   writeLines(lines, filename, 'w')
 end 
 
----- PlaceHolder
+---- Write multiple lines to a file
 -- @param lines
 -- @param filename
 -- @param mode

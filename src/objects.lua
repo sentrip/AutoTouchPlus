@@ -223,21 +223,20 @@ end
 function set:__sub(other) return self:difference(other) end
 
 
----
--- @
+--- Add a value to the set
+-- @param value
 function set:add(value) 
   if isNotNil(value) then rawset(self, str(hash(value)), value) end end
 
----
--- @
+--- Clear the set of all values
 function set:clear() for v in self() do self:remove(v) end end
 
----
--- @
+--- Check if the set contains a value
+-- @param value
 function set:contains(value) return isNotNil(rawget(self, str(hash(value)))) end
 
----
--- @
+--- Difference of two sets
+-- @param other
 function set:difference(other) 
   local vs = set()
   for v in self() do 
@@ -246,20 +245,19 @@ function set:difference(other)
   return vs
 end
 
----
--- @
+--- Pop a value out of the set
+-- @param value
 function set:pop(value) self:remove(value) return value end
 
----
--- @
+--- Remove a value from the set
+-- @param value
 function set:remove(value) rawset(self, str(hash(value)), nil) end
 
----
--- @
+--- Update the set with the values of an object
+-- @param other
 function set:update(other) for _, v in pairs(other) do self:add(v) end end
 
----
--- @
+--- List of the values in the set
 function set:values() 
   local result = {}
   for v in self() do result[#result + 1] = v end
