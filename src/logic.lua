@@ -4,18 +4,86 @@
 --- Logic
 -- @section logic
 
----- Check if input IS of given type.
--- @param input object to check type of
--- @param _type type to check for
--- @return boolean
-function isType(input, _type) return type(input) == _type end
+local type_index = {
+  ['str'] = 'string',
+  ['num'] = 'number',
+  ['bool'] = 'boolean',
+  ['tbl'] = 'table',
+  ['file'] = 'userdata',
+  ['func'] = 'function'
+}
 
----- Check if input IS NOT of given type.
--- @param input object to check type of
--- @param _type type to check for
+---- Check if an object is of one or more types
+-- @param object object to check type of
+-- @param ... types to check for
 -- @return boolean
-function isNotType(input, _type) return not isType(input, _type) end
+function isType(object, ...)
+  local types = {...}
+  if #types == 1 then return type(object) == types[1] end
+  local is_type = false
+  for i, v in pairs(types) do
+    is_type = is_type or type(object) == (type_index[v] or v)
+  end
+  return is_type
+end
 
+---- Check if an object is not of one or more types
+-- @param object object to check type of
+-- @param ... types to check for
+-- @return boolean
+function isNotType(object, ...)
+  return not isType(object, ...)
+end
+
+
+--- Check if an object is truthy (like Python's "if x" syntax).
+--- Truthy objects are any objects except for 0, false, nil and objects where len(object) == 0
+-- @param object
+is = setmetatable({}, {
+  --check truthy
+  __call = function(s, object)
+    if object == nil or object == false or object == 0 then
+      return false
+    elseif isType(object, 'number', 'boolean', 'userdata', 'function') then
+      return true
+    elseif isType(object, 'string') then
+      return #object > 0
+    elseif isType(object, 'table') then
+      if object.__is then 
+        return object:__is()
+      else
+        local size = #object
+        if size == 0 then
+          for i, v in pairs(object) do
+            size = size + 1
+          end
+        end
+        return size > 0
+      end
+    end
+    return false
+  end,
+  --check type
+  __index = function(s, value)
+    return function(v) 
+      local s = type_index[value] or value
+      return isType(v, s:lower()) 
+      end
+  end
+  })
+
+--- Check if an object is falsy (like Python's "if not x" syntax)
+-- @param object
+Not = setmetatable({}, {
+    --check falsy
+    __call = function(s, object) return not is(object) end,
+    --check type
+    __index = function(s, object) 
+      return function(v) return not isType(v, type_index[value] or value) end
+    end
+  })
+
+--todo remove deprecated functions
 ---- Check if input is boolean
 -- @param input object to check type
 -- @return boolean

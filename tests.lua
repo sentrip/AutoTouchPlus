@@ -132,24 +132,6 @@ failed = failed or test('core, math and string tests', {
       values[#values + 1] = h
     end
     end,
-  is = function()
-    assert(is(true), 'True is not')
-    assert(is(1), '1 is not')
-    assert(is({1, 2, 3}), 'Full table is not')
-    assert(not is({}), 'Empty table is')
-    end,
-  isnot = function()
-    assert(isnot(false), 'False is')
-    assert(isnot(0), '0 is')
-    assert(isnot(nil), 'Nil is')
-    assert(isnot(''), 'Empty string is')
-    assert(isnot({}), 'Empty table is')
-    assert(not isnot({1, 2, 3}), 'Full table isnot')
-    end,
-  count = function() 
-    assertEqual(count(1, {1,1,2}), 2, 'Incorrect integer count')
-    assertEqual(count('a', 'aab'), 2, 'Incorrect character count')    
-  end,
   isin = function()
     assert(isin('a', 'abc'), 'Character not in string when it should be')
     assert(not isin('t', 'abc'), "Character in string when it shouldn't be")
@@ -205,32 +187,73 @@ failed = failed or test('core, math and string tests', {
       assertEqual(v, eb[i], 'String sorting failed')
     end
     --key based sort
+    local a2, e2 = {list{'a', 2}, list{'b', 1}}, {list{'b', 1}, list{'a', 2}}
+    for i, v in pairs(sorted(list(a2), function(m) return m[2] end)) do
+      assertEqual(v, e2[i], 'String sorting failed')
+    end
     end,
   ------------------------------ Logic Tests --------------------------------
-  isBool = function() 
+  isType = function()
+    assert(isType(true, 'boolean'), 'basic isType failed')
+    assert(isType(true, 'string', 'bool'), 'multi arg isType failed')
+    assert(not isType(true, 'string', 'table'), 'multi arg isType failed')
+    end,
+  is = function()
+    local f = io.tmpfile()
+    --truthy checks
+    assert(is(true), 'boolean is failed')
+    assert(is(1), 'number is failed')
+    assert(is('thing'), 'string(5) is failed')
+    assert(is({1,2,3}), 'table(3) is failed')
+    assert(is(function() end), 'function is failed')
+    assert(is(f), 'file is failed')
+    --type checks
+    assert(is.str(''), 'is.str failed')
+    assert(is.num(0), 'is.num failed')
+    assert(is.bool(true), 'is.bool failed')
+    assert(is.tbl({}), 'is.tbl failed')
+    assert(is.func(function() end), 'is.func failed')
+    assert(is.file(f), 'is.file failed')
+    assert(is.string(''), 'is.string failed')
+    assert(is.number(0), 'is.number failed')
+    assert(is.boolean(true), 'is.boolean failed')
+    assert(is.table({}), 'is.table failed')
+    assert(is.userdata(f), 'is.userdata failed')
+    f:close()
+    end,
+  Not = function()
+    assert(Not(nil), 'nil Not failed')
+    assert(Not(0), 'number Not failed')
+    assert(Not(false), 'boolean Not failed')
+    assert(Not(''), 'string(0) Not failed')
+    assert(Not({}), 'table(0) Not failed')
+    assert(is(true) == not is.Not(true), 
+      'is and is.Not did not return opposite results')
+    end,
+  isBool = function() --todo remove
     assert(isBool(true), 'Boolean not isBool') 
     assert(isBool(false), 'Boolean not isBool') 
     assertEqual(isBool(""), false, 'Not boolean isBool')
   end,
-  isNil = function() 
+  isNil = function()  --todo remove
     assert(isNil(nil), 'nil not isNil') 
     assertEqual(isNil(""), false, 'Not nil isNil')
   end,
-  isNotNil = function() 
+  isNotNil = function()  --todo remove
     assert(isNotNil(""), 'Not nil is nil')
     assertEqual(isNotNil(nil), false, 'nil isNotNil') 
   end,
-  isNum = function() 
+  isNum = function()  --todo remove
     assert(isNum(1), 'Number not isNum') 
     assert(isNum(-0.2), 'Negative float not isNum')
     assertEqual(isNum(""), false, 'Non num isNum')
   end,
-  isStr = function() 
+  isStr = function()  --todo remove
     assert(isStr(""), 'String not isStr') 
     assert(isStr("123"), 'Number string not isStr')
     assertEqual(isStr(123), false, 'Numbers isStr')
   end,
-  isTable = function() 
+  isTable = function()  --todo remove
     assert(isTable({}), 'Table not isTable') 
     assert(isTable({a = 1}), 'Dict type table not isTable')
     assertEqual(isTable(""), false, 'String isTable')
@@ -392,7 +415,7 @@ failed = failed or test('dict tests', {
     assertEqual(self.b:get('q', 5), 5, 'Dict get incorrect for unknown key with default')
     end,
   keys = function(self)
-    assert(isnot(self.a:keys(), 'Incorrect dict keys'))
+    assert(Not(self.a:keys(), 'Incorrect dict keys'))
     for i, v in pairs({'a', 'b'}) do
       assert(isin(v, self.b:keys()), 'Dict key not found')
     end
@@ -406,7 +429,7 @@ failed = failed or test('dict tests', {
     assertEqual(self.a, self.b, 'Dicts not equal after update')
     end,
   values = function(self)
-    assert(isnot(self.a:values(), 'Incorrect dict values'))
+    assert(Not(self.a:values(), 'Incorrect dict values'))
     for i, v in pairs({1, 2}) do
       assert(isin(v, self.b:values()), 'Dict value not found')
     end
@@ -881,7 +904,7 @@ failed = failed or test('screen tests', {
   function(self) 
     end)
 
-failed = failed or test('sys tests', {  
+failed = failed or test('system tests', {  
   fcopy = function()
     local function check_lines(fname, expected)
       expected = expected or {'1', '2', '3'}

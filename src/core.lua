@@ -43,7 +43,7 @@ local classes = {}
 --They are only created upon being indexed for memory efficiency
 local private_tables = {}
   
----- Class creator
+---- Create a new class instance
 -- @param name 
 -- @param ...
 function class(name, ...)
@@ -190,7 +190,7 @@ function unpack_(t)
   return load(string.format("return %s", table.concat(t, ',')))() 
 end
 
----- PlaceHolder
+---- Copy an object
 -- @param object 
 -- @param deep
 function copy(object, deep) 
@@ -241,20 +241,6 @@ function hash(input)
   return hsh
 end
 
----- Check if an object is truthy (like Python's "if x" syntax).
--- Truthy objects are any objects except for 0, false, nil and objects where len(object) == 0
--- @param object 
--- @return
-function is(object) 
-  if object == 0 or object == false or object == nil then return false
-  elseif len(object) == 0 then return false
-  else return true end
-end
-
----- Check if an object is falsy (like Python's "if not x" syntax)
--- @param object 
--- @return
-function isnot(object) return not is(object) end
 
 ---- Check if sub is contained in main (like Python's "x in y" syntax)
 -- @param sub
@@ -315,7 +301,7 @@ function isinstance(klass, other)
   return false
 end
 
----- Placeholder
+---- Get the maximum value of two or more values
 -- @param ... 
 -- @return
 function max(...) 
@@ -328,7 +314,7 @@ function max(...)
   return math.max(unpack_(args))
 end
 
----- Placeholder
+---- Get the minimum value of two or more values
 -- @param ... 
 -- @return
 function min(...) 
@@ -481,7 +467,7 @@ end
 
 --defaults to log in AutoTouch, otherwise print in IDEs or terminal for developement
 local _print = log or print
----- Placeholder
+---- Improved print function
 -- @param ... 
 -- @return
 function print(...) 
@@ -490,7 +476,7 @@ function print(...)
   _print(table.concat(strings, '\t')) 
 end
 
----- Placeholder
+---- Pretty print a table
 -- @param tbl 
 -- @return
 function pprint(tbl)
@@ -498,7 +484,7 @@ function pprint(tbl)
 end
 
 
----- Placeholder
+---- Simple string representation of an object
 -- @param input 
 -- @return
 function repr(input) 
@@ -540,7 +526,7 @@ end
 
 
 
----- Placeholder
+---- Reverse the order of the elements in an object
 -- @param object
 -- @return 
 function reversed(object)
@@ -550,7 +536,7 @@ function reversed(object)
   return result
 end
 
----- Placeholder
+---- Sort an object
 -- @param object
 -- @param key
 -- @return 
@@ -566,4 +552,3 @@ function sorted(object, key)
   table.sort(cp, sorter)
   return cp
 end
-
