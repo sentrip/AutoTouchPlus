@@ -28,7 +28,7 @@ function dict:__add(other)
 end
 
 function dict:__call(...) 
-  assert(isNil(...), 'Dict can only be called in a for-loop')
+  assert(is.Nil(...), 'Dict can only be called in a for-loop')
   local key, value
   return function()
     key, value =  next(self, key, value)
@@ -58,7 +58,7 @@ function dict:clear() for k, v in pairs(self) do self:set(k, nil) end end
 --- Check if the dict contains a key
 -- @param key key to check for
 -- @return (boolean) is the key in the dict
-function dict:contains(key) return isNotNil(rawget(self, key)) end
+function dict:contains(key) return Not.Nil(rawget(self, key)) end
 
 --- Get the value indexed by the given key in the dictionary
 -- @param key key index of dictionary
@@ -105,7 +105,7 @@ list = class('list')
 
 
 function list:__init(lst) 
-  if isTable(lst) and lst[1] then self:extend(lst) end
+  if is.table(lst) and lst[1] then self:extend(lst) end
 end
 
 function list:__add(other) local new = list(self); new:extend(other); return new end
@@ -114,7 +114,7 @@ function list:__call(start, _end, step)
   local key, value
   local slice = list()
    
-  if isNil(start or _end or step) then  -- no arguements -> for loop
+  if is.Nil(start or _end or step) then  -- no arguements -> for loop
     return function()
       key, value =  next(self, key, value)
       return value
@@ -122,7 +122,7 @@ function list:__call(start, _end, step)
   else -- arguments -> slice
     _end = _end or #self
     if _end < 0 and not step then _end = #self + 1 + _end end
-    if isTable(start) then for i, v in pairs(start) do slice:append(self[v]) end
+    if is.table(start) then for i, v in pairs(start) do slice:append(self[v]) end
     else for i=start, _end, step or 1 do slice:append(self[i]) end end
     return slice  
   end
@@ -133,7 +133,7 @@ function list:__eq(other) return namedRequality('list')(self, other) end
 function list:__len() return len(self) end
 
 function list:__getitem(value) 
-  if isStr(value) then return rawget(list, value) 
+  if is.str(value) then return rawget(list, value) 
   else 
     if sign(value) < 0 then value = #self + 1 + value end
     return rawget(self, value) end
@@ -201,7 +201,7 @@ function set:__add(other)
 end
 
 function set:__call(...)
-  assert(isNil(...), 'Set can only be called in a for-loop')
+  assert(is.Nil(...), 'Set can only be called in a for-loop')
   local key, value
   return function()
     key, value =  next(self, key, value)
@@ -226,21 +226,21 @@ function set:__sub(other) return self:difference(other) end
 --- Add a value to the set
 -- @param value
 function set:add(value) 
-  if isNotNil(value) then rawset(self, str(hash(value)), value) end end
+  if Not.Nil(value) then rawset(self, str(hash(value)), value) end end
 
 --- Clear the set of all values
 function set:clear() for v in self() do self:remove(v) end end
 
 --- Check if the set contains a value
 -- @param value
-function set:contains(value) return isNotNil(rawget(self, str(hash(value)))) end
+function set:contains(value) return Not.Nil(rawget(self, str(hash(value)))) end
 
 --- Difference of two sets
 -- @param other
 function set:difference(other) 
   local vs = set()
   for v in self() do 
-    if isNil(rawget(other, str(hash(v)))) then vs:add(v) end 
+    if is.Nil(rawget(other, str(hash(v)))) then vs:add(v) end 
   end
   return vs
 end

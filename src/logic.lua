@@ -78,41 +78,10 @@ Not = setmetatable({}, {
     --check falsy
     __call = function(s, object) return not is(object) end,
     --check type
-    __index = function(s, object) 
-      return function(v) return not isType(v, type_index[value] or value) end
+    __index = function(s, value) 
+      return function(v) return not is[value](v) end
     end
   })
-
---todo remove deprecated functions
----- Check if input is boolean
--- @param input object to check type
--- @return boolean
-function isBool(input) return isType(input, 'boolean') end
-
----- Check if input is nil
--- @param input object to check type
--- @return boolean
-function isNil(input) return isType(input, 'nil') end
-
----- Check if input is not nil
--- @param input object to check type
--- @return boolean
-function isNotNil(input) return not isNil(input) end
-
----- Check if input is number
--- @param input object to check type
--- @return boolean
-function isNum(input) return isType(input, 'number') end
-
----- Check if input is string
--- @param input object to check type
--- @return boolean
-function isStr(input) return isType(input, 'string') end
-
----- Check if input is table
--- @param input object to check type
--- @return boolean
-function isTable(input) return isType(input, 'table') end
 
 ---- Check if all values in two tables are equal (recursive-equal)
 -- @param value1 table for equality check
@@ -120,7 +89,7 @@ function isTable(input) return isType(input, 'table') end
 -- @return boolean
 function requal(value1, value2)
   local all_equal = type(value1) == type(value2)
-  if all_equal and not isTable(value1) then 
+  if all_equal and not is.table(value1) then 
     return value1 == value2 
   elseif all_equal then
     all_equal = len(value1) == len(value2)
@@ -130,16 +99,16 @@ function requal(value1, value2)
   
   local l1, l2 = {}, {}
   for i, v in pairs(value1) do 
-    if isNum(v) then v = str(v) end
+    if is.num(v) then v = str(v) end
     table.insert(l1, v)
   end
   for i, v in pairs(value2) do 
-    if isNum(v) then v = str(v) end
+    if is.num(v) then v = str(v) end
     table.insert(l2, v)
   end
   
   local function sorter(first, second) 
-    if isTable(first) or isType(first, 'function')then  return false end
+    if is.table(first) or isType(first, 'function') then  return false end
     if type(first) ~= type(second) then return false end
     return first < second
   end
@@ -147,7 +116,7 @@ function requal(value1, value2)
   table.sort(l2, sorter)
   for i, v in pairs(l1) do
     if not all_equal then return false end
-    if isTable(v) then
+    if is.table(v) then
       all_equal = requal(v, l2[i])
     else
       all_equal = type(v) == type(l2[i])
@@ -184,8 +153,8 @@ function div(x, y) return math.floor(x / y) end
 -- @param input 
 -- @return
 function len(input) 
-  if isNil(input) then return 0
-  elseif isNum(input) or isBool(input) then return 1
+  if is.Nil(input) then return 0
+  elseif is.num(input) or is.Bool(input) then return 1
   else
     local total = 0
     for i, v in pairs(input) do total = total + 1 end

@@ -108,7 +108,7 @@ end
 
 
 function _requests.urlencode(params)
-  if isStr(params) then return params end
+  if is.str(params) then return params end
   local s = ''
   if not params or next(params) == nil then return s end
   for key, value in pairs(params) do
@@ -134,7 +134,7 @@ function _requests.make_request(request)
   if is(request.auth) then
     local usr = request.auth.user or request.auth[1]
     local pwd = request.auth.password or request.auth[2]
-    assert(isStr(usr) and isStr(pwd), 'Incorrect authentication format')
+    assert(is.str(usr) and is.str(pwd), 'Incorrect authentication format')
     cmd:extend{'--http-user', usr, '--http-password', pwd}
   end
   -- proxies
@@ -223,8 +223,8 @@ end
 -- @return <Response>
 function requests.request(method, url, args)
   local request
-  if isTable(url) then 
-    if isNotNil(url[1]) then 
+  if is.table(url) then 
+    if Not.Nil(url[1]) then 
       url.url = url[1] 
       url[1] = nil 
     end

@@ -58,10 +58,10 @@ _string = {
 
 ---- String formatting (Python style! ...kinda)
   format = function(s, ...)
-    if isNotNil(string.find(s, '{[^}]*}')) then
+    if Not.Nil(string.find(s, '{[^}]*}')) then
       local args; local modified = ''; local stringified = ''; 
       local index = 1; local length = 0; local pad = 0
-      if isTable(...) then args = ... else args = {...} end
+      if is.table(...) then args = ... else args = {...} end
       
       local function formatter(prev, match) 
         -- replace match
@@ -100,17 +100,17 @@ _string = {
     local values = {}
 
     while i <= #s do
-      if isNil(delim) then values[i] = s[i]; i = i + 1
+      if is.Nil(delim) then values[i] = s[i]; i = i + 1
       else
         if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
       else 
-          if isNil(values[idx]) then values[idx] = '' end
+          if is.Nil(values[idx]) then values[idx] = '' end
           values[idx] = values[idx] .. s[i] 
         end
         i = i + 1
       end
     end
-    for i, v in pairs(values) do if isNil(v) then values[i] = '' end end
+    for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
     return list(values)
   end,
 
@@ -134,7 +134,7 @@ getmetatable('').__ipairs = str_pairs
 getmetatable('').__mul = str_mul
 getmetatable('').__pairs = str_pairs
 getmetatable('').__index = function(s, i) 
-  if isNum(i) then 
+  if isType(i, 'number') then 
     if i < 0 then i = #s + 1 + i end
     return string.sub(s, i, i) 
   else 

@@ -12,7 +12,7 @@ end
 -- @param cmd
 -- @param split_output
 function exe(cmd, split_output)
-  if isNil(split_output) then split_output = true end
+  if is.Nil(split_output) then split_output = true end
   if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
   if rootDir then cmd = 'cd '..rootDir()..'; '..cmd end
   local f = assert(io.popen(cmd, 'r'))
@@ -35,7 +35,7 @@ end
 -- @param dest
 -- @param overwrite
 function fcopy(src, dest, overwrite) 
-  if isNil(overwrite) then overwrite = true end
+  if is.Nil(overwrite) then overwrite = true end
   local cmd = list{'cp'}
   if isDir(src) then cmd:append('-R') end
   if not overwrite then cmd:append('-n') end
@@ -48,7 +48,7 @@ end
 -- @param starting_directory
 function find(name, starting_directory) 
   local _type = 'f'
-  if isTable(name) then
+  if is.table(name) then
     starting_directory = name.start
     if name.file or name.f then 
       name = name.file or name.f
@@ -83,7 +83,7 @@ function pathExists(path) return _getType(path) ~= 'INVALID' end
 -- @param ...
 function pathJoin(...) 
   local values
-  if isTable(...) then values = ... else values = {...} end
+  if is.table(...) then values = ... else values = {...} end
   local s = string.gsub(table.concat(values, '/'), '/+', '/')
   return s
   --('/'):join(values):replace('/+', '/') 
@@ -102,7 +102,7 @@ end
 function readLines(f) 
   local lines = list()
   local function read(fle) for line in fle:lines() do lines:append(line) end end
-  if isStr(f) then with(open(f, 'r'), read) else read(f) end
+  if is.str(f) then with(open(f, 'r'), read) else read(f) end
   if lines[#lines] == '' then lines[#lines] = nil end
   return lines
 end

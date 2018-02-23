@@ -91,9 +91,9 @@ function test(description, tests, setup, teardown)
   table.sort(tests)
   for test_name, tst in pairs(tests) do 
     test_vars = {}
-    if isNotNil(setup) then setup(test_vars) end
+    if Not.Nil(setup) then setup(test_vars) end
     success, err = pcall(tst, test_vars)
-    if isNotNil(teardown) then teardown(test_vars) end
+    if Not.Nil(teardown) then teardown(test_vars) end
     if not success then 
       if not failed then 
         print(description) 

@@ -6,9 +6,9 @@ local function table2string(input)
   local m = getmetatable(input)
   local function idxstr(idx, val, custom_type) 
     if custom_type then return str(val) 
-    elseif isStr(val) then val = '"'..val..'"'
+    elseif is.str(val) then val = '"'..val..'"'
     else val = str(val) end
-    if isStr(idx) then idx = '"'..idx..'"'
+    if is.str(idx) then idx = '"'..idx..'"'
     else idx = str(idx) end
     return string.format('%s: %s', idx, val)
   end
@@ -17,7 +17,7 @@ local function table2string(input)
   local count, all_int = 0, true
   for i, v in pairs(input) do
     count = count + 1
-    if not isNum(i) or i ~= count then 
+    if not is.num(i) or i ~= count then 
       all_int = false
       break
     end
@@ -51,7 +51,7 @@ function class(name, ...)
   local getters, setters = {}, {}
   local bases = {}
   for i, v in pairs({...}) do
-    if isStr(v) then v = classes[v] end
+    if is.str(v) then v = classes[v] end
     table.insert(bases, v)
   end
 
@@ -197,7 +197,7 @@ function copy(object, deep)
   --copy object attributes
   local c = {}
   for k, v in pairs(object) do
-    if deep and isTable(v) then c[k] = copy(v, true)
+    if deep and is.table(v) then c[k] = copy(v, true)
     else c[k] = v end
   end
   --copy metatable attributes
@@ -229,11 +229,11 @@ function hash(input)
   
   local hsh
   local mod = 2 ^ 64
-  if isNum(input) then 
+  if is.num(input) then 
     if input > 0 then hsh = -input * 2 
     elseif input < 0 then hsh = input * 2 - 1
     else hsh = input end
-  elseif not isStr(input) then error("Can only hash integers and strings")
+  elseif not is.str(input) then error("Can only hash integers and strings")
   else
     hsh = string.byte(input[1]) * 2 ^ 7
     for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
@@ -251,8 +251,8 @@ function isin(sub, main)
   local length, subLength
   local mt = getmetatable(main)
   if not mt or not mt.contains then 
-    if isStr(main) then return isNotNil(main:find(sub))
-    elseif isTable(main) then length = #main; subLength = 1
+    if is.str(main) then return Not.Nil(main:find(sub))
+    elseif is.table(main) then length = #main; subLength = 1
     else length = 1; subLength = 1 end
     for i=1, length do 
       if _is then break end
@@ -282,10 +282,10 @@ function isnotin(sub, main) return not isin(sub, main) end
 function isinstance(klass, other)
   local m = getmetatable(klass)
   if not m or not m.__name then 
-    if not isStr(other) then other = type(other) end
+    if not is.str(other) then other = type(other) end
     return type(klass) == other
   else 
-    if isStr(other) then other = {__name = other} end 
+    if is.str(other) then other = {__name = other} end 
   end
   
   local i, v
@@ -306,7 +306,7 @@ end
 -- @return
 function max(...) 
   local args
-  if isTable(...) then args = ... else args = {...} end
+  if is.table(...) then args = ... else args = {...} end
   local mt = getmetatable(args)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
@@ -319,7 +319,7 @@ end
 -- @return
 function min(...) 
   local args
-  if isTable(...) then args = ... else args = {...} end
+  if is.table(...) then args = ... else args = {...} end
   local mt = getmetatable(args)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
@@ -331,7 +331,7 @@ end
 -- @param input 
 -- @return
 function num(input) 
-  if isNum(input) then return input else return tonumber(input) end 
+  if is.num(input) then return input else return tonumber(input) end 
 end
 
 --pretty printing code modified from
@@ -530,7 +530,7 @@ end
 -- @param object
 -- @return 
 function reversed(object)
-  if isStr(object) then return object:reverse() end
+  if is.str(object) then return object:reverse() end
   local result = list()
   for i, v in pairs(object) do result:insert(1, v) end
   return result

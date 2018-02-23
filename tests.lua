@@ -154,9 +154,9 @@ failed = failed or test('core, math and string tests', {
     assertEqual(math.min(unpack_(t)), min(s), 'set min not same as math.min')
     end,
   num = function()
-    assert(isNum(num(1)), 'Converted int to non number')
-    assert(isNum(num(1.0)), 'Converted float to non number')
-    assert(isNum(num(-1)), 'Converted negative to non number')
+    assert(is.num(num(1)), 'Converted int to non number')
+    assert(is.num(num(1.0)), 'Converted float to non number')
+    assert(is.num(num(-1)), 'Converted negative to non number')
     assertEqual(num('1'), 1, 'Converted string int to non number')
     assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
     end,
@@ -230,34 +230,6 @@ failed = failed or test('core, math and string tests', {
     assert(is(true) == not is.Not(true), 
       'is and is.Not did not return opposite results')
     end,
-  isBool = function() --todo remove
-    assert(isBool(true), 'Boolean not isBool') 
-    assert(isBool(false), 'Boolean not isBool') 
-    assertEqual(isBool(""), false, 'Not boolean isBool')
-  end,
-  isNil = function()  --todo remove
-    assert(isNil(nil), 'nil not isNil') 
-    assertEqual(isNil(""), false, 'Not nil isNil')
-  end,
-  isNotNil = function()  --todo remove
-    assert(isNotNil(""), 'Not nil is nil')
-    assertEqual(isNotNil(nil), false, 'nil isNotNil') 
-  end,
-  isNum = function()  --todo remove
-    assert(isNum(1), 'Number not isNum') 
-    assert(isNum(-0.2), 'Negative float not isNum')
-    assertEqual(isNum(""), false, 'Non num isNum')
-  end,
-  isStr = function()  --todo remove
-    assert(isStr(""), 'String not isStr') 
-    assert(isStr("123"), 'Number string not isStr')
-    assertEqual(isStr(123), false, 'Numbers isStr')
-  end,
-  isTable = function()  --todo remove
-    assert(isTable({}), 'Table not isTable') 
-    assert(isTable({a = 1}), 'Dict type table not isTable')
-    assertEqual(isTable(""), false, 'String isTable')
-  end,
   requal = function()
     assert(requal({'a'}, {'a'}), 'Basic tables not requal')
     assert(requal(
@@ -353,7 +325,7 @@ failed = failed or test('core, math and string tests', {
   str_index = function() 
     local s = 'abc'
     for i, v in pairs(string) do
-      assert(isNotNil(s[i]), 'string missing function '..i)
+      assert(Not.Nil(s[i]), 'string missing function '..i)
     end
     assertEqual(s[1], 'a', 'Positive string index failed')
     assertEqual(s[-1], 'c', 'Negative string index failed')
