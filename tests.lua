@@ -91,6 +91,23 @@ failed = failed or test('class tests', {
       'Inherited method different from original method')
     end,
   class_get_set_properties = function()
+    local A = class("A")
+    function A:__init(value)
+      self.value = max(0, min(10, value))
+    end
+    A.__getters['v'] = function(self)
+      return self.value * 2
+    end
+    A.__setters['v'] = function(self, value)
+      self.value = max(0, min(10, value))
+    end
+    a = A(1)
+    assert(a.v, 'Getter proprty was not created on class')
+    assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
+    a.v = -1
+    assertEqual(a.v, 0, 'Setter did not set custom value')
+    a.v = 10
+    assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
     end
 })
 
@@ -163,8 +180,24 @@ failed = failed or test('core, math and string tests', {
   str = function()
     end,
   getattr = function()
+    local A = class('A')
+    function A:__init()
+      self.val = 5
+    end
+    local a = A()
+    assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
+    assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
+    assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
     end,
   setattr = function()
+    local A = class('A')
+    function A:__init()
+      self.val = 5
+    end
+    local a = A()
+    setattr(a, 'val', 3)
+    assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
+    assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
     end,
   reversed = function()
     local l, s = {1, 2, 3}, 'abc'
@@ -857,20 +890,55 @@ failed = failed or test('requests tests', {
     end)
 
 failed = failed or test('screen tests', {
-  tree_nagivation = function()
-    --t = Tree()
-    --t:add('left', f('left'), b('root'))
-    --t:add('mid', f('mid'), b('root'))
-    --t:add('right', f('right'), b('root'))
+  tree_root_nagivation = function()
+    local l = list()
+    local function f(v) return function() l:append({'fw', v}) end end
+    local function b(v) return function() l:append({'bw', v}) end end
+    local t = TransitionTree()
+    t:add('left', f('left'), b('root'))
+    t:add('mid', f('mid'), b('root'))
+    t:add('right', f('right'), b('root'))
 
-    --t['left']:add('a', f('a'), b('left'))
-    --t['left']:add('b', f('b'), b('left'))
+    t['left']:add('a', f('a'), b('left'))
+    t['left']:add('b', f('b'), b('left'))
 
-    --t['mid']:add('c', f('c'), b('mid'))
-    --t['mid']:add('d', f('d'), b('mid'))
+    t['mid']:add('c', f('c'), b('mid'))
+    t['mid']:add('d', f('d'), b('mid'))
 
-    --t['right']:add('e', f('e'), b('right'))
-    --t['right']:add('f', f('f'), b('right'))
+    t['right']:add('e', f('e'), b('right'))
+    t['right']:add('f', f('f'), b('right'))
+    t:navigate('a', 'f')
+    local ea = {'bw', 'bw', 'fw', 'fw'}
+    local en = {'left', 'root', 'right', 'f'}
+    for i, v in pairs(ea) do
+      assertEqual(l[i][1], ea[i], 'Did not navigate in correct direction')
+      assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
+    end
+  end,
+  tree_lca_nagivation = function()
+    local l = list()
+    local function f(v) return function() l:append({'fw', v}) end end
+    local function b(v) return function() l:append({'bw', v}) end end
+    local t = TransitionTree()
+    t:add('left', f('left'), b('root'))
+    t:add('mid', f('mid'), b('root'))
+    t:add('right', f('right'), b('root'))
+
+    t['left']:add('a', f('a'), b('left'))
+    t['left']:add('b', f('b'), b('left'))
+
+    t['mid']:add('c', f('c'), b('mid'))
+    t['mid']:add('d', f('d'), b('mid'))
+
+    t['right']:add('e', f('e'), b('right'))
+    t['right']:add('f', f('f'), b('right'))
+    t:navigate('a', 'b')
+    local ea = {'bw', 'fw'}
+    local en = {'left', 'b'}
+    for i, v in pairs(ea) do
+      assertEqual(l[i][1], ea[i], 'Did not navigate in correct direction')
+      assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
+    end
     end,
   },
   function(self) 

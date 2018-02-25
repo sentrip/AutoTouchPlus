@@ -31,7 +31,7 @@ function Pixel:__eq(pixel)
   return self.x == pixel.x and self.y == pixel.y and self.color == pixel.color
 end
 
----- PlaceHolder
+---- Get the absolute x, y location of the pixel in a screen
 -- @param screen
 function Pixel:abs_position(screen)
   local x, y
@@ -42,7 +42,7 @@ function Pixel:abs_position(screen)
   return x, y
 end
 
----- PlaceHolder
+---- Check if the pixel is in a screen
 -- @param screen
 function Pixel:in_(screen)
   return getColor(self:abs_position(screen)) == self.color
@@ -54,10 +54,20 @@ end
 Pixels = class('Pixels')
 
 function Pixels:__init(pixels)
-  self.pixels = pixels or list()
+  self.pixels = list()
   self.colors = list()
-  for i, pixel in pairs(pixels) do
-    self.colors:append(pixel.color)
+  --table of pixels
+  if is(pixels) and getmetatable(pixels[1]) then
+    self.pixels = pixels    
+    for i, pixel in pairs(pixels) do
+      self.colors:append(pixel.color)
+    end
+  --table of tables {x, y, color}
+  else
+    for i, t in pairs(pixels) do
+      self.pixels:append(Pixel{t[1], t[2], t[3]})
+      self.colors:append(t[3])
+    end
   end
 end
 
@@ -75,7 +85,7 @@ function Pixels:__eq(pixels)
   return true
 end
 
----- PlaceHolder
+---- Check if all the pixels are in a screen
 -- @param screen
 function Pixels:in_(screen)
   local positions = {}
@@ -85,6 +95,20 @@ function Pixels:in_(screen)
   return requal(getColors(positions), self.colors)
 end
 
+
+---- Count how many of the pixels are in a screen
+-- @param screen
+function Pixels:count(screen)
+  local positions = {}
+  for i, pixel in pairs(self.pixels) do 
+    positions[#positions + 1] = {pixel:abs_position(screen)}
+  end
+  local count = 0
+  for i, v in pairs(getColors(positions)) do
+    if v == self.colors[i] then count = count + 1 end
+  end
+  return count
+end
 
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
@@ -102,15 +126,21 @@ function Screen:__init(width, height, xOffSet, yOffSet)
   self.right = self.x + self.width
   self.bottom = self.y + self.height
   self.check_interval = 50000 --checks every 50ms (0.05s)
+  self.mid = {
+    left = {self.x, self.bottom / 2},
+    right = {self.right, self.bottom / 2},
+    top = {self.y, self.right / 2},
+    bottom = {self.bottom, self.right / 2}
+  }
 end
 
----- PlaceHolder
+---- Check if the screen contains a pixel/set of pixels
 -- @param pixel
 function Screen:contains(pixel)
   return pixel:in_(self)
 end
 
----- PlaceHolder
+---- Improved tap function
 -- @param x
 -- @param y
 -- @param times
@@ -129,7 +159,7 @@ function Screen:tap(x, y, times, interval)
   return self
 end
 
----- PlaceHolder
+---- Tap the screen if a pixel/set of pixels is visible
 -- @param pixel pixel to search for
 -- @param ... arguments for @{screen.Screen.tap}
 function Screen:tap_if(pixel, ...)
@@ -139,7 +169,7 @@ function Screen:tap_if(pixel, ...)
   return self
 end
 
----- PlaceHolder
+---- Tap the screen while a pixel/set of pixels is visible
 -- @param pixel pixel(s) to search for
 -- @param ... arguments for @{screen.Screen.tap}
 function Screen:tap_while(pixel, ...)
@@ -150,7 +180,7 @@ function Screen:tap_while(pixel, ...)
   return self
 end
 
----- PlaceHolder
+---- Tap the screen until a pixel/set of pixels is visible
 -- @param pixel pixel(s) to search for
 -- @param ... arguments for @{screen.Screen.tap}
 function Screen:tap_until(pixel, ...)
@@ -161,9 +191,32 @@ function Screen:tap_until(pixel, ...)
   return self
 end
 
----- PlaceHolder
--- @param pixel
-function Screen:swipe()
+---- Swipe the screen
+function Screen:swipe(start, _end, speed)
+  if is.str(start) then
+    assert(self.mid[start], 
+      'Incorrect identifier: use one of (left, right, top, bottom)')
+    start = self.mid[start]
+  end
+  
+  if is.str(_end) then
+    assert(self.mid[_end], 
+      'Incorrect identifier: use one of (left, right, top, bottom)')
+    _end = self.mid[_end]
+  end
+  
+  local steps = 50 / speed
+  local x, y = start[1], start[2]
+  local deltaX = (_end[1] - start[1]) / steps
+  local deltaY = (_end[2] - start[2]) / steps
+  touchDown(2, x, y)
+  usleep(16000)
+  for i=1, steps do
+    x = x + deltaX
+    y = y + deltaY
+    touchMove(2, x, y)
+    usleep(16000)
+  touchUp(2, x, y)
   return self
 end
 
@@ -178,7 +231,7 @@ TransitionTree = class('TransitionTree')
 function TransitionTree:__init(name, parent, forward, backward)
   self.name = name or 'root'
   self.parent = parent
-  if isNil(backward) then self.backward = forward
+  if is.Nil(backward) then self.backward = forward
   else
     self.forward = forward
     self.backward = backward
@@ -190,7 +243,7 @@ function TransitionTree:__index(value)
   return rawget(TransitionTree, value) or rawget(self, value) or self.nodes[value]
 end
 
----- Placeholder
+---- Add a node to the tree
 -- @param name
 -- @param forward
 -- @param backward
@@ -198,18 +251,18 @@ function TransitionTree:add(name, forward, backward)
   self.nodes[name] = TransitionTree(name, self, forward, backward)
 end
 
----- Placeholder
+---- Get the path from the current node to the root node
 function TransitionTree:path_to_root()
   local path = list{self}
   local parent = self.parent
-  while isNotNil(parent) do
+  while Not.Nil(parent) do
     path:append(parent)
     parent = parent.parent
   end
   return path
 end
 
----- Placeholder
+---- Get the path from the current node to the named node
 -- @param name
 function TransitionTree:path_to(name)
   local q = list()
@@ -222,7 +275,7 @@ function TransitionTree:path_to(name)
   end
 end
 
----- Placeholder
+---- Least common ancestor of two nodes
 -- @param name1
 -- @param name2
 function TransitionTree:lca(name1, name2)
@@ -237,7 +290,7 @@ function TransitionTree:lca(name1, name2)
   return lca 
 end
 
----- Placeholder
+---- Navigate the tree calling forward and backward functions
 -- @param start
 -- @param _end
 function TransitionTree:navigate(start, _end)

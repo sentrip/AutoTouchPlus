@@ -154,15 +154,12 @@ function getattr(cls, value)
       return primary
     elseif mt then  
       local fallback = rawget(mt, value) 
-      if mt.__getters[value] then 
+      if mt.__getters and mt.__getters[value] then 
         return mt.__getters[value](cls, value)
       elseif mt.__getitem then
         return mt.__getitem(cls, value)
       elseif fallback then
         return fallback
-      else
-        --index method in class baseclass
-        return getmetatable(mt).__index(mt, value)
       end
     end
   end
