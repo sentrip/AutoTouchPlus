@@ -1,6 +1,15 @@
 ---- AutoTouchPlus core.
 -- @module core
 
+--Global variable patching
+abs = math.abs
+local _execute = os.execute
+os.execute = function(s) 
+  if rootDir then s = 'cd '..rootDir()..'; '..s end
+  return _execute(s)
+end
+
+
 --convert table to string with special cases for custom objects
 local function table2string(input)
   local m = getmetatable(input)

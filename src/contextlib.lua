@@ -49,6 +49,15 @@ function Exception.add_traceback(s)
   return s
 end
 
+--Some useful exceptions
+AssertionError = Exception('AssertionError')
+IOError = Exception('IOError')
+KeyError = Exception('KeyError')
+OSError = Exception('OSError')
+TypeError = Exception('TypeError')
+ValueError = Exception('ValueError')
+
+
 ---- Placeholder
 -- @param f 
 -- @param except 

@@ -1,5 +1,8 @@
 require("AutoTouchPlus")
 
+--check for wget
+assert(is(exe('dpkg-query -W wget')), 
+  'wget not installed\nEither install it or remove this check from test.lua (4-5)')
 -------------------------------AutoTouch mocking --------------------------- 
 alert = alert or print
 rootDir = rootDir or function() return '.' end
