@@ -216,6 +216,7 @@ function Screen:swipe(start, _end, speed)
     y = y + deltaY
     touchMove(2, x, y)
     usleep(16000)
+  end
   touchUp(2, x, y)
   return self
 end

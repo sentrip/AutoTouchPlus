@@ -178,6 +178,11 @@ failed = failed or test('core, math and string tests', {
     assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
     end,
   str = function()
+    assertEqual(str(1), '1', 'str number failed')
+    assertEqual(str('1'), '1', 'str string failed')
+    assertEqual(str({1,2}), '{1, 2}', 'table number failed')
+    assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
+    assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
     end,
   getattr = function()
     local A = class('A')

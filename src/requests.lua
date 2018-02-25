@@ -18,7 +18,7 @@ function Response:__init(request)
   self.ok = false
 end
 
-function Response:__str()
+function Response:__tostring()
   return string.format('<Response [%d]>', self.status_code)
 end
 

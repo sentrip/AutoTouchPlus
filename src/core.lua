@@ -109,7 +109,7 @@ function class(name, ...)
     if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
       return table2string(cls)
     else
-      return cls:__repr()
+      return class_repr(cls)
     end
   end
   
@@ -121,7 +121,6 @@ function class(name, ...)
     __index = getattr,
     __newindex = setattr,
     __repr = class_repr,
-    __str = class_str,
     -- convience methods
     copy = copy,
     isinstance = isinstance
@@ -137,7 +136,8 @@ function class(name, ...)
   classes[name] = setmetatable(c, {
       __call = constructor,
       __index = class_meta_index,
-      __newindex = class_meta_newindex
+      __newindex = class_meta_newindex,
+      __tostring = class_str,
     })
   return classes[name]
 end
@@ -512,13 +512,15 @@ end
 -- @return
 function str(input) 
   local m = getmetatable(input)
-  if m and input.__str then return input:__str()
-  elseif m and input.__repr then return input:__repr()
+  if m then
+    local _m = getmetatable(m)
+    if m.__tostring then return tostring(input)
+    elseif _m and _m.__tostring then return _m.__tostring(input) end
   elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
   elseif isType(input, 'nil') then return 'nil'
   elseif isType(input, 'string') then return input 
-  elseif isType(input, 'table') then return table2string(input)
-  else return tostring(input) end 
+  elseif isType(input, 'table') then return table2string(input) end
+  return repr(input)
 end
 
 
