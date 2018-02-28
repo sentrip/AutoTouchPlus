@@ -3,6 +3,7 @@
 
 --Global variable patching
 abs = math.abs
+unpack = table.unpack
 local _execute = os.execute
 os.execute = function(s) 
   if rootDir then s = 'cd '..rootDir()..'; '..s end
@@ -191,14 +192,10 @@ function setattr(cls, key, value)
   end
 end
 
---no unpack function in AutoTouch :( hence this hacky solution
-function unpack_(t) 
-  return load(string.format("return %s", table.concat(t, ',')))() 
-end
-
 ---- Copy an object
--- @param object 
--- @param deep
+-- @param object any table-like object
+-- @param deep whether to copy recursively
+-- @return copy of object at a new memory location
 function copy(object, deep) 
   --copy object attributes
   local c = {}
@@ -227,8 +224,8 @@ function eval(input)
 end
 
 ---- Unique integer representation of input
--- @param input 
--- @return integer
+-- @param input an integer, string or any object that has a __hash method
+-- @return integer unique integer representation of object
 function hash(input)
   local m = getmetatable(input)  
   if m and m.__hash then return input:__hash() end
@@ -308,8 +305,8 @@ function isinstance(klass, other)
 end
 
 ---- Get the maximum value of two or more values
--- @param ... 
--- @return
+-- @param ... any objects that can be compared with <, >, and ==
+-- @return maximum value of what was passed
 function max(...) 
   local args
   if is.table(...) then args = ... else args = {...} end
@@ -317,12 +314,12 @@ function max(...)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
   end
-  return math.max(unpack_(args))
+  return math.max(unpack(args))
 end
 
 ---- Get the minimum value of two or more values
--- @param ... 
--- @return
+-- @param ... any objects that can be compared with <, >, and ==
+-- @return minimum value of what was passed
 function min(...) 
   local args
   if is.table(...) then args = ... else args = {...} end
@@ -330,12 +327,12 @@ function min(...)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
   end
-  return math.min(unpack_(args))
+  return math.min(unpack(args))
 end
 
 ---- Numerical representation of input
--- @param input 
--- @return
+-- @param input any object that can be converted into a number
+-- @return numerical representation of input
 function num(input) 
   if is.num(input) then return input else return tonumber(input) end 
 end
@@ -483,16 +480,15 @@ function print(...)
 end
 
 ---- Pretty print a table
--- @param tbl 
--- @return
+-- @tparam table tbl 
 function pprint(tbl)
   print("\n{\n" .. traverseTable(tbl,{[tbl]=true},1, ',') .. "}")
 end
 
 
 ---- Simple string representation of an object
--- @param input 
--- @return
+-- @param input
+-- @return 
 function repr(input) 
   local m = getmetatable(input)
   if m and m.__repr then return input:__repr()
@@ -502,7 +498,7 @@ end
 
 ---- Sleep for a certain amount of seconds.
 -- The precision is +-0.1ms
--- @param seconds number of seconds to sleep for (can be a float) 
+-- @tparam number seconds number of seconds to sleep for
 function sleep(seconds) 
   seconds = (seconds^2)^0.5
   local remainder = seconds
@@ -516,9 +512,9 @@ function sleep(seconds)
 end
 
 
----- String representation of input (recursive too!)
--- @param input 
--- @return
+---- Convert an input into a string
+-- @param input any object
+-- @treturn string string representation of object
 function str(input) 
   local m = getmetatable(input)
   if m then
@@ -534,9 +530,9 @@ end
 
 
 
----- Reverse the order of the elements in an object
--- @param object
--- @return 
+---- Reverse the order of the elements in a table or list
+-- @param object object to reverse order of
+-- @treturn table copy of object with elements in reverse order
 function reversed(object)
   if is.str(object) then return object:reverse() end
   local result = list()

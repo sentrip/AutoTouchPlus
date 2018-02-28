@@ -8,9 +8,13 @@ local function _getType(name)
     name, name))
 end
 
----- Execute a shell command and return the result
--- @param cmd
--- @param split_output
+--- Execute a shell command and return the result
+-- @tparam string|table cmd Unix command to execute.
+-- String commands are passed directly to the shell.
+-- Table commands are concatenated with the space character.
+-- So exe({'ls', 'mydir'}), exe{'ls', 'mydir'} and exe('ls mydir') are all equivalent.
+-- @tparam boolean split_output if false then returns the entire stdout as a string, otherwise a table of lines
+-- @treturn table|string result of command in stdout
 function exe(cmd, split_output)
   if is.Nil(split_output) then split_output = true end
   if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
@@ -31,9 +35,9 @@ function exe(cmd, split_output)
 end
 
 ---- Copy a file or directory
--- @param src
--- @param dest
--- @param overwrite
+-- @tparam string src source to copy from (file or directory)
+-- @tparam string dest desination to copy to (file or directory, but has to be a directory if src is a directory)
+-- @tparam boolean overwrite whether to overwrite any existing files/directories 
 function fcopy(src, dest, overwrite) 
   if is.Nil(overwrite) then overwrite = true end
   local cmd = list{'cp'}
@@ -44,8 +48,12 @@ function fcopy(src, dest, overwrite)
 end
 
 ---- Find a file or directory
--- @param name
--- @param starting_directory
+-- @tparam string|table name name of file/directory to search for.
+-- If you wish to search for a directory then you must pass a table as name.
+-- If a table is passed then it must be of the format {type=name, start=starting_directory},
+-- where type is one of f, file, dir or d, and start is an optional value in the table.
+-- @tparam string starting_directory directory in which to begin search (can drastically increase speed)
+-- @treturn string absolute path if it exists, an empty string otherwise
 function find(name, starting_directory) 
   local _type = 'f'
   if is.table(name) then
@@ -64,41 +72,47 @@ function find(name, starting_directory)
   end
 
 ---- Check if a path is a directory
--- @param name
+-- @tparam string name path to check
+-- @treturn boolean is the path a directory
 function isDir(name) return _getType(name) == 'DIR' end
 
 ---- Check if a path is a file
--- @param name
+-- @tparam string name path to check
+-- @treturn boolean is the path a file
 function isFile(name) return _getType(name) == 'FILE' end
 
 ---- List the contents of a directory
--- @param dirname
+-- @tparam string dirname path of the directory
+-- @treturn table sorted table of file names found in dirname
 function listdir(dirname) return sorted(exe{'ls', dirname}) end
 
 ---- Check if a path exists
--- @param path
+-- @tparam string path path to check
+-- @treturn boolean does the path exist
 function pathExists(path) return _getType(path) ~= 'INVALID' end
 
 ---- Join one or more paths
--- @param ...
+-- @param ... file paths to join
+-- @treturn string concatenated path of all names with the correct number of /s
 function pathJoin(...) 
   local values
   if is.table(...) then values = ... else values = {...} end
   local s = string.gsub(table.concat(values, '/'), '/+', '/')
   return s
-  --('/'):join(values):replace('/+', '/') 
 end
 
 ---- Read a single line from a file
--- @param f
--- @param lineNumber
+-- @tparam file|string f file or filename (see @{readLines})
+-- @tparam number lineNumber line number to read (starts at 1)
+-- @treturn string contents of line at lineNumber
 function readLine(f, lineNumber) 
   local lines = readLines(f)
   return lines[lineNumber] 
 end 
 
 ---- Read all the lines in a file
--- @param f
+-- @tparam file|string f file object or file name. If a file object is passed, then it is not closed.
+-- @treturn table strings of each line with the newline character removed
 function readLines(f) 
   local lines = list()
   local function read(fle) for line in fle:lines() do lines:append(line) end end
@@ -107,8 +121,9 @@ function readLines(f)
   return lines
 end
 
----- Get size in bytes of file or directory
--- @param name
+---- Get the size of a file or directory
+-- @param name path name to check size of
+-- @treturn number size of file/directory at path in bytes
 function sizeof(name) 
   local result = exe(string.format('du %s', name))
   local size = 0
@@ -117,9 +132,9 @@ function sizeof(name)
   end
 
 ---- Write a single line to a file
--- @param line
--- @param lineNumber
--- @param filename
+-- @tparam string line data to write to the file
+-- @tparam number lineNumber line number at which to write the line
+-- @tparam string filename name of file to write to 
 function writeLine(line, lineNumber, filename) 
   local lines = readLines(filename)
   lines[lineNumber] = line
@@ -127,9 +142,9 @@ function writeLine(line, lineNumber, filename)
 end 
 
 ---- Write multiple lines to a file
--- @param lines
--- @param filename
--- @param mode
+-- @tparam table lines strings of each line
+-- @tparam string filename name of file to write to
+-- @tparam string mode write mode (uses same argument as io.open)
 function writeLines(lines, filename, mode) 
   local function write(f) 
     for i, v in pairs(lines) do f:write(v .. '\n') end 

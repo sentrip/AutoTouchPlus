@@ -9,7 +9,7 @@ function Pixel:__init(x, y, color)
   self.x = x
   self.y = y
   if isType(color, 'table') then
-    self.color = rgbToInt(unpack_(color))
+    self.color = rgbToInt(unpack(color))
     self.rgb = color
   else
     self.color = color
@@ -32,7 +32,8 @@ function Pixel:__eq(pixel)
 end
 
 ---- Get the absolute x, y location of the pixel in a screen
--- @param screen
+-- @tparam Screen screen instance to check for pixel
+-- @return x, y position of pixel relative to screen 
 function Pixel:abs_position(screen)
   local x, y
   if self.x < 0 then x = screen.right + self.x
@@ -43,7 +44,8 @@ function Pixel:abs_position(screen)
 end
 
 ---- Check if the pixel is in a screen
--- @param screen
+-- @tparam Screen screen instance to check for pixel
+-- @treturn boolean is the pixel visible on the screen
 function Pixel:in_(screen)
   return getColor(self:abs_position(screen)) == self.color
 end
@@ -86,7 +88,8 @@ function Pixels:__eq(pixels)
 end
 
 ---- Check if all the pixels are in a screen
--- @param screen
+-- @tparam Screen screen instance to check for pixels
+-- @treturn boolean are all the pixels visible on the screen
 function Pixels:in_(screen)
   local positions = {}
   for i, pixel in pairs(self.pixels) do 
@@ -97,7 +100,8 @@ end
 
 
 ---- Count how many of the pixels are in a screen
--- @param screen
+-- @tparam Screen screen instance to check for pixels
+-- @treturn number how many pixels are visible on the screen
 function Pixels:count(screen)
   local positions = {}
   for i, pixel in pairs(self.pixels) do 
@@ -135,7 +139,8 @@ function Screen:__init(width, height, xOffSet, yOffSet)
 end
 
 ---- Check if the screen contains a pixel/set of pixels
--- @param pixel
+-- @tparam Pixel|Pixels pixel Pixel(s) instance to check position(s) of
+-- @treturn boolean does the screen contain the pixel(s)
 function Screen:contains(pixel)
   return pixel:in_(self)
 end
@@ -145,6 +150,7 @@ end
 -- @param y
 -- @param times
 -- @param interval
+-- @treturn Screen screen instance for method chaining
 function Screen:tap(x, y, times, interval)
   local pixel
   if isType(x, 'number') then
@@ -160,8 +166,9 @@ function Screen:tap(x, y, times, interval)
 end
 
 ---- Tap the screen if a pixel/set of pixels is visible
--- @param pixel pixel to search for
+-- @tparam Pixel pixel pixel(s) to search for
 -- @param ... arguments for @{screen.Screen.tap}
+-- @treturn Screen screen instance for method chaining
 function Screen:tap_if(pixel, ...)
   if self:contains(pixel) then
     self:tap(...)
@@ -172,6 +179,7 @@ end
 ---- Tap the screen while a pixel/set of pixels is visible
 -- @param pixel pixel(s) to search for
 -- @param ... arguments for @{screen.Screen.tap}
+-- @treturn Screen screen instance for method chaining
 function Screen:tap_while(pixel, ...)
   while self:contains(pixel) do
     self:tap(...)
@@ -183,6 +191,7 @@ end
 ---- Tap the screen until a pixel/set of pixels is visible
 -- @param pixel pixel(s) to search for
 -- @param ... arguments for @{screen.Screen.tap}
+-- @treturn Screen screen instance for method chaining
 function Screen:tap_until(pixel, ...)
   repeat  
     self:tap(...)
@@ -192,6 +201,10 @@ function Screen:tap_until(pixel, ...)
 end
 
 ---- Swipe the screen
+-- @tparam Pixel|string start pixel at which to start the swipe, or one of 'left, 'right', 'top', 'bottom'
+-- @tparam Pixel|string _end pixel at which to end the swipe, or one of 'left, 'right', 'top', 'bottom'
+-- @tparam number speed swipe speed (1-10)
+-- @treturn Screen screen instance for method chaining
 function Screen:swipe(start, _end, speed)
   if is.str(start) then
     assert(self.mid[start], 

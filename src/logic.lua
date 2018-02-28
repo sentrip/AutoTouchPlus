@@ -16,7 +16,7 @@ local type_index = {
 ---- Check if an object is of one or more types
 -- @param object object to check type of
 -- @param ... types to check for
--- @return boolean
+-- @treturn boolean is the object type in the given types
 function isType(object, ...)
   local types = {...}
   if #types == 1 then return type(object) == types[1] end
@@ -30,7 +30,7 @@ end
 ---- Check if an object is not of one or more types
 -- @param object object to check type of
 -- @param ... types to check for
--- @return boolean
+-- @treturn boolean is the object type not in the given types
 function isNotType(object, ...)
   return not isType(object, ...)
 end
@@ -84,9 +84,9 @@ Not = setmetatable({}, {
   })
 
 ---- Check if all values in two tables are equal (recursive-equal)
--- @param value1 table for equality check
--- @param value2 table for equality check
--- @return boolean
+-- @tparam table value1 table for equality check
+-- @tparam table value2 table for equality check
+-- @treturn boolean all values in both tables are recursively equal
 function requal(value1, value2)
   local all_equal = type(value1) == type(value2)
   if all_equal and not is.table(value1) then 
@@ -134,9 +134,9 @@ end
 -- @section math
 
 ---- Count occurrences of value in input
--- @param value
--- @param input
--- @return
+-- @param value any object
+-- @param input any object that can contain value
+-- @treturn number how many of value is in input
 function count(value, input) 
   local total = 0 
   for i, v in pairs(input) do if v == value then total = total + 1 end end
@@ -144,14 +144,14 @@ function count(value, input)
   end
 
 ---- Floor division of x by y
--- @param x
--- @param y
--- @return
+-- @tparam number x the numerator
+-- @tparam number y the denominator
+-- @treturn number integer result of x / y
 function div(x, y) return math.floor(x / y) end
 
 ---- Length of object (python style!)
--- @param input 
--- @return
+-- @param input any object 
+-- @treturn number length of the object
 function len(input) 
   if is.Nil(input) then return 0
   elseif is.num(input) or is.Bool(input) then return 1
@@ -163,26 +163,26 @@ function len(input)
 end
 
 ---- Round number to places (python style!)
--- @param num
--- @param places
--- @return
+-- @tparam number num number to round
+-- @tparam number places number of decimal places to round to
+-- @treturn number num rounded to places
 function round(num, places) 
   local value = num * 10^places
   if value - math.floor(value) >= 0.5 then value = value + 1 end
   return math.floor(value) / 10 ^ places
 end
 
----- Sign of a number 
--- @param n 
--- @return
+---- Sign of a number
+-- @tparam number n any number
+-- @treturn 1|-1 sign of the number
 function sign(n) 
   if n == 0 then return 1 
   else return math.floor(n / math.abs(n)) end 
 end
 
 ---- Sum of an object (python style!)
--- @param object 
--- @return
+-- @tparam table object containing numbers 
+-- @treturn number result of adding all numbers in the object
 function sum(object) 
   local total = 0
   for i, v in pairs(object) do total = total + v end

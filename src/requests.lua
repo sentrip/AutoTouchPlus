@@ -22,15 +22,16 @@ function Response:__tostring()
   return string.format('<Response [%d]>', self.status_code)
 end
 
----- PlaceHolder
+---- Iterate over the lines in the text of a response
+-- @return iterator of lines in response text
 function Response:iter_lines()
   local i, v
   local lines = self.text:split('\n')
   return function() i, v = next(lines, i) return v end
 end
 
----- PlaceHolder
--- @return
+---- Convert a json formatted response text to a lua table
+-- @treturn table dictionary-like table of response
 function Response:json()
 --  local clean = self.text:replace('[\n\t\r]', ''):replace('[ ]+', ' ')
 --  clean = clean:replace('"(.+)": ', function(m) return m..'=' end)
@@ -40,8 +41,8 @@ function Response:json()
   return json.decode(self.text)
 end
 
----- PlaceHolder
--- @raise
+---- Check if the request was successful
+-- @raise error if the response status code is not 200
 function Response:raise_for_status()
   if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
 end
@@ -55,7 +56,7 @@ local function parse_log(f, request, response)
   local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
   local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
 
-  _, response.status_code, response.reason = unpack_(resp[1]:split(' '))
+  _, response.status_code, response.reason = unpack(resp[1]:split(' '))
   response.status_code = num(response.status_code)
   response.ok = response.status_code < 400
 
@@ -142,7 +143,7 @@ function _requests.make_request(request)
     assert(request.proxies.http or request.proxies.https, 'Incorrect proxy format')
     local usr, pwd
     for k, v in pairs(request.proxies) do
-      if isin('@', v) then usr, pwd = unpack_(v:split('//')[2]:split('@')[1]:split(':')) end
+      if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
     end
   else cmd:append('--no-proxy') end
   -- user agent
@@ -185,42 +186,42 @@ end
 requests = {}
 
 ---- Make a DELETE request
--- @param url see @{requests.request}
--- @param args see @{requests.request}
--- @return <Response>
+-- @tparam string url url to request (see @{requests.request})
+-- @tparam table args request arguments (see @{requests.request})
+-- @treturn Response
 function requests.delete(url, args)
   return requests.request("DELETE", url, args)
 end
 
 ---- Make a GET request
--- @param url see @{requests.request}
--- @param args see @{requests.request}
--- @return <Response>
+-- @tparam string url url to request (see @{requests.request})
+-- @tparam table args request arguments (see @{requests.request})
+-- @treturn Response
 function requests.get(url, args)
   return requests.request("GET", url, args)
 end
 
 ---- Make a POST request
--- @param url see @{requests.request}
--- @param args see @{requests.request}
--- @return <Response>
+-- @tparam string url url to request (see @{requests.request})
+-- @tparam table args request arguments (see @{requests.request})
+-- @treturn Response
 function requests.post(url, args)
   return requests.request("POST", url, args)
 end
 
 ---- Make a PUT request
--- @param url see @{requests.request}
--- @param args see @{requests.request}
--- @return <Response>
+-- @tparam string url url to request (see @{requests.request})
+-- @tparam table args request arguments (see @{requests.request})
+-- @treturn Response
 function requests.put(url, args)
   return requests.request("PUT", url, args)
 end
 
 ---- Make an HTTP request
--- @param method one of GET, POST, PUT, DELETE
--- @param url url to request
--- @param args request arguments
--- @return <Response>
+-- @tparam string method one of GET, POST, PUT, DELETE
+-- @tparam string url url to request
+-- @tparam table args request arguments
+-- @treturn Response
 function requests.request(method, url, args)
   local request
   if is.table(url) then 
