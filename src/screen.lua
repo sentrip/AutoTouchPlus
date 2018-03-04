@@ -163,7 +163,7 @@ function Screen:tap(x, y, times, interval)
     pixel, times, interval = x, y, times
   end
   for i=1, times or 1 do
-    tap(pixel.x, pixel.y)
+    tap(pixel:absolute_position())
     if interval then usleep(interval * 10 ^ 6) end
   end
   return self
@@ -185,7 +185,7 @@ end
 function Screen:tap_if(condition, ...)
   local check = create_check(self, condition)
   if check() then
-    self:tap(...)
+    self:tap(... or condition)
   end
   return self
 end
@@ -197,7 +197,7 @@ end
 function Screen:tap_while(condition, ...)
   local check = create_check(self, condition)
   while check() do
-    self:tap(...)
+    self:tap(... or condition)
     usleep(self.check_interval)
   end
   return self
@@ -210,7 +210,7 @@ end
 function Screen:tap_until(condition, ...)
   local check = create_check(self, condition)
   repeat  
-    self:tap(...)
+    self:tap(... or condition)
     usleep(self.check_interval)
   until check()
   return self
