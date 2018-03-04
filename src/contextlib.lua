@@ -201,13 +201,6 @@ function open(name, mode)
   assert(f:close())
 end
 
----- Placeholder
--- @param object
-function closing(object)
-  yield(object)
-  object:close()
-end
-
 
 ---- Placeholder
 -- @param ...
@@ -225,4 +218,3 @@ end
   
 --Context manager function wrapping, see contextmanager function for details
 open = contextmanager(open)
-closing = contextmanager(closing)

@@ -1347,10 +1347,6 @@ function open(name, mode)
   yield(f)
   assert(f:close())
 end
-function closing(object)
-  yield(object)
-  object:close()
-end
 function suppress(...)
   local errors = {... or '.*'}
   local Context = ContextManager()
@@ -1361,7 +1357,6 @@ function suppress(...)
   return Context
 end
 open = contextmanager(open)
-closing = contextmanager(closing)
 local type_index = {
   ['str'] = 'string',
   ['num'] = 'number',
