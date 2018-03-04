@@ -1116,7 +1116,7 @@ function test(description, tests, setup, teardown)
         print(description) 
         failed = true 
       end
-      print(string.gsub(err, "(.*):([0-9]+): ", function(path, n) 
+      print(string.gsub(err or 'Error', "(.*):([0-9]+): ", function(path, n) 
             return string.format('\n    FAILURE in %s -> %s @ %d\n    ==> ', test_name, path, n) 
             end) .. '\n') 
     end 
