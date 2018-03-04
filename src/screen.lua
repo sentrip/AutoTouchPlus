@@ -1,6 +1,9 @@
 --- Screen observation and application navigation helpers for AutoTouch
 -- @module screen
 
+--Basic colors
+WHITE = 16777215
+
 ---- Pixel object
 -- @type Pixel
 Pixel = class('Pixel')
@@ -8,6 +11,7 @@ Pixel = class('Pixel')
 function Pixel:__init(x, y, color)
   self.x = x
   self.y = y
+  color = color or WHITE
   if isType(color, 'table') then
     self.color = rgbToInt(unpack(color))
     self.rgb = color
