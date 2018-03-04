@@ -163,7 +163,7 @@ function Screen:tap(x, y, times, interval)
     pixel, times, interval = x, y, times
   end
   for i=1, times or 1 do
-    tap(pixel:absolute_position())
+    tap(pixel:abs_position(self))
     if interval then usleep(interval * 10 ^ 6) end
   end
   return self
@@ -211,6 +211,17 @@ function Screen:tap_until(condition, ...)
   local check = create_check(self, condition)
   repeat  
     self:tap(... or condition)
+    usleep(self.check_interval)
+  until check()
+  return self
+end
+
+---- Wait until a pixel/set of pixels is visible
+-- @tparam Pixel|func condition see @{screen.Screen.tap_if}
+-- @treturn Screen screen instance for method chaining
+function Screen:wait_for(condition)
+  local check = create_check(self, condition)
+  while do  
     usleep(self.check_interval)
   until check()
   return self
