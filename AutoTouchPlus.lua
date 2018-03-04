@@ -604,7 +604,7 @@ function Screen:tap_until(condition, ...)
 end
 function Screen:wait_for(condition)
   local check = create_check(self, condition)
-  while do  
+  repeat
     usleep(self.check_interval)
   until check()
   return self
