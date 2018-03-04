@@ -5,6 +5,7 @@
 -- @copyright Djordje Pepic 2018
 -- @usage require("AutoTouchPlus")
 abs = math.abs
+unpack = table.unpack
 local _execute = os.execute
 os.execute = function(s) 
   if rootDir then s = 'cd '..rootDir()..'; '..s end
@@ -145,9 +146,6 @@ function setattr(cls, key, value)
     end
   end
 end
-function unpack_(t) 
-  return load(string.format("return %s", table.concat(t, ',')))() 
-end
 function copy(object, deep) 
   local c = {}
   for k, v in pairs(object) do
@@ -233,7 +231,7 @@ function max(...)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
   end
-  return math.max(unpack_(args))
+  return math.max(unpack(args))
 end
 function min(...) 
   local args
@@ -242,7 +240,7 @@ function min(...)
   if mt and mt.__name == 'set' then -- special case for set objects
     args = args:values() 
   end
-  return math.min(unpack_(args))
+  return math.min(unpack(args))
 end
 function num(input) 
   if is.num(input) then return input else return tonumber(input) end 
@@ -1130,7 +1128,7 @@ function Pixel:__init(x, y, color)
   self.x = x
   self.y = y
   if isType(color, 'table') then
-    self.color = rgbToInt(unpack_(color))
+    self.color = rgbToInt(unpack(color))
     self.rgb = color
   else
     self.color = color
@@ -1237,24 +1235,34 @@ function Screen:tap(x, y, times, interval)
   end
   return self
 end
-function Screen:tap_if(pixel, ...)
-  if self:contains(pixel) then
+local function create_check(screen, condition)
+  if is.func(condition) then
+    return condition
+  else
+    return function() return screen:contains(condition) end
+  end
+end
+function Screen:tap_if(condition, ...)
+  local check = create_check(self, condition)
+  if check() then
     self:tap(...)
   end
   return self
 end
-function Screen:tap_while(pixel, ...)
-  while self:contains(pixel) do
+function Screen:tap_while(condition, ...)
+  local check = create_check(self, condition)
+  while check() do
     self:tap(...)
     usleep(self.check_interval)
   end
   return self
 end
-function Screen:tap_until(pixel, ...)
+function Screen:tap_until(condition, ...)
+  local check = create_check(self, condition)
   repeat  
     self:tap(...)
     usleep(self.check_interval)
-  until self:contains(pixel)
+  until check()
   return self
 end
 function Screen:swipe(start, _end, speed)
@@ -2171,7 +2179,7 @@ local function parse_log(f, request, response)
   assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
   local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
   local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
-  _, response.status_code, response.reason = unpack_(resp[1]:split(' '))
+  _, response.status_code, response.reason = unpack(resp[1]:split(' '))
   response.status_code = num(response.status_code)
   response.ok = response.status_code < 400
   local k, v
@@ -2242,7 +2250,7 @@ function _requests.make_request(request)
     assert(request.proxies.http or request.proxies.https, 'Incorrect proxy format')
     local usr, pwd
     for k, v in pairs(request.proxies) do
-      if isin('@', v) then usr, pwd = unpack_(v:split('//')[2]:split('@')[1]:split(':')) end
+      if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
     end
   else cmd:append('--no-proxy') end
   if is(request.user_agent) then

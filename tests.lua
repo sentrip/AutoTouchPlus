@@ -163,15 +163,15 @@ failed = failed or test('core, math and string tests', {
     end,
   max = function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
-    assertEqual(math.max(unpack_(t)), max(t), 'table max not same as math.max')
-    assertEqual(math.max(unpack_(t)), max(l), 'list max not same as math.max')
-    assertEqual(math.max(unpack_(t)), max(s), 'set max not same as math.max')
+    assertEqual(math.max(unpack(t)), max(t), 'table max not same as math.max')
+    assertEqual(math.max(unpack(t)), max(l), 'list max not same as math.max')
+    assertEqual(math.max(unpack(t)), max(s), 'set max not same as math.max')
     end,
   min = function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
-    assertEqual(math.min(unpack_(t)), min(t), 'table min not same as math.min')
-    assertEqual(math.min(unpack_(t)), min(l), 'list min not same as math.min')
-    assertEqual(math.min(unpack_(t)), min(s), 'set min not same as math.min')
+    assertEqual(math.min(unpack(t)), min(t), 'table min not same as math.min')
+    assertEqual(math.min(unpack(t)), min(l), 'list min not same as math.min')
+    assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
     end,
   num = function()
     assert(is.num(num(1)), 'Converted int to non number')

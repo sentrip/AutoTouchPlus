@@ -165,23 +165,34 @@ function Screen:tap(x, y, times, interval)
   return self
 end
 
+--creates a checker function from a function or pixel
+local function create_check(screen, condition)
+  if is.func(condition) then
+    return condition
+  else
+    return function() return screen:contains(condition) end
+  end
+end
+
 ---- Tap the screen if a pixel/set of pixels is visible
--- @tparam Pixel pixel pixel(s) to search for
+-- @tparam Pixel|func condition pixel(s) to search for or an argumentless function hat returns a boolean
 -- @param ... arguments for @{screen.Screen.tap}
 -- @treturn Screen screen instance for method chaining
-function Screen:tap_if(pixel, ...)
-  if self:contains(pixel) then
+function Screen:tap_if(condition, ...)
+  local check = create_check(self, condition)
+  if check() then
     self:tap(...)
   end
   return self
 end
 
 ---- Tap the screen while a pixel/set of pixels is visible
--- @param pixel pixel(s) to search for
+-- @tparam Pixel|func condition see @{screen.Screen.tap_if}
 -- @param ... arguments for @{screen.Screen.tap}
 -- @treturn Screen screen instance for method chaining
-function Screen:tap_while(pixel, ...)
-  while self:contains(pixel) do
+function Screen:tap_while(condition, ...)
+  local check = create_check(self, condition)
+  while check() do
     self:tap(...)
     usleep(self.check_interval)
   end
@@ -189,14 +200,15 @@ function Screen:tap_while(pixel, ...)
 end
 
 ---- Tap the screen until a pixel/set of pixels is visible
--- @param pixel pixel(s) to search for
+-- @tparam Pixel|func condition see @{screen.Screen.tap_if}
 -- @param ... arguments for @{screen.Screen.tap}
 -- @treturn Screen screen instance for method chaining
-function Screen:tap_until(pixel, ...)
+function Screen:tap_until(condition, ...)
+  local check = create_check(self, condition)
   repeat  
     self:tap(...)
     usleep(self.check_interval)
-  until self:contains(pixel)
+  until check()
   return self
 end
 
