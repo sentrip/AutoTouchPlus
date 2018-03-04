@@ -87,7 +87,7 @@ end
 ---        })
 function test(description, tests, setup, teardown) 
   local failed = false
-  local test_vars
+  local test_vars, msg
   table.sort(tests)
   for test_name, tst in pairs(tests) do 
     test_vars = {}
@@ -99,7 +99,8 @@ function test(description, tests, setup, teardown)
         print(description) 
         failed = true 
       end
-      print(string.gsub(err or "Error", "(.*):([0-9]+): ", function(path, n) 
+      msg = err or Exception.add_traceback("Error", true)
+      print(string.gsub(msg, "(.*):([0-9]+): ", function(path, n) 
             return string.format('\n    FAILURE in %s -> %s @ %d\n    ==> ', test_name, path, n) 
             end) .. '\n') 
     end 

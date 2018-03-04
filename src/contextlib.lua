@@ -30,7 +30,7 @@ end
 
 ---- Placeholder
 -- @param s
-function Exception.add_traceback(s)
+function Exception.add_traceback(s, force)
   local start = list()
   local traceback = debug.traceback()
   if traceback then 
@@ -42,7 +42,7 @@ function Exception.add_traceback(s)
         start:append(i)
       end 
     end
-    if not lines:contains("\t[C]: in function 'error'") then return s end
+    if not lines:contains("\t[C]: in function 'error'") and not force then return s end
     lines = lines(start[-2])
     s = s..'\nstack traceback:\n'..table.concat(lines, '\n') 
   end

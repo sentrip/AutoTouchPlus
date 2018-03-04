@@ -438,7 +438,7 @@ function assertRaises(exception, func, msg)
 end
 function test(description, tests, setup, teardown) 
   local failed = false
-  local test_vars
+  local test_vars, msg
   table.sort(tests)
   for test_name, tst in pairs(tests) do 
     test_vars = {}
@@ -450,7 +450,8 @@ function test(description, tests, setup, teardown)
         print(description) 
         failed = true 
       end
-      print(string.gsub(err or "Error", "(.*):([0-9]+): ", function(path, n) 
+      msg = err or Exception.add_traceback("Error", true)
+      print(string.gsub(msg, "(.*):([0-9]+): ", function(path, n) 
             return string.format('\n    FAILURE in %s -> %s @ %d\n    ==> ', test_name, path, n) 
             end) .. '\n') 
     end 
@@ -1221,7 +1222,7 @@ end
 function Exception:__call(message)
   return Exception(self.type, message)
 end
-function Exception.add_traceback(s)
+function Exception.add_traceback(s, force)
   local start = list()
   local traceback = debug.traceback()
   if traceback then 
@@ -1233,7 +1234,7 @@ function Exception.add_traceback(s)
         start:append(i)
       end 
     end
-    if not lines:contains("\t[C]: in function 'error'") then return s end
+    if not lines:contains("\t[C]: in function 'error'") and not force then return s end
     lines = lines(start[-2])
     s = s..'\nstack traceback:\n'..table.concat(lines, '\n') 
   end
