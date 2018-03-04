@@ -1235,7 +1235,7 @@ function Exception.add_traceback(s, force)
       end 
     end
     if not lines:contains("\t[C]: in function 'error'") and not force then return s end
-    lines = lines(start[-2])
+    if not force then lines = lines(start[-2]) end
     s = s..'\nstack traceback:\n'..table.concat(lines, '\n') 
   end
   return s
