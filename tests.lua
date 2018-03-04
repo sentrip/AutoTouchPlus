@@ -835,19 +835,6 @@ failed = failed or test('contextlib tests', {
     assertEqual(readLines('_tmp_tst/t.txt'), list{'hello'}, 
       'with open did not write to file')
     end,
-  closing = function(self)
-    local fl = io.open('_tmp_tst/t.txt', 'w')
-    with(closing(fl), function(f) f:write('hello') end)
-    assert(type(self.l[1] == 'userdata'), 'with open did not open a file')
-    assertRaises(
-      'attempt to use a closed file',  
-      function() self.l[1]:close() end, 
-      'with open did not close file after operation'
-      )
-    assert(isFile('_tmp_tst/t.txt'), 'open did not create file')
-    assertEqual(readLines('_tmp_tst/t.txt'), list{'hello'}, 
-      'with open did not write to file')
-    end,
   suppress = function()
     assertEqual(with(suppress(), function() error(ValueError) end), nil,
       'Empty suppress raised error')
@@ -975,7 +962,7 @@ failed = failed or test('system tests', {
   find = function()
     assertEqual(find('tests.lua'), './tests.lua', 
       'find returned incorrect file path')
-    assertEqual(find{dir='src'}, './src', 
+    assertEqual(find{dir='_tmp_tst'}, './_tmp_tst', 
       'find returned incorrect directory path')
     end,
   exe = function() 
