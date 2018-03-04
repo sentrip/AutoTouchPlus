@@ -127,8 +127,12 @@ end
 Screen = class('Screen')
 
 function Screen:__init(width, height, xOffSet, yOffSet)
-  self.width = width
+  if is.Nil(width) then
+    self.width, self.height = getScreenResolution()
+  else
+    self.width = width
   self.height = height
+  end
   self.x = xOffSet or 0
   self.y = yOffSet or 0
   self.right = self.x + self.width
