@@ -450,7 +450,7 @@ function test(description, tests, setup, teardown)
         print(description) 
         failed = true 
       end
-      print(string.gsub(err, "(.*):([0-9]+): ", function(path, n) 
+      print(string.gsub(err or "Error", "(.*):([0-9]+): ", function(path, n) 
             return string.format('\n    FAILURE in %s -> %s @ %d\n    ==> ', test_name, path, n) 
             end) .. '\n') 
     end 
@@ -1213,7 +1213,7 @@ function Exception:__init(_type, message)
   self.message = message or ''
 end
 function Exception:__tostring()
-  return self.add_traceback('<'..self.type..'> '..self.message)
+  return Exception.add_traceback('<'..self.type..'> '..self.message)
 end
 function Exception:__repr()
   return tostring(self)
@@ -1233,9 +1233,9 @@ function Exception.add_traceback(s)
         start:append(i)
       end 
     end
-    if count > 3 then return s end
+    if not lines:contains("\t[C]: in function 'error'") then return s end
     lines = lines(start[-2])
-    s = s..'\nstack traceback:\n'..('\n'):join(lines) 
+    s = s..'\nstack traceback:\n'..table.concat(lines, '\n') 
   end
   return s
 end

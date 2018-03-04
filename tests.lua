@@ -878,17 +878,16 @@ failed = failed or test('contextlib tests', {
   )
 
 failed = failed or test('requests tests', {
---  get_json = function()
---    local resp = requests.get('http://httpbin.org/ip')
---    assert(resp, 'Json request did not return response')
---    local j = resp:json()
---    assert(j.origin, 'Incorrect json returned')
---  end,
+  get_json = function()
+    local resp = requests.get('http://httpbin.org/ip')
+    assert(resp, 'Json request did not return response')
+    local j = resp:json()
+    assert(j.origin, 'Incorrect json returned')
+  end,
 --  get_text = function()
 --    local txt
---    local base = 'https:/github.com/sentrip/AutoTouchPlus'
---    local url = base..'/blob/master/AutoTouchPlus/AutoTouchPlus.lua'
---    local resp = requests.get{url, params={raw=1}, verify=false}
+--    local url = 'https:/raw.githubusercontent.com/sentrip/AutoTouchPlus/master/AutoTouchPlus.lua'
+--    local resp = requests.get{url, verify=false}
 --    assert(resp, 'Text request did not return response')
 --    with(open('AutoTouchPlus.lua'), function(f) txt = f:read('*a') end)
 --    assertEqual(txt, resp.text, 'Incorrect text returned')
