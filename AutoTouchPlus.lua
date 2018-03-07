@@ -1599,6 +1599,9 @@ function _requests.make_request(request)
   if is(request.user_agent) then
     cmd:extend{'-U', request.headers.user_agent}
   end
+  if isType(request.data, 'string') then
+    cmd:append("--header='"..'Content-Length'..': '..str(len(request.data).."'")
+  end
   if is(request.headers) then
     for k, v in pairs(request.headers) do 
       cmd:append("--header='"..k..': '..str(v).."'")
