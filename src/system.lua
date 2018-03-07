@@ -30,7 +30,7 @@ function exe(cmd, split_output)
   if code ~= 0 then
     return data, status, code
   else
-    return data
+    return data or ''
   end
 end
 

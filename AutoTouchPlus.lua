@@ -1576,10 +1576,10 @@ function _requests.urlencode(params)
 end
 function _requests.make_request(request)
   local cmd = list{'wget', '--method', request.method:upper()}
-  if request.verify == false then
+  if (request.url:startswith('https') and not request.verify) or request.verify == false then
     cmd:append('--no-check-certificate')
   end
-  if is(request.data) then
+  if is(request.data) and isType(request.data, 'table') then
     local fle = request.data[1] or _requests.tbody
     cmd:extend{'--body-file', fle}
   end
@@ -1674,7 +1674,7 @@ function exe(cmd, split_output)
   if code ~= 0 then
     return data, status, code
   else
-    return data
+    return data or ''
   end
 end
 function fcopy(src, dest, overwrite) 

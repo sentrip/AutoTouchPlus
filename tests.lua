@@ -987,7 +987,7 @@ failed = failed or test('system tests', {
     end,
   pathExists = function()
     assert(not pathExists('randompath_sdas'), 'Invalid path exists')
-    assert(pathExists('/usr'), '/usr does not exist')
+    assert(pathExists('/etc'), '/usr does not exist')
     end,
   readLine = function() 
     local line = readLine('_tmp_tst/t.txt', 2)

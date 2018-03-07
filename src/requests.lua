@@ -123,11 +123,11 @@ end
 function _requests.make_request(request)
   local cmd = list{'wget', '--method', request.method:upper()}
   --ssl verification
-  if request.verify == false then
+  if (request.url:startswith('https') and not request.verify) or request.verify == false then
     cmd:append('--no-check-certificate')
   end
   -- request data
-  if is(request.data) then
+  if is(request.data) and isType(request.data, 'table') then
     local fle = request.data[1] or _requests.tbody
     cmd:extend{'--body-file', fle}
   end
