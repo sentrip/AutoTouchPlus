@@ -1553,7 +1553,6 @@ function _requests.check_data(request)
   elseif isType(request.data, 'table') and not request.data[1] then 
     assert(requal(request.data, json.decode(json.encode(request.data))),
       'Incorrect json formatting')
-    request.data = json.encode(request.data)
   end
 end
 function _requests.check_url(request) 
@@ -1606,19 +1605,26 @@ function _requests.make_request(request)
   else request.headers = {} end
   if isType(request.data, 'string') then 
     local d = _requests.urlencode(request.data)
-    with(open(_requests.tbody, 'wb'), 
-      function(f) f:write(d) end)
-    cmd:append("--header='"..'Content-Length'..': '..str(len(d).."'")
+    with(open(_requests.tbody, 'wb'), function(f) 
+        f:write(d) 
+        end)
+    cmd:append("--header='"..'Content-Length'..': '..str(len(d)).."'")
   end
   cmd:extend{"'"..request.url.."'", '-d'}
   cmd:extend{'--output-document', _requests.tdata}
   cmd:extend{'--output-file', _requests.tlog}
-  exe(cmd)
   local response = Response(request)
-  with(open(_requests.tdata, 'rb'), 
-    function(f) response.text = f:read('*all') end)
-  with(open(_requests.tlog), 
-    function(f) parse_log(f, request, response) end)
+  try(
+   function() 
+      exe(cmd)
+      with(open(_requests.tdata, 'rb'), 
+        function(f) response.text = f:read('*all') end)
+      with(open(_requests.tlog), 
+        function(f) parse_log(f, request, response) end)
+   end,
+   except(function(err) 
+       end)
+  )
   if isType(request.data, 'string') then
     exe{'rm', _requests.tbody}
   end
