@@ -151,9 +151,6 @@ function _requests.make_request(request)
     cmd:extend{'-U', request.headers.user_agent}
   end
   -- headers
-  if isType(request.data, 'string') then
-    cmd:append("--header='"..'Content-Length'..': '..str(len(request.data).."'")
-  end
   if is(request.headers) then
     for k, v in pairs(request.headers) do 
       cmd:append("--header='"..k..': '..str(v).."'")
@@ -161,8 +158,10 @@ function _requests.make_request(request)
   else request.headers = {} end
   -- output options
   if isType(request.data, 'string') then 
+    local d = _requests.urlencode(request.data)
     with(open(_requests.tbody, 'wb'), 
-      function(f) f:write(_requests.urlencode(request.data)) end)
+      function(f) f:write(d) end)
+    cmd:append("--header='"..'Content-Length'..': '..str(len(d).."'")
   end
   cmd:extend{"'"..request.url.."'", '-d'}
   cmd:extend{'--output-document', _requests.tdata}
