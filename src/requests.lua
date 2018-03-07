@@ -81,8 +81,7 @@ end
 --Web requesting and data parsing
 local _requests = {
   tdata = '_response_data',
-  tlog = '_response_log',
-  tbody = '_request_body'
+  tlog = '_response_log'
 }
 
 --checks for correct json format in case a table is passed as data
@@ -127,9 +126,12 @@ function _requests.make_request(request)
     cmd:append('--no-check-certificate')
   end
   -- request data
-  if is(request.data) and isType(request.data, 'table') then
-    local fle = request.data[1] or _requests.tbody
-    cmd:extend{'--body-file', fle}
+  if is(request.data) then
+    if is.str(request.data) then
+      cmd:extend{'--body-data', request.data}
+    else
+      cmd:extend{'--body-data', _requests.urlencode(request.data)}
+    end
   end
   -- http authentication
   if is(request.auth) then
@@ -167,11 +169,12 @@ function _requests.make_request(request)
   cmd:extend{"'"..request.url.."'", '-d'}
   cmd:extend{'--output-document', _requests.tdata}
   cmd:extend{'--output-file', _requests.tlog}
-  local response = Response(request)
+  local response
   -- execute request
   try(
    function() 
       exe(cmd)
+      response = Response(request)
       with(open(_requests.tdata, 'rb'), 
         function(f) response.text = f:read('*all') end)
       with(open(_requests.tlog), 
@@ -181,9 +184,6 @@ function _requests.make_request(request)
        end)
   )
   -- temporary file cleanup
-  if isType(request.data, 'string') then
-    exe{'rm', _requests.tbody}
-  end
   exe{'rm', _requests.tdata, _requests.tlog} 
   return response
 end

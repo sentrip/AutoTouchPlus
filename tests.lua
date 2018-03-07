@@ -871,6 +871,10 @@ failed = failed or test('requests tests', {
     local j = resp:json()
     assert(j.origin, 'Incorrect json returned')
   end,
+  post_json = function()
+    local resp = requests.post{'http://httpbin.org/post', data={amount=10}}
+    assertEqual(str(resp:json().form.amount), '10', 'Did not post correct data')
+  end,
 --  get_text = function()
 --    local txt
 --    local url = 'https:/raw.githubusercontent.com/sentrip/AutoTouchPlus/master/AutoTouchPlus.lua'

@@ -1544,8 +1544,7 @@ local function parse_log(f, request, response)
 end
 local _requests = {
   tdata = '_response_data',
-  tlog = '_response_log',
-  tbody = '_request_body'
+  tlog = '_response_log'
 }
 function _requests.check_data(request) 
   if not request.data then
@@ -1578,9 +1577,12 @@ function _requests.make_request(request)
   if (request.url:startswith('https') and not request.verify) or request.verify == false then
     cmd:append('--no-check-certificate')
   end
-  if is(request.data) and isType(request.data, 'table') then
-    local fle = request.data[1] or _requests.tbody
-    cmd:extend{'--body-file', fle}
+  if is(request.data) then
+    if is.str(request.data) then
+      cmd:extend{'--body-data', request.data}
+    else
+      cmd:extend{'--body-data', _requests.urlencode(request.data)}
+    end
   end
   if is(request.auth) then
     local usr = request.auth.user or request.auth[1]
@@ -1613,10 +1615,11 @@ function _requests.make_request(request)
   cmd:extend{"'"..request.url.."'", '-d'}
   cmd:extend{'--output-document', _requests.tdata}
   cmd:extend{'--output-file', _requests.tlog}
-  local response = Response(request)
+  local response
   try(
    function() 
       exe(cmd)
+      response = Response(request)
       with(open(_requests.tdata, 'rb'), 
         function(f) response.text = f:read('*all') end)
       with(open(_requests.tlog), 
@@ -1625,9 +1628,6 @@ function _requests.make_request(request)
    except(function(err) 
        end)
   )
-  if isType(request.data, 'string') then
-    exe{'rm', _requests.tbody}
-  end
   exe{'rm', _requests.tdata, _requests.tlog} 
   return response
 end
