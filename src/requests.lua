@@ -180,11 +180,12 @@ function _requests.make_request(request)
       with(open(_requests.tlog), 
         function(f) parse_log(f, request, response) end)
    end,
-   except(function(err) 
-       end)
+   except(function(err) end),
+   function() 
+     -- temporary file cleanup
+     exe{'rm', _requests.tdata, _requests.tlog} 
+   end)
   )
-  -- temporary file cleanup
-  exe{'rm', _requests.tdata, _requests.tlog} 
   return response
 end
 
