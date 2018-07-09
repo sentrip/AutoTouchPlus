@@ -86,7 +86,7 @@ _string = {
     else return string.format(s, ...) end
   end,
 
----- Placeholder
+---- Concatenate a list/table of strings with another string as the delimiter
   join = function(s, other) return table.concat(other, s) end,
 
 ---- Replace occurrences of sub in main with rep

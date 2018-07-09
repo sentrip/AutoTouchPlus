@@ -1,4 +1,4 @@
----- AutoTouchPlus core.
+---- Implementation of many of Python's builtin functions.
 -- @module core
 
 --Global variable patching
@@ -191,6 +191,7 @@ function setattr(cls, key, value)
     end
   end
 end
+
 
 ---- Copy an object
 -- @param object any table-like object

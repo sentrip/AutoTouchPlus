@@ -1,4 +1,4 @@
----- Web requests.
+---- Web requests and data parsing.
 -- Mirrors basic methods and api of Python's 'requests' module.
 -- Requires wget to work, as @{requests} is simply a lua wrapper for the wget cli.
 -- @module requests
@@ -33,11 +33,6 @@ end
 ---- Convert a json formatted response text to a lua table
 -- @treturn table dictionary-like table of response
 function Response:json()
---  local clean = self.text:replace('[\n\t\r]', ''):replace('[ ]+', ' ')
---  clean = clean:replace('"(.+)": ', function(m) return m..'=' end)
---  clean = clean:replace('%[', '{'):replace('%]', '}')
---  clean = clean:replace('{[ ]+', '{'):replace('}[ ]+', '}')
---  return dict(eval(string.format('return %s', clean)))
   return json.decode(self.text)
 end
 
@@ -185,7 +180,6 @@ function _requests.make_request(request)
      -- temporary file cleanup
      exe{'rm', _requests.tdata, _requests.tlog} 
    end)
-  )
   return response
 end
 

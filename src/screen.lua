@@ -2,6 +2,7 @@
 -- @module screen
 
 --Basic colors
+BLACK = 0
 WHITE = 16777215
 
 ---- Pixel object
