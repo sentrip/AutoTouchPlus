@@ -4,6 +4,31 @@
 --- Logic
 -- @section logic
 
+
+---- All elements in an iterable evaluate to true
+-- @param iterable any table-like object
+-- @treturn boolean all elements are true
+function all(iterable) 
+  for k, v in pairs(iterable) do
+    if Not(v) then return false end
+  end
+  return true
+end
+
+
+---- Any elements in an iterable evaluate to true
+-- @param iterable any table-like object
+-- @treturn boolean any elements are true
+function any(iterable) 
+  for k, v in pairs(iterable) do
+    if is(v) then return true end
+  end
+  return false
+end
+
+
+
+
 local type_index = {
   ['str'] = 'string',
   ['num'] = 'number',
