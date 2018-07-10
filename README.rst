@@ -1,4 +1,5 @@
-# AutoTouchPlus
+AutoTouchPlus
+=============
 A framework for creating better, faster and shorter AutoTouch scripts
 
 * Free software: Apache License, Version 2.0
@@ -21,15 +22,19 @@ Features
 Installation
 ------------
 To install this file, there are 3 methods. 
-For ease of installation, all of the modules in AutoTouchPlus are compiled into a single file - "AutoTouchPlus.lua" - that can be imported in a lua script.
-When installed just run "tests.lua" to ensure everything works and you're ready to go! 
+For ease of installation, all of the modules in AutoTouchPlus are compiled into a single file - "AutoTouchPlus.lua" - that can be imported. When installed just run "tests.lua" to ensure everything works and you're ready to go! 
+
+|
 
 Fastest and simplest method:
-* Copy the raw text from "install.lua" and paste it into a new script in AutoTouch. Then just save and run the script and you're ready!
+
+* Copy the raw text from "install.lua" and paste it into a new script in AutoTouch. Then just save and run the script!
 
 
 Second, more complicated method:
+
 * Run the following commands on your computer (requires git and scp)
+
 .. code-block:: shell
 
   PHONE_IP=<YOUR.PHONES.IP.ADDRESS>
@@ -39,7 +44,8 @@ Second, more complicated method:
 
 
 Third, most tedious method (manual file copy):
-* copy "AutoTouchPlus.lua" and "tests.lua" to "/var/mobile/Library/AutoTouch/Scripts"
+
+* Copy "AutoTouchPlus.lua" and "tests.lua" to "/var/mobile/Library/AutoTouch/Scripts"
 
 
 Usage
