@@ -8,6 +8,13 @@ local function _getType(name)
     name, name))
 end
 
+--- Get the current working directory
+-- @tparam string file (Optional) file name to append to end of path
+-- @treturn string path of current working directory
+function get_cwd(file)
+  return exe('pwd')
+end
+
 --- Execute a shell command and return the result
 -- @tparam string|table cmd Unix command to execute.
 -- String commands are passed directly to the shell.
@@ -18,7 +25,9 @@ end
 function exe(cmd, split_output)
   if is.Nil(split_output) then split_output = true end
   if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
+  
   if rootDir then cmd = 'cd '..rootDir()..'; '..cmd end
+  
   local f = assert(io.popen(cmd, 'r'))
   local data = readLines(f)
   local success, status, code = f:close()
@@ -27,6 +36,7 @@ function exe(cmd, split_output)
   else
     data = table.concat(data, '\n')
   end
+  
   if code ~= 0 then
     return data, status, code
   else
