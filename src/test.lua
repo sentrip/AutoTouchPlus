@@ -107,3 +107,15 @@ function test(description, tests, setup, teardown)
   end
   return failed
 end
+
+--- Calls a collection of test functions
+-- @param ... table of test collections
+function test_all(...)
+  local _alert = alert or print
+  local failed = false
+  for name, result in pairs(...) do
+    failed = failed or result
+  end
+  if not failed then _alert("All tests passed!") end
+  return failed
+end

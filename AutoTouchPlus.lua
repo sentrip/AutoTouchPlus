@@ -492,8 +492,190 @@ table.sort(cp, sorter)
 return cp
 end
 
-Response = class('Response')
 
+requests = {}
+
+function requests.delete(url, args)
+return requests.request("DELETE", url, args)
+end
+
+function requests.get(url, args)
+return requests.request("GET", url, args)
+end
+
+function requests.post(url, args)
+return requests.request("POST", url, args)
+end
+
+function requests.put(url, args)
+return requests.request("PUT", url, args)
+end
+
+function requests.request(method, url, args)
+local _req = args or {}
+
+if is.table(url) then
+_req = url
+else
+_req.url = url
+end
+
+_req.method = method
+local request = Request(_req)
+
+if request:verify() then
+local cmd = request:build()
+return request:send(cmd)
+else
+return "failed"
+end
+end
+
+local function parse_log(f, request, response)
+local err_msg = 'error in '..request.method..' request: '
+local lines = readLines(f)
+assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
+local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
+local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
+
+_, response.status_code, response.reason = unpack(resp[1]:split(' '))
+response.status_code = num(response.status_code)
+response.ok = response.status_code < 400
+
+local k, v
+for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
+for line in lns() do
+k = line:split(':')[1]
+v = line:replace(k..': ', '')
+v = tonumber(v) or v
+if i == 'request' then
+request.headers[k] = v
+else
+response.headers[k] = v
+if k == 'Content-Type' then
+if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
+end
+end
+end
+end
+end
+
+local function urlencode(params)
+if is.str(params) then return params end
+local s = ''
+if not params or next(params) == nil then return s end
+for key, value in pairs(params) do
+if is(s) then s = s..'&' end
+if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
+end
+return s
+end
+
+Request = class('Request')
+function Request:__init(request)
+for k, v in pairs(request) do
+setattr(self, k, v)
+end
+self.method = request.method or "GET"
+self.url = request.url or request[1] or ''
+self.temp_data_path = (rootDir or function() return "" end)() .. "request_data"
+self.temp_log_path = (rootDir or function() return "" end)() .. "request_log"
+end
+
+function Request:build()
+local cmd = list{'wget', '--method', self.method:upper()}
+if is(self.params) then
+self.url = self.url .. '?' .. urlencode(self.params)
+end
+cmd:extend(self:_add_auth() or {})
+cmd:extend(self:_add_data() or {})
+cmd:extend(self:_add_headers() or {})
+cmd:extend(self:_add_proxies() or {})
+cmd:extend(self:_add_ssl() or {})
+cmd:extend(self:_add_user_agent() or {})
+cmd:extend{"'"..self.url.."'"}
+cmd:extend{'--output-document', self.temp_data_path}
+cmd:extend{'--output-file', self.temp_log_path}
+return cmd
+end
+
+function Request:send(cmd)
+local response = Response(self)
+try(function()
+exe(cmd)
+with(open(self.temp_data_path, 'rb'), function(f)
+response.text = f:read('*all')
+end)
+with(open(self.temp_log_path), function(f)
+parse_log(f, self, response)
+end)
+return true
+end,
+
+except(function(err)
+--print('Requesting '..self.url..' failed - ' .. str(err))
+end),
+
+function()
+-- temporary file cleanup
+exe{'rm', self.temp_data_path, self.temp_log_path}
+end)
+return response
+end
+
+function Request:verify()
+assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
+assert(self.url:startswith('http'), 'Only http(s) urls are supported')
+return true
+end
+
+function Request:_add_auth()
+if is(self.auth) then
+local usr = self.auth.user or self.auth[1]
+local pwd = self.auth.password or self.auth[2]
+retur {'--http-user', usr, '--http-password', pwd}
+end
+end
+
+function Request:_add_data()
+if is(self.data) then
+if Not.string(self.data) then
+self.data = urlencode(self.data)
+end
+return {'--body-data', "'"..self.data.."'"}
+end
+end
+
+function Request:_add_headers()
+if is(self.headers) then
+for k, v in pairs(self.headers) do
+cmd:append("--header='"..k..': '..str(v).."'")
+end
+end
+end
+
+function Request:_add_proxies()
+if is(self.proxies) then
+local usr, pwd
+for k, v in pairs(self.proxies) do
+if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
+end
+end
+end
+
+function Request:_add_ssl()
+if (self.url:startswith('https') and not self.verify) or self.verify == false then
+return {'--no-check-certificate'}
+end
+end
+
+function Request:_add_user_agent()
+if is(self.user_agent) then
+return {'-U', self.user_agent}
+end
+end
+
+Response = class('Response')
 function Response:__init(request)
 self.request = request or {}
 self.url = self.request.url
@@ -521,184 +703,6 @@ end
 
 function Response:raise_for_status()
 if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
-end
-
-local function parse_log(f, request, response)
-local err_msg = 'error in '..request.method..' request: '
-local lines = readLines(f)
-
-assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
-local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
-local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
-
-_, response.status_code, response.reason = unpack(resp[1]:split(' '))
-response.status_code = num(response.status_code)
-response.ok = response.status_code < 400
-
-local k, v
-for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
-for line in lns() do
-k = line:split(':')[1]
-v = line:replace(k..': ', '')
-v = tonumber(v) or v
-if i == 'request' then
-request.headers[k] = v
-else
-response.headers[k] = v
-if k == 'Content-Type' then
-if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
-end
-end
-end
-end
-end
-
-local _requests = {
-tdata = '_response_data',
-tlog = '_response_log'
-}
-
-function _requests.check_data(request)
-if not request.data then
-return
-elseif isType(request.data, 'table') and not request.data[1] then
-assert(requal(request.data, json.decode(json.encode(request.data))),
-'Incorrect json formatting')
---request.data = json.encode(request.data)
-end
-end
-
-function _requests.check_url(request)
-assert(request.url:startswith('http'), 'Only http(s) urls are supported')
-end
-
-
-function _requests.format_params(request)
-if is(request.params) then
-request.url = request.url..'?'.._requests.urlencode(request.params)
-end
-end
-
-
-function _requests.urlencode(params)
-if is.str(params) then return params end
-local s = ''
-if not params or next(params) == nil then return s end
-for key, value in pairs(params) do
-if is(s) then s = s..'&' end
-if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
-end
-return s
-end
-
-
-function _requests.make_request(request)
-local cmd = list{'wget', '--method', request.method:upper()}
---ssl verification
-if (request.url:startswith('https') and not request.verify) or request.verify == false then
-cmd:append('--no-check-certificate')
-end
--- request data
-if is(request.data) then
-if is.str(request.data) then
-cmd:extend{'--body-data', request.data}
-else
-cmd:extend{'--body-data', _requests.urlencode(request.data)}
-end
-end
--- http authentication
-if is(request.auth) then
-local usr = request.auth.user or request.auth[1]
-local pwd = request.auth.password or request.auth[2]
-assert(is.str(usr) and is.str(pwd), 'Incorrect authentication format')
-cmd:extend{'--http-user', usr, '--http-password', pwd}
-end
--- proxies
-if is(request.proxies) then
-assert(request.proxies.http or request.proxies.https, 'Incorrect proxy format')
-local usr, pwd
-for k, v in pairs(request.proxies) do
-if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
-end
-else cmd:append('--no-proxy') end
--- user agent
-if is(request.user_agent) then
-cmd:extend{'-U', request.headers.user_agent}
-end
--- headers
-if is(request.headers) then
-for k, v in pairs(request.headers) do
-cmd:append("--header='"..k..': '..str(v).."'")
-end
-else request.headers = {} end
--- output options
-if isType(request.data, 'string') then
-local d = _requests.urlencode(request.data)
-with(open(_requests.tbody, 'wb'), function(f)
-f:write(d)
-end)
-cmd:append("--header='"..'Content-Length'..': '..str(len(d)).."'")
-end
-cmd:extend{"'"..request.url.."'", '-d'}
-cmd:extend{'--output-document', _requests.tdata}
-cmd:extend{'--output-file', _requests.tlog}
-local response
--- execute request
-try(
-function()
-exe(cmd)
-response = Response(request)
-with(open(_requests.tdata, 'rb'),
-function(f) response.text = f:read('*all') end)
-with(open(_requests.tlog),
-function(f) parse_log(f, request, response) end)
-end,
-except(function(err) end),
-function()
--- temporary file cleanup
-exe{'rm', _requests.tdata, _requests.tlog}
-end)
-return response
-end
-
-
-requests = {}
-
-function requests.delete(url, args)
-return requests.request("DELETE", url, args)
-end
-
-function requests.get(url, args)
-return requests.request("GET", url, args)
-end
-
-function requests.post(url, args)
-return requests.request("POST", url, args)
-end
-
-function requests.put(url, args)
-return requests.request("PUT", url, args)
-end
-
-function requests.request(method, url, args)
-local request
-if is.table(url) then
-if Not.Nil(url[1]) then
-url.url = url[1]
-url[1] = nil
-end
-request = url
-else
-request = args or {}
-request.url = url
-end
-
-request.method = method
-_requests.check_url(request)
-_requests.check_data(request)
-_requests.format_params(request)
-
-return _requests.make_request(request)
 end
 
 
@@ -1097,6 +1101,19 @@ return Context
 end
 
 
+function time_ensured(t)
+local start = os.time()
+yield()
+sleep(max(0, t - (os.time() - start)))
+end
+
+
+function time_padded(t_before, t_after)
+sleep(t_before)
+yield()
+sleep(t_after or t_before)
+end
+
 
 ContextManager = class("ContextManager")
 
@@ -1182,7 +1199,10 @@ TypeError = Exception('TypeError')
 ValueError = Exception('ValueError')
 
 open = contextmanager(open)
+run_and_close = contextmanager(run_and_close)
 run_if_closed = contextmanager(run_if_closed)
+time_ensured = contextmanager(time_ensured)
+time_padded = contextmanager(time_padded)
 json = {}
 
 local encode
@@ -1604,6 +1624,16 @@ end
 return failed
 end
 
+function test_all(...)
+local _alert = alert or print
+local failed = false
+for name, result in pairs(...) do
+failed = failed or result
+end
+if not failed then _alert("All tests passed!") end
+return failed
+end
+
 
 local function _getType(name)
 return exe(string.format(
@@ -1770,6 +1800,12 @@ function dict:keys()
 local ks = list()
 for k in self() do ks:append(k) end
 return sorted(ks)
+end
+
+function dict:pop(key, default)
+result = rawget(self, key) or default
+rawset(self, key, nil)
+return result
 end
 
 function dict:set(key, value) rawset(self, key, value) end
@@ -2020,6 +2056,8 @@ else
 self.width = width
 self.height = height
 end
+self.wait_before_act = 0
+self.wait_after_act = 0
 self.x = xOffSet or 0
 self.y = yOffSet or 0
 self.right = self.x + self.width
@@ -2044,10 +2082,16 @@ pixel = Pixel(x, y)
 else
 pixel, times, interval = x, y, times
 end
+
+sleep(self.wait_before_act)
+
 for i=1, times or 1 do
 tap(pixel:abs_position(self))
 if interval then usleep(interval * 10 ^ 6) end
 end
+
+sleep(self.wait_after_act)
+
 return self
 end
 
@@ -2087,9 +2131,15 @@ end
 
 function Screen:wait_for(condition)
 local check = create_check(self, condition)
+
+sleep(self.wait_before_act)
+
 repeat
 usleep(self.check_interval)
 until check()
+
+sleep(self.wait_after_act)
+
 return self
 end
 
@@ -2106,6 +2156,8 @@ assert(self.mid[_end],
 _end = self.mid[_end]
 end
 
+sleep(self.wait_before_act)
+
 local steps = 50 / speed
 local x, y = start[1], start[2]
 local deltaX = (_end[1] - start[1]) / steps
@@ -2119,6 +2171,9 @@ touchMove(2, x, y)
 usleep(16000)
 end
 touchUp(2, x, y)
+
+sleep(self.wait_after_act)
+
 return self
 end
 
@@ -2195,3 +2250,155 @@ end
 
 
 Navigator = class('Navigator')
+
+local pairs, ipairs, t_sort = pairs, ipairs, table.sort
+local co_yield, co_wrap = coroutine.yield, coroutine.wrap
+local co_resume = coroutine.resume
+itertools = {}
+
+function itertools.values (table)
+return co_wrap(function ()
+for _, v in pairs(table) do
+co_yield(v)
+end
+end)
+end
+
+function itertools.each (table)
+return co_wrap(function ()
+for _, v in ipairs(table) do
+co_yield(v)
+end
+end)
+end
+
+function itertools.collect (iterable)
+local t, n = {}, 0
+for element in iterable do
+n = n + 1
+t[n] = element
+end
+return t, n
+end
+
+function itertools.count (n, step)
+if n == nil then n = 1 end
+if step == nil then step = 1 end
+return co_wrap(function ()
+while true do
+co_yield(n)
+n = n + step
+end
+end)
+end
+
+function itertools.cycle (iterable)
+local saved = {}
+local nitems = 0
+return co_wrap(function ()
+for element in iterable do
+co_yield(element)
+nitems = nitems + 1
+saved[nitems] = element
+end
+while nitems > 0 do
+for i = 1, nitems do
+co_yield(saved[i])
+end
+end
+end)
+end
+
+function itertools.value (value, times)
+if times then
+return co_wrap(function ()
+while times > 0 do
+times = times - 1
+co_yield(value)
+end
+end)
+else
+return co_wrap(function ()
+while true do co_yield(value) end
+end)
+end
+end
+
+function itertools.islice (iterable, start, stop)
+if start == nil then
+start = 1
+end
+return co_wrap(function ()
+if stop ~= nil and stop - start < 1 then
+return
+end
+
+local current = 0
+for element in iterable do
+current = current + 1
+if stop ~= nil and current > stop then
+return
+end
+if current >= start then
+co_yield(element)
+end
+end
+end)
+end
+
+function itertools.takewhile (predicate, iterable)
+return co_wrap(function ()
+for element in iterable do
+if predicate(element) then
+co_yield(element)
+else
+break
+end
+end
+end)
+end
+
+function itertools.map (func, iterable)
+return co_wrap(function ()
+for element in iterable do
+co_yield(func(element))
+end
+end)
+end
+
+function itertools.filter (predicate, iterable)
+return co_wrap(function ()
+for element in iterable do
+if predicate(element) then
+co_yield(element)
+end
+end
+end)
+end
+
+local function make_comp_func(key)
+if key == nil then
+return nil
+end
+return function (a, b)
+return key(a) < key(b)
+end
+end
+
+local _collect = itertools.collect
+
+function itertools.sorted (iterable, key, reverse)
+local t, n = _collect(iterable)
+t_sort(t, make_comp_func(key))
+if reverse then
+return co_wrap(function ()
+for i = n, 1, -1 do co_yield(t[i]) end
+end)
+else
+return co_wrap(function ()
+for i = 1, n do co_yield(t[i]) end
+end)
+end
+end
+
+

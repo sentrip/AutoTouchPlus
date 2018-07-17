@@ -906,9 +906,7 @@ failed = failed or test('requests tests', {
     assert(resp, 'Text request did not return response')
     assertEqual(resp.text, 'HTTPBIN is awesome', 'Incorrect text returned')
   end
-  },
-  function(self) 
-    end)
+  })
 
 failed = failed or test('screen tests', {
   tree_root_nagivation = function()
