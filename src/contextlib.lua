@@ -149,6 +149,24 @@ function suppress(...)
 end
 
 
+---- Ensure code execution takes a certain amount of time
+-- @param t
+function time_ensured(t)
+  local start = os.time()
+  yield()
+  sleep(max(0, t - (os.time() - start)))
+end
+
+
+---- Wait before and after executing code
+-- @param t_before
+-- @param t_after
+function time_padded(t_before, t_after)
+  sleep(t_before)
+  yield()
+  sleep(t_after or t_before)
+end
+
 
 ------ Context manager object
 ---- @type ContextManager
@@ -251,4 +269,7 @@ ValueError = Exception('ValueError')
 
 --Context manager function wrapping, see contextmanager function for details
 open = contextmanager(open)
+run_and_close = contextmanager(run_and_close)
 run_if_closed = contextmanager(run_if_closed)
+time_ensured = contextmanager(time_ensured)
+time_padded = contextmanager(time_padded)
