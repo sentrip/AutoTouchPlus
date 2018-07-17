@@ -132,8 +132,10 @@ function Screen:__init(width, height, xOffSet, yOffSet)
     self.width, self.height = getScreenResolution()
   else
     self.width = width
-  self.height = height
+    self.height = height
   end
+  self.wait_before_act = 0
+  self.wait_after_act = 0
   self.x = xOffSet or 0
   self.y = yOffSet or 0
   self.right = self.x + self.width
@@ -167,10 +169,16 @@ function Screen:tap(x, y, times, interval)
   else
     pixel, times, interval = x, y, times
   end
+  
+  sleep(self.wait_before_act)
+  
   for i=1, times or 1 do
     tap(pixel:abs_position(self))
     if interval then usleep(interval * 10 ^ 6) end
   end
+  
+  sleep(self.wait_after_act)
+  
   return self
 end
 
@@ -226,9 +234,15 @@ end
 -- @treturn Screen screen instance for method chaining
 function Screen:wait_for(condition)
   local check = create_check(self, condition)
+  
+  sleep(self.wait_before_act)
+  
   repeat
     usleep(self.check_interval)
   until check()
+  
+  sleep(self.wait_after_act)
+  
   return self
 end
 
@@ -250,6 +264,8 @@ function Screen:swipe(start, _end, speed)
     _end = self.mid[_end]
   end
   
+  sleep(self.wait_before_act)
+  
   local steps = 50 / speed
   local x, y = start[1], start[2]
   local deltaX = (_end[1] - start[1]) / steps
@@ -263,6 +279,9 @@ function Screen:swipe(start, _end, speed)
     usleep(16000)
   end
   touchUp(2, x, y)
+  
+  sleep(self.wait_after_act)
+  
   return self
 end
 
