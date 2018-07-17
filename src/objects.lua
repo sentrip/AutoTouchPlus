@@ -78,6 +78,15 @@ function dict:keys()
   return sorted(ks) 
 end
 
+--- Pop a value from the dictionary given by key, or return a default
+-- @param key key index of dictionary
+-- @param default default value to return
+function dict:pop(key, default) 
+  result = rawget(self, key) or default
+  rawset(self, key, nil) 
+  return result
+end
+
 --- Set the value indexed by given key to given value
 -- @param key key index of dictionary
 -- @param value value to set at given key
