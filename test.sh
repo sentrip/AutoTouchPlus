@@ -54,4 +54,4 @@ with open('tests.lua', 'w') as f:
 
 EOF
 
-lua tests1.lua
+lua tests.lua
