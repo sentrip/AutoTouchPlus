@@ -1,6 +1,3 @@
-require("AutoTouchPlus")
-
-
 ---- Web requests and data parsing.
 -- Mirrors basic methods and api of Python's 'requests' module.
 -- Requires wget to work, as @{requests} is simply a lua wrapper for the wget cli.
@@ -69,8 +66,8 @@ function requests.request(method, url, args)
 end
 ---
 
---Parse wget debug output and patch attributes of response
-function parse_stdout(lines, request, response)
+---
+local function parse_data(lines, request, response)         
   
   local err_msg = 'error in '..request.method..' request: '
   assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
@@ -82,26 +79,29 @@ function parse_stdout(lines, request, response)
   response.status_code = num(response.status_code)
   response.ok = response.status_code < 400
 
-  try(function()
-    local k, v
-    for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
-      for line in lns() do 
-        k = line:split(':')[1]:strip('\13')
-        v = line:replace(k..': ', ''):strip('\13')
-        v = tonumber(v) or v
-        if v then
-          if i == 'request' then 
-            request.headers[k] = v 
-          else 
-            response.headers[k] = v 
-            if k == 'Content-Type' then 
-              if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
-            end
+  local k, v
+  for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
+    for line in lns() do 
+      k = line:split(':')[1]:strip('\13')
+      v = line:replace(k..': ', ''):strip('\13')
+      v = tonumber(v) or v
+      if v then
+        if i == 'request' then 
+          request.headers[k] = v 
+        else 
+          response.headers[k] = v 
+          if k == 'Content-Type' then 
+            if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
           end
         end
       end
     end
-  end)
+  end
+end
+---
+
+--Parse wget debug output and patch attributes of response
+local function parse_text(lines, request, response)
 
   local start_read_body = false
   local done_read_body = false
@@ -176,14 +176,16 @@ end
 -- @return Reponse of request
 function Request:send(cmd)
   local response = Response(self)
-  try(function() 
-      local raw = exe(cmd)
-      parse_stdout(raw, self, response)
+  
+  local raw = try(function() 
+      return exe(cmd) 
     end,
     except(function(err) 
        print('Requesting '..self.url..' failed - ' .. str(err)) 
      end)
-   )
+   )   
+  try(function() parse_data(raw, self, response) end)
+  try(function() parse_text(raw, self, response) end)
   return response
 end
 ---
@@ -241,7 +243,7 @@ end
 
 ---
 function Request:_add_ssl()
-  if (self.url:startswith('https') and not self.verify) or self.verify == false then
+  if not self.verify or (self.url:startswith('https') and self.verify) then
     return {'--no-check-certificate'}
   end
 end

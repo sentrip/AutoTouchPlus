@@ -488,8 +488,6 @@ return cp
 end
 
 
-
-
 requests = {}
 
 function requests.delete(url, args)
@@ -528,7 +526,7 @@ return "failed"
 end
 end
 
-function parse_stdout(lines, request, response)
+local function parse_data(lines, request, response)
 
 local err_msg = 'error in '..request.method..' request: '
 assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
@@ -540,7 +538,6 @@ _, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '
 response.status_code = num(response.status_code)
 response.ok = response.status_code < 400
 
-try(function()
 local k, v
 for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
 for line in lns() do
@@ -559,7 +556,9 @@ end
 end
 end
 end
-end)
+end
+
+local function parse_text(lines, request, response)
 
 local start_read_body = false
 local done_read_body = false
@@ -622,14 +621,16 @@ end
 
 function Request:send(cmd)
 local response = Response(self)
-try(function()
-local raw = exe(cmd)
-parse_stdout(raw, self, response)
+
+local raw = try(function()
+return exe(cmd)
 end,
 except(function(err)
 print('Requesting '..self.url..' failed - ' .. str(err))
 end)
 )
+try(function() parse_data(raw, self, response) end)
+try(function() parse_text(raw, self, response) end)
 return response
 end
 
@@ -674,7 +675,7 @@ end
 end
 
 function Request:_add_ssl()
-if (self.url:startswith('https') and not self.verify) or self.verify == false then
+if not self.verify or (self.url:startswith('https') and self.verify) then
 return {'--no-check-certificate'}
 end
 end
