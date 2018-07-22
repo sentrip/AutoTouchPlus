@@ -119,7 +119,8 @@ _string = {
 
 ---- String stripping (Python style!)
   strip = function(s, remove) 
-    local start, _end
+    local start=1
+    local _end = #s
     for i=1, #s do if isnotin(s[i], remove) then start = i break end end
     for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
     return s(start, _end)
