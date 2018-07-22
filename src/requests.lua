@@ -1,3 +1,6 @@
+require("AutoTouchPlus")
+
+
 ---- Web requests and data parsing.
 -- Mirrors basic methods and api of Python's 'requests' module.
 -- Requires wget to work, as @{requests} is simply a lua wrapper for the wget cli.
@@ -66,34 +69,59 @@ function requests.request(method, url, args)
 end
 ---
 
---Parse log file of wget (debug) and patch attributes of response
-local function parse_log(f, request, response)
+--Parse wget debug output and patch attributes of response
+function parse_stdout(lines, request, response)
+  
   local err_msg = 'error in '..request.method..' request: '
-  local lines = readLines(f)
   assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
+  
   local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
   local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
-
-  _, response.status_code, response.reason = unpack(resp[1]:split(' '))
+  
+  _, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '))
   response.status_code = num(response.status_code)
   response.ok = response.status_code < 400
 
-  local k, v
-  for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
-    for line in lns() do 
-      k = line:split(':')[1]
-      v = line:replace(k..': ', '')
-      v = tonumber(v) or v
-      if i == 'request' then 
-        request.headers[k] = v 
-      else 
-        response.headers[k] = v 
-        if k == 'Content-Type' then 
-          if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
+  try(function()
+    local k, v
+    for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
+      for line in lns() do 
+        k = line:split(':')[1]:strip('\13')
+        v = line:replace(k..': ', ''):strip('\13')
+        v = tonumber(v) or v
+        if v then
+          if i == 'request' then 
+            request.headers[k] = v 
+          else 
+            response.headers[k] = v 
+            if k == 'Content-Type' then 
+              if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
+            end
+          end
         end
       end
     end
+  end)
+
+  local start_read_body = false
+  local done_read_body = false
+  
+  for i, ln in pairs(lines) do
+
+    if start_read_body and ln:strip('\r\n\t\13 '):startswith('0K') then  
+      done_read_body = true
+    end
+        
+    if start_read_body and not done_read_body then
+      response.text = response.text .. ln
+    end
+      
+    if ln:startswith('Saving to: ') then
+      start_read_body = true
+    end
+    
   end
+  
 end
 ---
 
@@ -117,10 +145,9 @@ function Request:__init(request)
   for k, v in pairs(request) do
     setattr(self, k, v)
   end
+  self.headers = dict()
   self.method = request.method or "GET"
   self.url = request.url or request[1] or ''
-  self.temp_data_path = (rootDir or function() return "" end)() .. "request_data"
-  self.temp_log_path = (rootDir or function() return "" end)() .. "request_log"
 end
 ---
 
@@ -137,9 +164,9 @@ function Request:build()
   cmd:extend(self:_add_proxies() or {})
   cmd:extend(self:_add_ssl() or {})
   cmd:extend(self:_add_user_agent() or {})
-  cmd:extend{"'"..self.url.."'"}
-  cmd:extend{'--output-document', self.temp_data_path}
-  cmd:extend{'--output-file', self.temp_log_path}
+  cmd:extend{"'"..self.url.."'", '-d'}
+  cmd:extend{'--output-document', '-'}
+  cmd:extend{'--output-file', '-'}
   return cmd
 end
 ---
@@ -150,24 +177,13 @@ end
 function Request:send(cmd)
   local response = Response(self)
   try(function() 
-      exe(cmd)
-      with(open(self.temp_data_path, 'rb'), function(f) 
-          response.text = f:read('*all') 
-          end)
-      with(open(self.temp_log_path), function(f) 
-          parse_log(f, self, response) 
-          end)
-      return true
-      end,
-  
-   except(function(err) 
-       --print('Requesting '..self.url..' failed - ' .. str(err)) 
-       end),
-     
-   function() 
-     -- temporary file cleanup
-     exe{'rm', self.temp_data_path, self.temp_log_path} 
-   end)
+      local raw = exe(cmd)
+      parse_stdout(raw, self, response)
+    end,
+    except(function(err) 
+       print('Requesting '..self.url..' failed - ' .. str(err)) 
+     end)
+   )
   return response
 end
 ---
@@ -282,4 +298,3 @@ function Response:raise_for_status()
   if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
 end
 ---
-
