@@ -558,29 +558,6 @@ end
 end
 end
 
-local function parse_text(lines, request, response)
-
-local start_read_body = false
-local done_read_body = false
-
-for i, ln in pairs(lines) do
-
-if start_read_body and ln:strip('\r\n\t\13 '):startswith('0K') then
-done_read_body = true
-end
-
-if start_read_body and not done_read_body then
-response.text = response.text .. ln
-end
-
-if ln:startswith('Saving to: ') then
-start_read_body = true
-end
-
-end
-
-end
-
 local function urlencode(params)
 if is.str(params) then return params end
 local s = ''
@@ -600,6 +577,7 @@ end
 self.headers = dict()
 self.method = request.method or "GET"
 self.url = request.url or request[1] or ''
+self._response_fn = '_response.txt'
 end
 
 function Request:build()
@@ -614,23 +592,33 @@ cmd:extend(self:_add_proxies() or {})
 cmd:extend(self:_add_ssl() or {})
 cmd:extend(self:_add_user_agent() or {})
 cmd:extend{"'"..self.url.."'", '-d'}
-cmd:extend{'--output-document', '-'}
 cmd:extend{'--output-file', '-'}
+cmd:extend{'--output-document', self._response_fn}
 return cmd
 end
 
 function Request:send(cmd)
 local response = Response(self)
 
-local raw = try(function()
-return exe(cmd)
+try(function()
+local lines = exe(cmd)
+
+with(open(self._response_fn), function(f)
+response.text = f:read('*a') end)
+
+try(function() parse_data(lines, self, response) end)
+
 end,
+
 except(function(err)
 print('Requesting '..self.url..' failed - ' .. str(err))
-end)
+end),
+
+function()
+exe{'rm', self._response_fn}
+end
 )
-try(function() parse_data(raw, self, response) end)
-try(function() parse_text(raw, self, response) end)
+
 return response
 end
 
