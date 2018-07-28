@@ -48,11 +48,28 @@ function Pixel:abs_position(screen)
   return x, y
 end
 
+---- Returns a function that checks if a pixels color has changed
+-- @tparam Screen screen instance to check for pixel
+-- @treturn function check whether the color has changed
+function Pixel:color_changed(screen)
+  local old_color = self:get_color(screen)
+  return function() 
+    return self:get_color(screen) ~= old_color 
+  end
+end
+
+---- Get color of the screen at this pixel's position
+-- @tparam Screen screen instance to check for pixel
+-- @treturn num is the pixel visible on the screen
+function Pixel:get_color(screen)
+  return getColor(self:abs_position(screen))
+end
+
 ---- Check if the pixel is in a screen
 -- @tparam Screen screen instance to check for pixel
 -- @treturn boolean is the pixel visible on the screen
 function Pixel:in_(screen)
-  return getColor(self:abs_position(screen)) == self.color
+  return self:get_color(screen) == self.color
 end
 
 
@@ -96,6 +113,7 @@ end
 -- @tparam Screen screen instance to check for pixels
 -- @treturn boolean are all the pixels visible on the screen
 function Pixels:in_(screen)
+  screen = screen 
   local positions = {}
   for i, pixel in pairs(self.pixels) do 
     positions[#positions + 1] = {pixel:abs_position(screen)}
@@ -108,6 +126,7 @@ end
 -- @tparam Screen screen instance to check for pixels
 -- @treturn number how many pixels are visible on the screen
 function Pixels:count(screen)
+  screen = screen 
   local positions = {}
   for i, pixel in pairs(self.pixels) do 
     positions[#positions + 1] = {pixel:abs_position(screen)}
@@ -129,7 +148,7 @@ Screen = class('Screen')
 
 function Screen:__init(width, height, xOffSet, yOffSet)
   if is.Nil(width) then
-    self.width, self.height = getScreenResolution()
+    self.width, self.height = (getScreenResolution or function() return 0, 0 end)()
   else
     self.width = width
     self.height = height
@@ -140,12 +159,13 @@ function Screen:__init(width, height, xOffSet, yOffSet)
   self.y = yOffSet or 0
   self.right = self.x + self.width
   self.bottom = self.y + self.height
-  self.check_interval = 50000 --checks every 50ms (0.05s)
+  self.check_interval = 150000 --checks every 150ms (0.15s)
   self.mid = {
-    left = {self.x, self.bottom / 2},
-    right = {self.right, self.bottom / 2},
-    top = {self.y, self.right / 2},
-    bottom = {self.bottom, self.right / 2}
+    left = Pixel(self.x, self.bottom / 2),
+    right = Pixel(self.right, self.bottom / 2),
+    top = Pixel(self.y, self.right / 2),
+    bottom = Pixel(self.bottom, self.right / 2),
+    center = Pixel(self.right / 2, self.bottom / 2)
   }
 end
 
@@ -170,14 +190,14 @@ function Screen:tap(x, y, times, interval)
     pixel, times, interval = x, y, times
   end
   
-  sleep(self.wait_before_act)
+  usleep(self.wait_before_act * 10 ^ 6)
   
   for i=1, times or 1 do
     tap(pixel:abs_position(self))
     if interval then usleep(interval * 10 ^ 6) end
   end
   
-  sleep(self.wait_after_act)
+  usleep(self.wait_after_act * 10 ^ 6)
   
   return self
 end
@@ -235,13 +255,13 @@ end
 function Screen:wait_for(condition)
   local check = create_check(self, condition)
   
-  sleep(self.wait_before_act)
+  usleep(self.wait_before_act * 10 ^ 6)
   
   repeat
     usleep(self.check_interval)
   until check()
   
-  sleep(self.wait_after_act)
+  usleep(self.wait_after_act * 10 ^ 6)
   
   return self
 end
@@ -264,7 +284,7 @@ function Screen:swipe(start, _end, speed)
     _end = self.mid[_end]
   end
   
-  sleep(self.wait_before_act)
+  usleep(self.wait_before_act * 10 ^ 6)
   
   local steps = 50 / speed
   local x, y = start[1], start[2]
@@ -280,7 +300,7 @@ function Screen:swipe(start, _end, speed)
   end
   touchUp(2, x, y)
   
-  sleep(self.wait_after_act)
+  usleep(self.wait_after_act * 10 ^ 6)
   
   return self
 end

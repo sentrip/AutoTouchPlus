@@ -7,14 +7,17 @@ boilerplate = """---- AutoTouchPlus stuff and things.
 -- @copyright Djordje Pepic 2018
 -- @usage require("AutoTouchPlus")
 """
-test_boilerplate = u"""require("AutoTouchPlus")
---check for wget
-assert(is(exe('dpkg-query -W wget')), 
-  'wget not installed. Either install it or remove this check from test.lua (4-5)')
--------------------------------AutoTouch mocking --------------------------- 
+test_boilerplate = u"""-------------------------------AutoTouch mocking ---------------------------
 alert = alert or print
 tap = tap or function(x, y) print('tapping', x, y) end
 usleep = usleep or function(t) sleep(t / 1000000) end
+function intToRgb(i) return 0, 0, 0 end
+function rgbToInt(r,g,b) return 0 end
+----------------------------------------------------------------------------
+require("AutoTouchPlus")
+--check for wget
+assert(is(exe('dpkg-query -W wget')),
+  'wget not installed. Either install it or remove this check from test.lua (4-5)')
 ----------------------------------------------------------------------------
 """
 
