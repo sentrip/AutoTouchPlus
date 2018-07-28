@@ -501,7 +501,7 @@ function sleep(seconds)
   if seconds > 0.01 then
     local rnd = round(seconds, 5)
     remainder = seconds - rnd
-    os.execute('sleep ' .. rnd) 
+    io.popen('sleep ' .. rnd) :close()
   end
   local start = os.clock()
   while os.clock() - start < remainder do end
