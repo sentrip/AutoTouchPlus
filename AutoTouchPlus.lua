@@ -704,6 +704,143 @@ function Response:raise_for_status()
 if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
 end
 
+BLACK = 0
+WHITE = 16777215
+
+Pixel = class('Pixel')
+
+function Pixel:__init(x, y, color)
+self.x = x
+self.y = y
+self.expected_color = color or WHITE
+end
+function Pixel:__add(position)
+self.x = self.x + (position.x or position[1] or 0)
+self.y = self.y + (position.y or position[1] or 0)
+end
+
+function Pixel:__sub(position)
+self.x = self.x - (position.x or position[1] or 0)
+self.y = self.y - (position.y or position[1] or 0)
+end
+
+function Pixel:__eq(pixel)
+return self.x == pixel.x and self.y == pixel.y and self.color == pixel.color
+end
+
+Pixel.__getters['color'] = function(self)
+return getColor(self.x, self.y)
+end
+
+function Pixel:color_changed()
+local old_color = self.color
+return function()
+local current_color = self.color
+if current_color ~= old_color then
+old_color = current_color
+return true
+end
+return false
+end
+end
+
+function Pixel:visible()
+return self.color == self.expected_color
+end
+
+Pixels = class('Pixels')
+
+function Pixels:__init(pixels)
+self.pixels = list()
+self.expected_colors = list()
+--table of pixels
+if is(pixels) and getmetatable(pixels[1]) then
+self.pixels = pixels
+for i, pixel in pairs(pixels) do
+self.expected_colors:append(pixel.color)
+end
+--table of tables {x, y, color}
+else
+for i, t in pairs(pixels) do
+self.pixels:append(Pixel{t[1], t[2], t[3]})
+self.expected_colors:append(t[3] or WHITE)
+end
+end
+end
+
+function Pixels:__add(pixels)
+for i, pixel in pairs(pixels) do
+self.pixels:append(pixel)
+self.expected_colors:append(pixel.expected_color)
+end
+end
+
+function Pixels:__eq(pixels)
+for i, pixel in pairs(pixels.pixels) do
+if pixel ~= self.pixels[i] then return false end
+end
+return true
+end
+
+Pixels.__getters['positions'] = function(self)
+local positions = list()
+for pixel in iter(self.pixels) do
+positions:append({pixel.x, pixel.y})
+end
+return positions
+end
+
+Pixels.__getters['colors'] = function(self)
+return getColors(self.positions)
+end
+
+function Pixels:visible()
+return requal(getColors(self.positions), self.expected_colors)
+end
+
+function Pixels:count()
+local count = 0
+for i, v in pairs(self.colors) do
+if v == self.expected_colors[i] then count = count + 1 end
+end
+return count
+end
+
+local function n_colors_changed(pixels, n)
+local old_colors = pixels.colors
+
+return function()
+local count = 0
+local current_colors = pixels.colors
+for i, color in pairs(current_colors) do
+if old_colors[i] ~= color then
+count = count + 1
+end
+end
+
+local result = count >= (n or len(current_colors))
+
+if result then
+old_colors = current_colors
+end
+
+return result
+end
+end
+
+
+function Pixels:any_colors_changed()
+return n_colors_changed(self, 1)
+end
+
+function Pixels:all_colors_changed()
+return n_colors_changed(self, len(self.pixels))
+end
+
+function Pixels:n_colors_changed(n)
+return n_colors_changed(self, n)
+end
+
 
 function str_add(s, other) return s .. other end
 
@@ -1944,151 +2081,130 @@ for v in self() do result[#result + 1] = v end
 return result
 end
 
-BLACK = 0
-WHITE = 16777215
+screen = {
 
-Pixel = class('Pixel')
+before_action_funcs = list(),
+after_action_funcs = list(),
+before_check_funcs = list(),
+after_check_funcs = list(),
+before_tap_funcs = list(),
+after_tap_funcs = list(),
 
-function Pixel:__init(x, y, color)
-self.x = x
-self.y = y
-color = color or WHITE
-if isType(color, 'table') then
-self.color = rgbToInt(unpack(color))
-self.rgb = color
-else
-self.color = color
-self.rgb = {intToRgb(color)}
-end
-end
+check_interval = 150000, --checks every 150ms (0.15s)
+wait_before_action = 0,
+wait_after_action = 0,
+wait_before_tap = 0,
+wait_after_tap = 0
 
-function Pixel:__add(position)
-self.x = self.x + (position.x or position[1] or 0)
-self.y = self.y + (position.y or position[1] or 0)
-end
-
-function Pixel:__sub(position)
-self.x = self.x - (position.x or position[1] or 0)
-self.y = self.y - (position.y or position[1] or 0)
-end
-
-function Pixel:__eq(pixel)
-return self.x == pixel.x and self.y == pixel.y and self.color == pixel.color
-end
-
-function Pixel:abs_position(screen)
-local x, y
-if self.x < 0 then x = screen.right + self.x
-else x = screen.x + self.x end
-if self.y < 0 then y = screen.bottom + self.y
-else y = screen.y + self.y end
-return x, y
-end
-
-function Pixel:color_changed(screen)
-local old_color = self:get_color(screen)
-return function()
-return self:get_color(screen) ~= old_color
-end
-end
-
-function Pixel:get_color(screen)
-return getColor(self:abs_position(screen))
-end
-
-function Pixel:in_(screen)
-return self:get_color(screen) == self.color
-end
-
-
-Pixels = class('Pixels')
-
-function Pixels:__init(pixels)
-self.pixels = list()
-self.colors = list()
---table of pixels
-if is(pixels) and getmetatable(pixels[1]) then
-self.pixels = pixels
-for i, pixel in pairs(pixels) do
-self.colors:append(pixel.color)
-end
---table of tables {x, y, color}
-else
-for i, t in pairs(pixels) do
-self.pixels:append(Pixel{t[1], t[2], t[3]})
-self.colors:append(t[3])
-end
-end
-end
-
-function Pixels:__add(pixels)
-for i, pixel in pairs(pixels) do
-self.pixels:append(pixel)
-self.colors:append(pixel.color)
-end
-end
-
-function Pixels:__eq(pixels)
-for i, pixel in pairs(pixels.pixels) do
-if pixel ~= self.pixels[i] then return false end
-end
-return true
-end
-
-function Pixels:in_(screen)
-screen = screen
-local positions = {}
-for i, pixel in pairs(self.pixels) do
-positions[#positions + 1] = {pixel:abs_position(screen)}
-end
-return requal(getColors(positions), self.colors)
-end
-
-
-function Pixels:count(screen)
-screen = screen
-local positions = {}
-for i, pixel in pairs(self.pixels) do
-positions[#positions + 1] = {pixel:abs_position(screen)}
-end
-local count = 0
-for i, v in pairs(getColors(positions)) do
-if v == self.colors[i] then count = count + 1 end
-end
-return count
-end
-
-
-Screen = class('Screen')
-
-function Screen:__init(width, height, xOffSet, yOffSet)
-if is.Nil(width) then
-self.width, self.height = (getScreenResolution or function() return 0, 0 end)()
-else
-self.width = width
-self.height = height
-end
-self.wait_before_act = 0
-self.wait_after_act = 0
-self.x = xOffSet or 0
-self.y = yOffSet or 0
-self.right = self.x + self.width
-self.bottom = self.y + self.height
-self.check_interval = 150000 --checks every 150ms (0.15s)
-self.mid = {
-left = Pixel(self.x, self.bottom / 2),
-right = Pixel(self.right, self.bottom / 2),
-top = Pixel(self.y, self.right / 2),
-bottom = Pixel(self.bottom, self.right / 2),
-center = Pixel(self.right / 2, self.bottom / 2)
 }
+
+if Not.Nil(getScreenResolution) then
+screen.width, screen.height = getScreenResolution()
+else
+screen.width, screen.height = 0, 0
 end
 
-function Screen:contains(pixel)
-return pixel:in_(self)
+screen.mid = {
+left = Pixel(0, screen.height / 2),
+right = Pixel(screen.width, screen.height / 2),
+top = Pixel(screen.width / 2, 0),
+bottom = Pixel(screen.height, screen.width / 2),
+center = Pixel(screen.width / 2, screen.height / 2)
+}
+
+local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
+
+sleep(before_wait)
+
+for func in iter(before_funcs) do
+func()
 end
 
-function Screen:tap(x, y, times, interval)
+yield()
+
+for func in iter(after_funcs) do
+func()
+end
+
+sleep(after_wait)
+
+end)
+
+local action_context = contextmanager(function(condition)
+
+local ctx = create_context(
+screen.wait_before_action, screen.wait_after_action,
+screen.before_action_funcs, screen.after_action_funcs
+)
+
+with(ctx, function()
+
+local check
+
+if is.func(condition) then
+check = condition
+else
+check = function() return screen.contains(condition) end
+end
+
+yield(function()
+for func in iter(screen.before_check_funcs) do
+func()
+end
+
+local result = check()
+
+for func in iter(screen.after_check_funcs) do
+func()
+end
+
+return result
+end)
+
+end)
+
+end)
+
+local tap_context = contextmanager(function()
+
+local ctx = create_context(
+screen.wait_before_tap, screen.wait_after_tap,
+screen.before_tap_funcs, screen.after_tap_funcs
+)
+
+with(ctx, function() yield() end)
+
+end)
+
+function screen.before_action(func)
+screen.before_action_funcs:append(func)
+end
+
+function screen.after_action(func)
+screen.after_action_funcs:append(func)
+end
+
+function screen.before_check(func)
+screen.before_check_funcs:append(func)
+end
+
+function screen.after_check(func)
+screen.after_check_funcs:append(func)
+end
+
+function screen.before_tap(func)
+screen.before_tap_funcs:append(func)
+end
+
+function screen.after_tap(func)
+screen.after_tap_funcs:append(func)
+end
+
+function screen.contains(pixel)
+return pixel:visible()
+end
+
+function screen.tap(x, y, times, interval)
 local pixel
 if isType(x, 'number') then
 pixel = Pixel(x, y)
@@ -2096,81 +2212,77 @@ else
 pixel, times, interval = x, y, times
 end
 
-usleep(self.wait_before_act * 10 ^ 6)
-
+with(tap_context(screen), function()
 for i=1, times or 1 do
-tap(pixel:abs_position(self))
-if interval then usleep(interval * 10 ^ 6) end
+tap(pixel.x, pixel.y)
+usleep(10000)
+if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
+end
+end)
+
+return screen
 end
 
-usleep(self.wait_after_act * 10 ^ 6)
+function screen.tap_if(condition, to_tap)
+with(action_context(condition), function(check)
 
-return self
-end
-
-local function create_check(screen, condition)
-if is.func(condition) then
-return condition
-else
-return function() return screen:contains(condition) end
-end
-end
-
-function Screen:tap_if(condition, ...)
-local check = create_check(self, condition)
 if check() then
-self:tap(... or condition)
-end
-return self
+screen.tap(to_tap or condition)
 end
 
-function Screen:tap_while(condition, ...)
-local check = create_check(self, condition)
+end)
+return screen
+end
+
+function screen.tap_while(condition, to_tap)
+with(action_context(condition), function(check)
+
 while check() do
-self:tap(... or condition)
-usleep(self.check_interval)
-end
-return self
+screen.tap(to_tap or condition)
+usleep(screen.check_interval)
 end
 
-function Screen:tap_until(condition, ...)
-local check = create_check(self, condition)
-repeat
-self:tap(... or condition)
-usleep(self.check_interval)
-until check()
-return self
+end)
+return screen
 end
 
-function Screen:wait_for(condition)
-local check = create_check(self, condition)
-
-usleep(self.wait_before_act * 10 ^ 6)
+function screen.tap_until(condition, to_tap)
+with(action_context(condition), function(check)
 
 repeat
-usleep(self.check_interval)
+screen.tap(to_tap or condition)
+usleep(screen.check_interval)
 until check()
 
-usleep(self.wait_after_act * 10 ^ 6)
-
-return self
+end)
+return screen
 end
 
-function Screen:swipe(start, _end, speed)
+function screen.wait(condition)
+with(action_context(condition), function(check)
+
+repeat
+usleep(screen.check_interval)
+until check()
+
+end)
+return screen
+end
+
+function screen.swipe(start, _end, speed)
 if is.str(start) then
-assert(self.mid[start],
+assert(screen.mid[start],
 'Incorrect identifier: use one of (left, right, top, bottom)')
-start = self.mid[start]
+start = screen.mid[start]
 end
 
 if is.str(_end) then
-assert(self.mid[_end],
+assert(screen.mid[_end],
 'Incorrect identifier: use one of (left, right, top, bottom)')
-_end = self.mid[_end]
+_end = screen.mid[_end]
 end
 
-usleep(self.wait_before_act * 10 ^ 6)
-
+with(action_context(function() return true end), function(check)
 local steps = 50 / speed
 local x, y = start[1], start[2]
 local deltaX = (_end[1] - start[1]) / steps
@@ -2184,85 +2296,10 @@ touchMove(2, x, y)
 usleep(16000)
 end
 touchUp(2, x, y)
+end)
 
-usleep(self.wait_after_act * 10 ^ 6)
-
-return self
+return screen
 end
-
-
-TransitionTree = class('TransitionTree')
-
-function TransitionTree:__init(name, parent, forward, backward)
-self.name = name or 'root'
-self.parent = parent
-if is.Nil(backward) then self.backward = forward
-else
-self.forward = forward
-self.backward = backward
-end
-self.nodes = {}
-end
-
-function TransitionTree:__index(value)
-return rawget(TransitionTree, value) or rawget(self, value) or self.nodes[value]
-end
-
-function TransitionTree:add(name, forward, backward)
-self.nodes[name] = TransitionTree(name, self, forward, backward)
-end
-
-function TransitionTree:path_to_root()
-local path = list{self}
-local parent = self.parent
-while Not.Nil(parent) do
-path:append(parent)
-parent = parent.parent
-end
-return path
-end
-
-function TransitionTree:path_to(name)
-local q = list()
-for i, v in pairs(self.nodes) do q:append({i, v}) end
-local item
-while len(q) > 0 do
-item = q:pop(1)
-for i, v in pairs(item[2].nodes) do q:append({i, v}) end
-if item[1] == name then return reversed(item[2]:path_to_root()) end
-end
-end
-
-function TransitionTree:lca(name1, name2)
-local lca = 'root'
-local v1, v2
-local path1, path2 = self:path_to(name1), self:path_to(name2)
-for i=2, math.min(len(path1), len(path2)) do
-v1, v2 = path1[i], path2[i]
-if v1.name == v2.name then lca = v1.name; break end
-if v1.parent ~= v2.parent then break else lca = v1.parent.name end
-end
-return lca
-end
-
-function TransitionTree:navigate(start, _end)
-local counting = false
-local lca = self:lca(start, _end)
-local path1, path2 = reversed(self:path_to(start)), self:path_to(_end)
-for i, v in pairs(path1) do
-if v.name == lca then break end
-v.backward()
-end
-
-for i, v in pairs(path2) do
-if counting then v.forward() end
-if v.name == lca then counting = true end
-end
-end
-
-
-
-Navigator = class('Navigator')
 
 local pairs, ipairs, t_sort = pairs, ipairs, table.sort
 local co_yield, co_wrap = coroutine.yield, coroutine.wrap
@@ -2414,4 +2451,79 @@ end)
 end
 end
 
+iter = itertools.values
 
+
+
+TransitionTree = class('TransitionTree')
+
+function TransitionTree:__init(name, parent, forward, backward)
+self.name = name or 'root'
+self.parent = parent
+if is.Nil(backward) then self.backward = forward
+else
+self.forward = forward
+self.backward = backward
+end
+self.nodes = {}
+end
+
+function TransitionTree:__index(value)
+return rawget(TransitionTree, value) or rawget(self, value) or self.nodes[value]
+end
+
+function TransitionTree:add(name, forward, backward)
+self.nodes[name] = TransitionTree(name, self, forward, backward)
+end
+
+function TransitionTree:path_to_root()
+local path = list{self}
+local parent = self.parent
+while Not.Nil(parent) do
+path:append(parent)
+parent = parent.parent
+end
+return path
+end
+
+function TransitionTree:path_to(name)
+local q = list()
+for i, v in pairs(self.nodes) do q:append({i, v}) end
+local item
+while len(q) > 0 do
+item = q:pop(1)
+for i, v in pairs(item[2].nodes) do q:append({i, v}) end
+if item[1] == name then return reversed(item[2]:path_to_root()) end
+end
+end
+
+function TransitionTree:lca(name1, name2)
+local lca = 'root'
+local v1, v2
+local path1, path2 = self:path_to(name1), self:path_to(name2)
+for i=2, math.min(len(path1), len(path2)) do
+v1, v2 = path1[i], path2[i]
+if v1.name == v2.name then lca = v1.name; break end
+if v1.parent ~= v2.parent then break else lca = v1.parent.name end
+end
+return lca
+end
+
+function TransitionTree:navigate(start, _end)
+local counting = false
+local lca = self:lca(start, _end)
+local path1, path2 = reversed(self:path_to(start)), self:path_to(_end)
+for i, v in pairs(path1) do
+if v.name == lca then break end
+v.backward()
+end
+
+for i, v in pairs(path2) do
+if counting then v.forward() end
+if v.name == lca then counting = true end
+end
+end
+
+
+
+Navigator = class('Navigator')

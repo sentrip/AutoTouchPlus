@@ -792,6 +792,9 @@ test('core tests', {
     end
 }),
 test('screen tests', {
+  
+}),
+test('navigation tests', {
   tree_root_nagivation = function()
     local l = list()
     local function f(v) return function() l:append({'fw', v}) end end
@@ -817,6 +820,7 @@ test('screen tests', {
       assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
     end
   end,
+  
   tree_lca_nagivation = function()
     local l = list()
     local function f(v) return function() l:append({'fw', v}) end end
@@ -841,10 +845,9 @@ test('screen tests', {
       assertEqual(l[i][1], ea[i], 'Did not navigate in correct direction')
       assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
     end
-    end,
-  },
-  function(self) 
-    end),
+  end,
+
+}),
 test('logic tests', {
   all = function()
     assert(all({true, true, true}), 'All - table of booleans')
@@ -1069,6 +1072,9 @@ test('requests tests', {
     assertEqual(resp.text, 'HTTPBIN is awesome', 'Incorrect text returned')
   end
   }),
+test('pixel tests', {
+  
+}),
 test('string tests', {
   startswith = function() 
      assert(('\nabc'):startswith('\n'), 'Startswith \\n')

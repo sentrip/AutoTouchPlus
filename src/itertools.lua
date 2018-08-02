@@ -179,5 +179,6 @@ function itertools.sorted (iterable, key, reverse)
    end
 end
 
+--shortcut for iterating
+iter = itertools.values
 
-return itertools
