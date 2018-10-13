@@ -41,15 +41,28 @@ with open('AutoTouchPlus.lua', 'w') as f:
 
 
 # Create test file
-test_files = ['tests/' + i for i in os.listdir('tests')]
+test_files = ['tests/' + i for i in []]
+old_test_files = ['tests/' + i for i in os.listdir('tests') if (i != 'test_test.lua' and i not in test_files)]
 
 data = "failed = test_all{\n"
-
-for fn in test_files:
+for fn in old_test_files:
   with open(fn) as f:
     data += f.read().strip('\n') + ',\n'
+data += '\n}\n'
 
-data += '\n}\nif is.Nil(rootDir) then os.exit(num(failed)) end\n'
+for fn in test_files:
+  data += '\n\n\n'
+  with open(fn) as f:
+    for line in f:
+      if not line.startswith('require') and not line.startswith('run_tests()'):
+        data += line
+  data += '\n\n\n'
+data += '\nrun_tests()\n'
+
+with open('tests/test_test.lua') as f:
+  data += '\n\n\n' + '\n'.join(f.read().splitlines()[1:]) + '\n\n\n'
+
+data += 'if is.Nil(rootDir) then os.exit(num(failed)) end\n'
 
 with open('tests.lua', 'w') as f:
   f.write(test_boilerplate)
