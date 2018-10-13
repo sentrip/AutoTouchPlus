@@ -1,22 +1,36 @@
 
 
-test('contextlib tests', {
-  Exception = function()
-    local Ex = Exception('Ex')
---    local x, y = tostring(Ex), tostring(Ex())
---    local s = ''
---    for i, v in pairs(x) do 
---      if y[i] ~= v then s = s..v end
---    end
---    print(x, y)
---    print(s)
+fixture('patched_open', function(monkeypatch, request) 
+  local l = {}
+  local _open = io.open
+  io.popen('mkdir _tmp_tst'):close()
+  monkeypatch.setattr(io, 'open', function(...) 
+    local f = _open(...)
+    table.insert(l, f)
+    return f
+  end)
+  request.addfinalizer(function() io.popen('rm -R _tmp_tst'):close() end)
+  return l
+end)
+
+
+describe('contextlib',
+  it('Exception', function()
+    --local Ex = Exception('Ex')
+    --local x, y = tostring(Ex), tostring(Ex())
+    --local s = ''
+    --for i, v in pairs(x) do 
+    --  if y[i] ~= v then s = s..v end
+    --end
+    --print(x, y)
+    --print(s)
     --assertEqual(tostring(Ex), tostring(Ex()),  
     --  'Exceptions return different messages')
     --local _, e1 = pcall(error, tostring(Ex))
     --local _, e2 = pcall(error, tostring(Ex()))
     --assertRequal(e1, e2, 'Exceptions return different messages')
-    end,
-  try = function()
+    end),
+  it('try', function()
     local result = try(function() return 1 end)
     assertEqual(result, 1, 'try did not return function result')
     result = try(function() error() end, function() end)
@@ -30,8 +44,8 @@ test('contextlib tests', {
     assertEqual(result, nil, 'Failing try did not return nil')
     assertEqual(l, list{1,2,3}, 
       'Incorrect execution order for try, except, finally')
-    end,
-  except = function()
+    end),
+  it('except', function()
     local l = list()
     local x
     assertEqual(except()('err'), nil, 'Empty except returned exception')
@@ -76,8 +90,8 @@ test('contextlib tests', {
         )(e)
     assertEqual(l[-1], '<Ex> err1', 'Did not catch Exception')
     assertEqual(x, e, 'Caught Exception returned error')
-    end,
-  try_except = function()
+    end),
+  it('try_except', function()
     local Ex = Exception('Ex')
     local e = Ex('err1')
     local exFail = function() error(e) end
@@ -136,8 +150,8 @@ test('contextlib tests', {
           except({Exception('other'), Exception('other2')})
         )
       end, 'Uncaught exception did not raise')
-   end,
-  try_except_nested = function()
+   end),
+  it('try_except_nested', function()
     local Ex = Exception('Ex')
     local Ex2 = Exception('Xe2')
     local e = Ex('err1')
@@ -166,8 +180,8 @@ test('contextlib tests', {
           )
       end, 'Uncaught exception did not raise')
     assertEqual(l[-1], e2, 'Caught exception returned incorrect error')
-    end,
-  ContextManager = function()
+    end),
+  it('ContextManager', function()
     local l = list()
     local Q = class('Q', ContextManager)
     function Q:__enter()
@@ -180,8 +194,8 @@ test('contextlib tests', {
     end
     with(Q(), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with ContextManager: incorrect execution order')
-    end,
-  contextmanager = function()
+    end),
+  it('contextmanager', function()
     local l = list()
     local q = contextmanager(function(a) 
         l:append(1)
@@ -190,20 +204,20 @@ test('contextlib tests', {
         end)
     with(q(2), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with contextmanager: incorrect execution order')
-    end,
-  open = function(self)
+    end),
+  it('open', function(patched_open)
     with(open('_tmp_tst/t.txt', 'w'), function(f) f:write('hello') end)
-    assert(type(self.l[1] == 'userdata'), 'with open did not open a file')
+    assert(type(patched_open[1] == 'userdata'), 'with open did not open a file')
     assertRaises(
       'attempt to use a closed file',  
-      function() self.l[1]:read() end, 
+      function() patched_open[1]:read() end, 
       'with open did not close file after operation'
     )
     assert(isFile('_tmp_tst/t.txt'), 'open did not create file')
     assertEqual(readLines('_tmp_tst/t.txt'), list{'hello'}, 
       'with open did not write to file')
-    end,
-  suppress = function()
+    end),
+  it('suppress', function()
     assertEqual(with(suppress(), function() error(ValueError) end), nil,
       'Empty suppress raised error')
     assertEqual(with(suppress('.*'), function() error(ValueError) end), nil,
@@ -211,24 +225,7 @@ test('contextlib tests', {
     assertEqual(with(suppress(ValueError), function() error(ValueError) end), nil,
       'ValueError suppress returned error')
     assertRaises(ValueError, function()
-        with(suppress(AssertionError), function() error(ValueError) end)
+        with(suppress(AssertionError), function() error(ValueError) end) 
       end, 'AssertionError suppress did not return error')
-    
-    end,
-  },
-  function(self) 
-    self.l = list()
-    self._open = io.open
-    io.open = function(...) 
-      local f = self._open(...)
-      self.l:append(f) 
-      return f 
-    end
-    exe('mkdir _tmp_tst')
-  end,
-  function(self)
-    exe('rm -R _tmp_tst')
-    io.open = self._open
-  end
-  )
-
+    end)
+)

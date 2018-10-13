@@ -1,8 +1,8 @@
 
 
 
-test('navigation tests', {
-  tree_root_nagivation = function()
+describe('navigation', 
+  it('tree_root_nagivation', function()
     local l = list()
     local function f(v) return function() l:append({'fw', v}) end end
     local function b(v) return function() l:append({'bw', v}) end end
@@ -26,9 +26,8 @@ test('navigation tests', {
       assertEqual(l[i][1], ea[i], 'Did not navigate in correct direction')
       assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
     end
-  end,
-  
-  tree_lca_nagivation = function()
+    end),
+  it('tree_lca_nagivation', function()
     local l = list()
     local function f(v) return function() l:append({'fw', v}) end end
     local function b(v) return function() l:append({'bw', v}) end end
@@ -52,7 +51,6 @@ test('navigation tests', {
       assertEqual(l[i][1], ea[i], 'Did not navigate in correct direction')
       assertEqual(l[i][2], en[i], 'Did not navigate to correct node')
     end
-  end,
-
-})
+    end)
+)
 

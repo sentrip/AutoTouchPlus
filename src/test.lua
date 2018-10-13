@@ -260,7 +260,7 @@ end
 --- Run all described tests and write results to stdout
 function run_tests()
   _test_utils.write_began_tests()
-  
+  local begin_time = os.time()
   local clock = os.clock()
   for _, test_obj in pairs(_tests) do
     _test_utils.write_test_description(test_obj.description)
@@ -272,19 +272,23 @@ function run_tests()
   end
   _test_utils.destroy_all_fixtures('module')
   _tests_duration = _tests_duration + (os.clock() - clock)
+  local end_time = os.time()
+  if end_time - begin_time > _tests_duration then
+    _tests_duration = math.max(0, end_time - begin_time - _tests_duration)
+  end
   _test_utils.write_completed_tests()
   _test_utils.write_errors()
   _test_utils.reset_internals()
 end
 
 
----
+
 -- function skip() end
 -- TODO: Skip tests
 -- _test_utils.get_line_stripped(debug.getinfo(1).currentline - 1) == 'skip()'
 
 
----
+-- @local
 function io.popen(name, ...)
   local float_regex = '0?%.?%d+'
   local time_taken = 0
@@ -580,6 +584,3 @@ function _test_utils.write_test_result(err, group_desc, test_desc)
     _test_utils.insert_error(err, test_desc, group_desc)
   end
 end
-
----
-return { describe=describe, it=it, main=main, fixture=fixture, parametrize=parametrize, skip=skip }

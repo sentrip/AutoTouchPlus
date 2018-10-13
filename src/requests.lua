@@ -140,7 +140,7 @@ function Request:build()
   cmd:extend(self:_add_proxies() or {})
   cmd:extend(self:_add_ssl() or {})
   cmd:extend(self:_add_user_agent() or {})
-  cmd:extend{"'"..self.url.."'", '-d'}
+  cmd:extend{"'"..self.url.."'"}
   cmd:extend{'--output-file', '-'}
   cmd:extend{'--output-document', self._response_fn}
   return cmd

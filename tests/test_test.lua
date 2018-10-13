@@ -268,7 +268,3 @@ assert(stdout:match('Failing fixture tests 3: EFEEFE'), 'Incorrect success/fail/
 
 
 -- TODO: Skiped test tests
-
--- replace
--- ([^]*) = (function\(\)[\n\w= ]*end),
--- it('$1', $2),

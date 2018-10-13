@@ -1,6 +1,1 @@
-
-
-
-test('pixel tests', {
-  
-})
+-- TODO: pixel tests

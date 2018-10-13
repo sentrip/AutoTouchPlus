@@ -41,14 +41,8 @@ with open('AutoTouchPlus.lua', 'w') as f:
 
 
 # Create test file
-test_files = ['tests/' + i for i in []]
-old_test_files = ['tests/' + i for i in os.listdir('tests') if (i != 'test_test.lua' and i not in test_files)]
-
-data = "failed = test_all{\n"
-for fn in old_test_files:
-  with open(fn) as f:
-    data += f.read().strip('\n') + ',\n'
-data += '\n}\n'
+data = ''
+test_files = ['tests/' + i for i in sorted(os.listdir('tests')) if i != 'test_test.lua']
 
 for fn in test_files:
   data += '\n\n\n'

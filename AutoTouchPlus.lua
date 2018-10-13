@@ -591,7 +591,7 @@ cmd:extend(self:_add_headers() or {})
 cmd:extend(self:_add_proxies() or {})
 cmd:extend(self:_add_ssl() or {})
 cmd:extend(self:_add_user_agent() or {})
-cmd:extend{"'"..self.url.."'", '-d'}
+cmd:extend{"'"..self.url.."'"}
 cmd:extend{'--output-file', '-'}
 cmd:extend{'--output-document', self._response_fn}
 return cmd
@@ -1872,7 +1872,7 @@ end
 
 function run_tests()
 _test_utils.write_began_tests()
-
+local begin_time = os.time()
 local clock = os.clock()
 for _, test_obj in pairs(_tests) do
 _test_utils.write_test_description(test_obj.description)
@@ -1884,10 +1884,15 @@ io.write('\n')
 end
 _test_utils.destroy_all_fixtures('module')
 _tests_duration = _tests_duration + (os.clock() - clock)
+local end_time = os.time()
+if end_time - begin_time > _tests_duration then
+_tests_duration = math.max(0, end_time - begin_time - _tests_duration)
+end
 _test_utils.write_completed_tests()
 _test_utils.write_errors()
 _test_utils.reset_internals()
 end
+
 
 
 
@@ -2169,7 +2174,6 @@ _count.failed = _count.failed + 1
 _test_utils.insert_error(err, test_desc, group_desc)
 end
 end
-
 
 
 local function _getType(name)

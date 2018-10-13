@@ -1,7 +1,7 @@
 
-
-test('core tests', {
-  class_definition = function() -- todo add instance checking
+ -- todo add instance checking
+describe('core',
+  it('class_definition', function()
     --definition
     local A = class("A")
     function A:__init(value)
@@ -30,8 +30,8 @@ test('core tests', {
     assert(p1, 'Class instance does not have private table')
     assert(p1, 'Class instance does not have private table')
     assertNotEqual(p1, p2, 'Unique instance private tables are equal')
-    end,
-  class_single_inheritance = function()  -- todo add instance checking
+    end),
+  it('class_single_inheritance', function()
     local A = class("A")
     function A:__init(value)
       self.value = value
@@ -51,8 +51,8 @@ test('core tests', {
     b:add(10)
     assertEqual(b.value, 20, 'Child class method failure')
     assertEqual(a.value, 2, 'Difference class has incorrect attribute value')
-    end,
-  class_multiple_inheritance = function() -- todo add instance checking
+    end),
+  it('class_multiple_inheritance', function()
     local A = class("A")
     function A:__init(value)
       self.value = value
@@ -81,8 +81,8 @@ test('core tests', {
       'Did not inherit methods in correct order')
     assertEqual(c:run5(1), b:run5(1) - 1, 
       'Inherited method different from original method')
-    end,
-  class_get_set_properties = function()
+    end),
+  it('class_get_set_properties', function()
     local A = class("A")
     function A:__init(value)
       self.value = max(0, min(10, value))
@@ -100,8 +100,8 @@ test('core tests', {
     assertEqual(a.v, 0, 'Setter did not set custom value')
     a.v = 10
     assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
-    end,
-  copy = function()
+    end),
+  it('copy', function()
     local t1, t2 = {1, 2}, {1, {1, 2}}
     local nt1 = copy(t1)
     assertRequal(t1, nt1, 'Did not copy all data')
@@ -117,13 +117,12 @@ test('core tests', {
     local l = list{1, {1, 2}}
     local nl = copy(l, true)
     assert(nl:isinstance(list), 'Did not copy object type')
-    end,
-  eval = function()
+    end),
+  it('eval', function()
     assertEqual(eval('return 1 + 1'), 2, 'eval 1 + 1 failed')
-    assertRaises('Syntax', function() eval('x =') end, 
-      'eval of syntax error did not fail')
-    end,
-  hash = function()
+    assertRaises('Syntax', function() eval('x =') end, 'eval of syntax error did not fail')
+    end),
+  it('hash', function()
     local h
     local values = {}
     for i=1, 128 do 
@@ -136,8 +135,8 @@ test('core tests', {
       assert(isnotin(h, values), 'Hash collision in first 50 +/- numbers')
       values[#values + 1] = h
     end
-    end,
-  isin = function()
+    end),
+  it('isin', function()
     assert(isin('a', 'abc'), 'Character not in string when it should be')
     assert(not isin('t', 'abc'), "Character in string when it shouldn't be")
     assert(isin('failed', 'stuff and thingsandstuffthisfailedand other'), "Sub not in string when it should be")
@@ -145,34 +144,34 @@ test('core tests', {
     assert(not isin(5, {1,2,3}), "Number in table when it shouldn't be")
     assert(isin({1,2,3}, {{1,2,3}, {4,5,6}}), 'Table not in nested table when it should be')
     assert(not isin({5}, {{1,2,3}, {4,5,6}}), "Table in nested table when it shouldn't be")
-    end,
-  max = function()
+    end),
+  it('max', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.max(unpack(t)), max(t), 'table max not same as math.max')
     assertEqual(math.max(unpack(t)), max(l), 'list max not same as math.max')
     assertEqual(math.max(unpack(t)), max(s), 'set max not same as math.max')
-    end,
-  min = function()
+    end),
+  it('min', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.min(unpack(t)), min(t), 'table min not same as math.min')
     assertEqual(math.min(unpack(t)), min(l), 'list min not same as math.min')
     assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
-    end,
-  num = function()
+    end),
+  it('num', function()
     assert(is.num(num(1)), 'Converted int to non number')
     assert(is.num(num(1.0)), 'Converted float to non number')
     assert(is.num(num(-1)), 'Converted negative to non number')
     assertEqual(num('1'), 1, 'Converted string int to non number')
     assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
-    end,
-  str = function()
+    end),
+  it('str', function()
     assertEqual(str(1), '1', 'str number failed')
     assertEqual(str('1'), '1', 'str string failed')
     assertEqual(str({1,2}), '{1, 2}', 'table number failed')
     assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
     assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
-    end,
-  getattr = function()
+    end),
+  it('getattr', function()
     local A = class('A')
     function A:__init()
       self.val = 5
@@ -181,8 +180,8 @@ test('core tests', {
     assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
     assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
     assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-    end,
-  setattr = function()
+    end),
+  it('setattr', function()
     local A = class('A')
     function A:__init()
       self.val = 5
@@ -191,8 +190,8 @@ test('core tests', {
     setattr(a, 'val', 3)
     assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
     assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-    end,
-  reversed = function()
+    end),
+  it('reversed', function()
     local l, s = {1, 2, 3}, 'abc'
     local e1, e2 = {3, 2, 1}, {'c', 'b', 'a'}
     for i, v in pairs(reversed(l)) do 
@@ -201,8 +200,8 @@ test('core tests', {
     for i, v in pairs(reversed(s)) do 
       assertEqual(e2[i], v, 'Did not reverse string correctly')
     end
-    end,
-  sorted = function()
+    end),
+  it('sorted', function()
     --basic sort
     local a, b = {3, 1, 2}, {'c', 'a', 'b'}
     local ea, eb = {1,2,3}, {'a','b','c'}
@@ -217,5 +216,5 @@ test('core tests', {
     for i, v in pairs(sorted(list(a2), function(m) return m[2] end)) do
       assertEqual(v, e2[i], 'String sorting failed')
     end
-    end
-})
+    end)
+)
