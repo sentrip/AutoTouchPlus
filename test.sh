@@ -56,8 +56,6 @@ data += '\nrun_tests()\n'
 with open('tests/test_test.lua') as f:
   data += '\n\n\n' + '\n'.join(f.read().splitlines()[1:]) + '\n\n\n'
 
-data += 'if is.Nil(rootDir) then os.exit(num(failed)) end\n'
-
 with open('tests.lua', 'w') as f:
   f.write(test_boilerplate)
   f.write(data)
