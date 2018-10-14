@@ -18,7 +18,7 @@ _reset_stdout_and_run_tests(function()
     end)
   )
 end)
-assert(stdout:match('1 passed in 0%.01'), 'Basic tests did not pass')
+assert(stdout:match('1 passed in 0%.[0-9][1-9]'), 'Basic tests did not pass')
 assert(stdout:match('%.\n'), 'Incorrect test results')
 
 
