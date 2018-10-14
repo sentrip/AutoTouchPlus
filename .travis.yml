@@ -1,0 +1,8 @@
+before_install:
+  - sudo luarocks install luacov-coveralls
+
+script:
+  - bash -c "ls tests | xargs -I '{}' lua -lluacov 'tests/{}'"
+
+after_success:
+  - luacov-coveralls
