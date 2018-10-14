@@ -1,6 +1,10 @@
 *.sh
 !coverage.sh
 !test.sh
+!.travis/platform.sh
+!.travis/setenv_lua.sh
+!.travis/setup_lua.sh
+
 *.ld
 .vscode/*
 luacov.report.out
