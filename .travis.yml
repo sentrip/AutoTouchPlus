@@ -19,9 +19,6 @@ before_install:
   - luarocks install luacov-coveralls --server=https://luarocks.org/dev
   - luarocks install lunitx
 
-install:
-  - luarocks make rockspecs/foo-scm-0.rockspec CFLAGS="-O2 -fPIC -ftest-coverage -fprofile-arcs" LIBFLAG="-shared --coverage"
-
 script:
   - bash -c "ls tests | xargs -I '{}' lua -lluacov 'tests/{}'"
 
