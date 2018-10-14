@@ -36,6 +36,9 @@ local _ansi_keys = {
   white     = 37,
 }
 
+if rootDir then io.write = function(...) print(...) end end
+
+
 local function format_ne(msg, v1, v2)
   msg = msg or ''
   return msg..string.format(' ==> %s != %s', str(v1 or ''), str(v2 or ''))
