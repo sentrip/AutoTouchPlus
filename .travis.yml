@@ -1,3 +1,13 @@
+language: c
+
+sudo: false
+
+env:
+  global:
+    - LUAROCKS=2.3.0
+  matrix:
+    - LUA=lua5.2
+
 before_install:
   - sudo luarocks install luacov-coveralls
 
