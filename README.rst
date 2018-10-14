@@ -1,5 +1,14 @@
 AutoTouchPlus
 =============
+
+.. image:: https://img.shields.io/travis/sentrip/AutoTouchPlus.svg
+    :target: https://travis-ci.org/sentrip/AutoTouchPlus
+
+
+.. image:: https://coveralls.io/repos/github/sentrip/AutoTouchPlus/badge.svg
+    :target: https://coveralls.io/github/sentrip/AutoTouchPlus
+
+
 A framework for creating better, faster and shorter AutoTouch scripts
 
 * Free software: Apache License, Version 2.0
