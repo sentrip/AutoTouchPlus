@@ -51,7 +51,8 @@ for fn in test_files:
       if not line.startswith('require') and not line.startswith('run_tests()'):
         data += line
   data += '\n\n\n'
-data += '\nrun_tests()\n'
+
+data += '\nif run_tests() == 0 then alert("All tests passed!") end \n'
 
 with open('tests/test_test.lua') as f:
   data += '\n\n\n' + '\n'.join(f.read().splitlines()[1:]) + '\n\n\n'

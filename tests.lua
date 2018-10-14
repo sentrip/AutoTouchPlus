@@ -1448,7 +1448,7 @@ describe('system',
 
 
 
-run_tests()
+if run_tests() == 0 then alert("All tests passed!") end 
 
 
 

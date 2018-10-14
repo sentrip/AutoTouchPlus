@@ -2021,7 +2021,7 @@ function _test_utils.get_terminal_width(default_width)
 local width = default_width
 pcall(function()
 local _f = assert(io.popen('tput cols'))
-width = tonumber(_f:read())
+width = tonumber(_f:read()) or default_width
 assert(_f:close())
 end)
 return width
