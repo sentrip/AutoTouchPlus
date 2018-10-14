@@ -1733,8 +1733,13 @@ magenta   = 35,
 cyan      = 36,
 white     = 37,
 }
-
-if rootDir then io.write = function(...) print(...) end end
+local _concatenated = ''
+if rootDir then
+io.write = function(s)
+_concatenated = _concatenated..s
+if _concatenated:match('\n') then print(_concatenated); _concatenated = '' end
+end
+end
 
 
 local function format_ne(msg, v1, v2)
@@ -1901,6 +1906,7 @@ end
 
 
 function _test_utils.ansi(c)
+if rootDir then return end
 if type(c) == 'string' then c = _ansi_keys[c] end
 io.write(string.char(27)..'['..tostring(c)..'m')
 end
