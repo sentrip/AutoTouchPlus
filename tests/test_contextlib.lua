@@ -6,15 +6,15 @@ require('src/string')
 require('src/system')
 
 
-fixture('patched_open', function(monkeypatch, request) 
-  local l = {}
-  local _open = io.open
+fixture('temp_dir', function(monkeypatch, request) 
+  -- local l = {}
+  -- local _open = io.open
   io.popen('mkdir _tmp_tst'):close()
-  monkeypatch.setattr(io, 'open', function(...) 
-    local f = _open(...)
-    table.insert(l, f)
-    return f
-  end)
+  -- monkeypatch.setattr(io, 'open', function(...) 
+  --   local f = _open(...)
+  --   table.insert(l, f)
+  --   return f
+  -- end)
   request.addfinalizer(function() io.popen('rm -R _tmp_tst'):close() end)
   return l
 end)
@@ -211,12 +211,13 @@ describe('contextlib',
     with(q(2), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with contextmanager: incorrect execution order')
     end),
-  it('open', function(patched_open)
-    with(open('_tmp_tst/t.txt', 'w'), function(f) f:write('hello') end)
-    assert(type(patched_open[1] == 'userdata'), 'with open did not open a file')
+  it('open', function(temp_dir)
+    local fle
+    with(open('_tmp_tst/t.txt', 'w'), function(f) fle = f; f:write('hello') end)
+    assert(type(fle == 'userdata'), 'with open did not open a file')
     assertRaises(
       'attempt to use a closed file',  
-      function() patched_open[1]:read() end, 
+      function() fle:read() end, 
       'with open did not close file after operation'
     )
     assert(isFile('_tmp_tst/t.txt'), 'open did not create file')
