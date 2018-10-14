@@ -1872,8 +1872,8 @@ end
 
 function run_tests()
 _test_utils.write_began_tests()
-local begin_time = os.time()
-local clock = os.clock()
+
+local begin_time = _test_utils.get_system_time()
 for _, test_obj in pairs(_tests) do
 _test_utils.write_test_description(test_obj.description)
 
@@ -1883,31 +1883,19 @@ _test_utils.destroy_all_fixtures('group', test_obj.description)
 io.write('\n')
 end
 _test_utils.destroy_all_fixtures('module')
-_tests_duration = _tests_duration + (os.clock() - clock)
-local end_time = os.time()
-if end_time - begin_time > _tests_duration then
-_tests_duration = math.max(0, end_time - begin_time - _tests_duration)
-end
+_tests_duration = _test_utils.get_system_time() - begin_time
+
+local exit_code = math.min(1, _count.failed + _count.errors)
 _test_utils.write_completed_tests()
 _test_utils.write_errors()
 _test_utils.reset_internals()
+return exit_code
 end
 
 
 
 
 
-function io.popen(name, ...)
-local float_regex = '0?%.?%d+'
-local time_taken = 0
-
-if name:find('sleep') then
-time_taken = name:match(float_regex)
-end
-
-_tests_duration = _tests_duration + tonumber(time_taken)
-return popen(name, ...)
-end
 
 function _test_utils.ansi(c)
 if type(c) == 'string' then c = _ansi_keys[c] end
@@ -2019,6 +2007,16 @@ end
 return _lines_of_this_file[lineno]:gsub('[ \t]*', '')
 end
 
+function _test_utils.get_system_time()
+local _time = os.time()
+pcall(function()
+local _f = assert(io.popen('date +%s%N'))
+_time = tonumber(_f:read()) / 1000000000
+assert(_f:close())
+end)
+return _time
+end
+
 function _test_utils.get_terminal_width(default_width)
 local width = default_width
 pcall(function()
@@ -2093,7 +2091,7 @@ end
 
 function _test_utils.write_began_tests()
 _test_utils.ansi('bright')
-_test_utils.write_equals_padded('test_obj session starts')
+_test_utils.write_equals_padded('test session starts')
 io.write('testing: ')
 _test_utils.ansi('reset')
 _test_utils.ansi('white')

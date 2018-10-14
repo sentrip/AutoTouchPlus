@@ -251,6 +251,8 @@ describe('contextlib',
 
 
 
+
+
  -- todo add instance checking
 describe('core',
   it('class_definition', function()
@@ -478,6 +480,7 @@ describe('core',
 
 
 
+
 describe("itertools",
   it('map', function ()
     local input = { 1, 2, 3, 4, 5 }
@@ -584,6 +587,7 @@ describe("itertools",
     end
     end)
 )
+
 
 
 
@@ -779,6 +783,8 @@ describe('json',
 
 
 
+
+
 describe('logic', 
   it('all', function()
     assert(all({true, true, true}), 'All - table of booleans')
@@ -874,6 +880,7 @@ describe('logic',
     assertEqual(sum({1,2,3}), 6, 'Number sum incorrect') 
     end)
 )
+
 
 
 
@@ -1204,7 +1211,12 @@ describe('objects - set',
 
 
 
+
+
+
 -- TODO: pixel tests
+
+
 
 
 
@@ -1239,7 +1251,13 @@ describe('requests',
 
 
 
+
+
+
+
 -- TODO: screen tests
+
+
 
 
 
@@ -1315,6 +1333,8 @@ describe('string',
     assertEqual(s[-1], 'c', 'Negative string index failed')
     end)
 )
+
+
 
 
 
@@ -1423,6 +1443,7 @@ describe('system',
     end
     end)
 )
+
 
 
 
@@ -1702,4 +1723,3 @@ assert(stdout:match('Failing fixture tests 3: EFEEFE'), 'Incorrect success/fail/
 -- TODO: Skiped test tests
 
 
-if is.Nil(rootDir) then os.exit(num(failed)) end

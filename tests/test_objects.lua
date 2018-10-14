@@ -1,3 +1,10 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
 
 
 fixture('dict_a', function() return dict() end)
@@ -254,3 +261,6 @@ describe('objects - set',
     end
     end)
 )
+
+
+run_tests()

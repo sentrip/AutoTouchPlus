@@ -1,3 +1,9 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/string')
+require('src/system')
 
 
 fixture('patched_open', function(monkeypatch, request) 
@@ -229,3 +235,5 @@ describe('contextlib',
       end, 'AssertionError suppress did not return error')
     end)
 )
+
+run_tests()

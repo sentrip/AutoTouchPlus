@@ -11,7 +11,7 @@ Features
 
 * Screen watching and interaction
 * Web requests and JSON parsing
-* Unit-testing framework
+* Unit-testing framework based on Python's pytest
 * Functions for system and file operations
 * Object orientation (classes and inheritance)
 * Python's "list", "dict" and "set" objects

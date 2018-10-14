@@ -1,4 +1,11 @@
-
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
+require('src/navigation')
 
 
 describe('navigation', 
@@ -54,3 +61,4 @@ describe('navigation',
     end)
 )
 
+run_tests()

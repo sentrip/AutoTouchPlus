@@ -1,3 +1,10 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
 
 
 describe('string', 
@@ -68,3 +75,6 @@ describe('string',
     assertEqual(s[-1], 'c', 'Negative string index failed')
     end)
 )
+
+
+run_tests()

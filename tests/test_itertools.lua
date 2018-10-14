@@ -1,3 +1,7 @@
+require('src/test')
+require('src/itertools')
+require('src/logic')
+require('src/objects')
 
 
 describe("itertools",
@@ -106,3 +110,5 @@ describe("itertools",
     end
     end)
 )
+
+run_tests()

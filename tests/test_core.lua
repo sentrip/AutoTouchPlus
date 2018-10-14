@@ -1,3 +1,10 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/string')
+require('src/system')
+
 
  -- todo add instance checking
 describe('core',
@@ -218,3 +225,5 @@ describe('core',
     end
     end)
 )
+
+run_tests()

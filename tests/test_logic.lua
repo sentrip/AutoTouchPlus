@@ -1,3 +1,10 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
 
 
 describe('logic', 
@@ -95,3 +102,6 @@ describe('logic',
     assertEqual(sum({1,2,3}), 6, 'Number sum incorrect') 
     end)
 )
+
+
+run_tests()

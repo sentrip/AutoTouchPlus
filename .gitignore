@@ -1,3 +1,7 @@
 *.sh
+!coverage.sh
 !test.sh
 *.ld
+.vscode/*
+luacov.report.out
+luacov.stats.out

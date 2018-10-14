@@ -1,3 +1,5 @@
+require('src/test')
+require('src/json')
 
 
 fixture('equal', function() 
@@ -180,3 +182,5 @@ describe('json',
     end
     end)
 )
+
+run_tests()

@@ -1,3 +1,12 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
+require('src/requests')
+require('src/json')
 
 
 describe('requests',
@@ -21,3 +30,6 @@ describe('requests',
     end)
 )
 -- TODO: failing request test
+
+
+run_tests()

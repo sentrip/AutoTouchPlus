@@ -1,3 +1,10 @@
+require('src/test')
+require('src/core')
+require('src/contextlib')
+require('src/objects')
+require('src/logic')
+require('src/string')
+require('src/system')
 
 
 fixture('filesystem', function(request) 
@@ -100,3 +107,5 @@ describe('system',
     end
     end)
 )
+
+run_tests()
