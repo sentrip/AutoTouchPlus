@@ -2,7 +2,7 @@ AutoTouchPlus
 =============
 
 .. image:: https://img.shields.io/travis/sentrip/AutoTouchPlus.svg
-    :target: https://travis-ci.org/sentrip/AutoTouchPlus
+    :target: https://travis-ci.com/sentrip/AutoTouchPlus
 
 
 .. image:: https://coveralls.io/repos/github/sentrip/AutoTouchPlus/badge.svg
