@@ -18,14 +18,15 @@ assert(is(exe('dpkg-query -W wget')),
 fixture('temp_dir', function(monkeypatch, request) 
   -- local l = {}
   -- local _open = io.open
-  io.popen('mkdir _tmp_tst'):close()
+  local dir_name = '_tmp_tst'
+  io.popen('mkdir '..dir_name):close()
   -- monkeypatch.setattr(io, 'open', function(...) 
   --   local f = _open(...)
   --   table.insert(l, f)
   --   return f
   -- end)
-  request.addfinalizer(function() io.popen('rm -R _tmp_tst'):close() end)
-  return l
+  request.addfinalizer(function() io.popen('rm -R '..dir_name):close() end)
+  return dir_name .. '/'
 end)
 
 
@@ -222,7 +223,7 @@ describe('contextlib',
     end),
   it('open', function(temp_dir)
     local fle
-    with(open('_tmp_tst/t.txt', 'w'), function(f) fle = f; f:write('hello') end)
+    with(open(temp_dir..'t.txt', 'w'), function(f) fle = f; f:write('hello') end)
     assert(type(fle == 'userdata'), 'with open did not open a file')
     -- TODO: fix this for mobile
     -- assertRaises(
@@ -230,8 +231,8 @@ describe('contextlib',
     --   function() fle:read() end, 
     --   'with open did not close file after operation'
     -- )
-    assert(isFile('_tmp_tst/t.txt'), 'open did not create file')
-    assertEqual(readLines('_tmp_tst/t.txt'), list{'hello'}, 
+    -- assert(isFile(temp_dir..'t.txt'), 'open did not create file')
+    assertEqual(readLines(temp_dir..'t.txt'), list{'hello'}, 
       'with open did not write to file')
     end),
   it('suppress', function()
