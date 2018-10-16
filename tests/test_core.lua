@@ -14,6 +14,9 @@ describe('core',
     function A:__init(value)
       self.value = value
     end
+    function A:__tostring()
+      return '['..self.value..']'
+    end
     function A:run()
       return self.value
     end
@@ -37,6 +40,14 @@ describe('core',
     assert(p1, 'Class instance does not have private table')
     assert(p1, 'Class instance does not have private table')
     assertNotEqual(p1, p2, 'Unique instance private tables are equal')
+    
+    local class_loc = repr(A):match('<%w+ class at (.*)')
+    assert(str(A):startswith('<A class at'), 'str(class) is incorrect '..str(A))
+    assert(repr(A):startswith('<A class at'), 'repr(class) is incorrect '..repr(A))
+    assert(str(a):startswith('['), 'str(instance) is incorrect '..str(a))
+    local instance_loc = repr(a):match('<%w+ instance at (.*)')
+    assert(repr(a):startswith('<A instance at'), 'repr(instance) is incorrect '..repr(a))
+    assert(class_loc ~= instance_loc, 'class and instance memory locations are the same')
     end),
   it('class_single_inheritance', function()
     local A = class("A")

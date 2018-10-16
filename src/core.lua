@@ -78,6 +78,7 @@ function class(name, ...)
   --class constructor
   local function constructor(cls, ...)
     local self = {}
+    local table_string = tostring(self)
     setmetatable(self, c)
     
     if cls.__init then 
@@ -91,6 +92,7 @@ function class(name, ...)
       end
     end
     
+    self.__getters.__base_repr = function(s) return table_string end
     return self
   end
   
@@ -106,7 +108,12 @@ function class(name, ...)
   
   --slight improvement of tostring(<table>)
   local function class_repr(cls)
-    return '<'..string.gsub(tostring(cls), 'table:', name..' instance at')..'>'
+    local obj_name, value = 'class', tostring(cls)
+    if getmetatable(cls) == c then 
+      obj_name = 'instance'
+      value = cls.__base_repr or tostring(getmetatable(cls))
+    end
+    return '<'..string.gsub(value, 'table:', name..' '..obj_name..' at')..'>'
   end
   
     --custom strings for dict, list and set
@@ -126,6 +133,7 @@ function class(name, ...)
     __index = getattr,
     __newindex = setattr,
     __repr = class_repr,
+    __tostring = class_str,
     -- convience methods
     copy = copy,
     isinstance = isinstance
@@ -142,7 +150,7 @@ function class(name, ...)
       __call = constructor,
       __index = class_meta_index,
       __newindex = class_meta_newindex,
-      __tostring = class_str,
+      __repr = class_repr,
     })
   return classes[name]
 end
@@ -223,8 +231,12 @@ end
 -- @param input an integer, string or any object that has a __hash method
 -- @return integer unique integer representation of object
 function hash(input)
-  local m = getmetatable(input)  
-  if m and m.__hash then return input:__hash() end
+  if is.func(input) then 
+    input = tostring(input):match('function: (.*)') 
+  else
+    local m = getmetatable(input)  
+    if m and m.__hash then return m.__hash(input) end
+  end
   
   local hsh
   local mod = 2 ^ 64
@@ -232,7 +244,7 @@ function hash(input)
     if input > 0 then hsh = -input * 2 
     elseif input < 0 then hsh = input * 2 - 1
     else hsh = input end
-  elseif not is.str(input) then error("Can only hash integers and strings")
+  elseif not is.str(input) then error("Can only hash functions, integers and strings")
   else
     hsh = string.byte(input[1]) * 2 ^ 7
     for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
