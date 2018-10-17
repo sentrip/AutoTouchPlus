@@ -108,6 +108,16 @@ describe("itertools",
     for i = 1, #data do
          assertEqual(data[i], sorted[i])
     end
+    end),
+  it('can repeat values', function() 
+    local finite = itertools.value(1, 3)
+    local infinite = itertools.value(1)
+    for i=1, 3 do
+      assert(finite() == 1)
+      assert(infinite() == 1)
+    end
+    assert(finite() == nil)
+    assert(infinite() == 1)
     end)
 )
 
