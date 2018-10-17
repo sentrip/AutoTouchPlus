@@ -113,6 +113,10 @@ describe('objects - list',
     assertRequal(list_b + list{5}, {1,2,3,5}, 'Added lists returned incorrect list')
     assertRequal(list{5} + list_b, {5,1,2,3}, 'Added lists returned incorrect list')
     end),
+  it('multiplication', function(list_a, list_b)
+    assertRequal(list_a * 2, list_a, 'Multiplied lists returned incorrect list')
+    assertRequal(list_b * 2, list{1, 2, 3, 1, 2, 3}, 'Multiplied lists returned incorrect list')
+    end),
   it('equality', function(list_a, list_b, list_c)
     assertEqual(list_a, list(), 'Lists not equal')
     assertRequal(list_a, {}, 'List not requals table')
@@ -157,6 +161,14 @@ describe('objects - list',
     assertRequal(list_b, {1,2,3}, 'Other lists changed after append')
     assertRequal(list_c, {1,{2,3}}, 'Other lists changed after append')
     end),
+  it('clear', function(list_a, list_b, list_c) 
+    list_a:clear()
+    assertEqual(len(list_a), 0, 'Did not clear list')
+    assertEqual(len(list_b), 3, 'Cleared more than one list')
+    assertEqual(len(list_c), 2, 'Cleared more than one list')
+    list_b:clear()
+    assertEqual(len(list_b), 0, 'Did not clear list')
+    end),
   it('contains', function(list_a, list_b, list_c)
     assert(list_b:contains(1), 'List does not contain number')
     assert(list_c:contains({2,3}), 'List does not contain table')
@@ -178,6 +190,8 @@ describe('objects - list',
     assertEqual(list_b:pop(2), 2, 'Incorrect value popped from list')
     assertEqual(list_b, list{1,3}, 'List and new list not equal')
     assertRequal(list_b, {1,3}, 'List and table not requal')
+    assertEqual(list_b:pop(), 1, 'Incorrect value popped from list')
+    assertEqual(list_b, list{3}, 'List and new list not equal')
     end)
 )
 
@@ -237,9 +251,11 @@ describe('objects - set',
     end),
   it('pop', function(set_a, set_b, set_c)
     assertEqual(set_b:pop(1), 1, 'Did not return correct number value from pop')
-    assertEqual(set_b, set{2, 3}, 'Did not number value from set after pop')
-    assertEqual(set_c:pop('c'), 'c', 'Did not return correct number value from pop')
-    assertEqual(set_c, set{'a', 'b'}, 'Did not number value from set after pop')
+    assertEqual(set_b, set{2, 3}, 'Did not return correct value from set after pop')
+    assertEqual(set_c:pop('c'), 'c', 'Did not return correct value from pop')
+    assertEqual(set_c, set{'a', 'b'}, 'Did not return correct value from set after pop')
+    set_b:pop()
+    assertEqual(len(set_b), 1, 'Did not pop any value from set')
     end),
   it('remove', function(set_a, set_b, set_c)
     set_b:remove(2)

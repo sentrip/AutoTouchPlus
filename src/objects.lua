@@ -148,10 +148,18 @@ function list:__getitem(value)
     return rawget(self, value) end
 end
 
+function list:__mul(n)
+  local result = list()
+  for i=1, n do result:extend(self) end
+  return result
+end
 
 ---- Append a value to the list
 -- @param value the value to append
 function list:append(value) rawset(self, #self + 1, value) end
+
+--- Clear the list of all values
+function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
 
 ---- Check if the list contains a value
 -- @param value value to check for
@@ -256,7 +264,15 @@ end
 
 --- Pop a value out of the set
 -- @param value
-function set:pop(value) self:remove(value) return value end
+function set:pop(value) 
+  if value then
+    self:remove(value) 
+    return value 
+  else
+    local k, _ = pairs(self)(self)
+    rawset(self, k, nil)
+  end
+end
 
 --- Remove a value from the set
 -- @param value
