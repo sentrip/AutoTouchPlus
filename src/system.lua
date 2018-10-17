@@ -79,7 +79,7 @@ function find(name, starting_directory)
     end 
   end
   return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
-  end
+end
 
 ---- Check if a path is a directory
 -- @tparam string name path to check
@@ -139,7 +139,27 @@ function sizeof(name)
   local size = 0
   for a in string.gmatch(result, "[0-9]*") do size = num(a); break end 
   return size
+end
+
+---- Sleep for a certain amount of seconds (millisecond precision)
+-- @tparam number seconds number of seconds to sleep for
+function sleep(seconds)
+  if seconds <= 0.01 then
+    local current = os.clock()
+    while os.clock() - current < seconds do end
+    return
   end
+  local function get_time()
+    local f = io.popen('date +%s%N')
+    local t = tonumber(f:read())
+    f:close()
+    return t
+  end
+  local time_ns = get_time()
+  while (get_time() - time_ns) < seconds * 1000000000 do 
+    io.popen('sleep 0.001'):close()
+  end
+end
 
 ---- Write a single line to a file
 -- @tparam string line data to write to the file
