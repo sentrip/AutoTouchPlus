@@ -1,4 +1,5 @@
 *.sh
+!compile.sh
 !coverage.sh
 !test.sh
 !.travis/platform.sh
