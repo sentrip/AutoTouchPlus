@@ -1,11 +1,240 @@
 require('src/test')
 require('src/contextlib')
 require('src/core')
+require('src/itertools')
+require('src/logic')
 require('src/objects')
 require('src/pixel')
 require('src/screen')
+require('src/string')
+require('src/system')
 
 
--- TODO: screen tests
+fixture('do_after', function() 
+  return function(n, f, f_before)
+    local count = 0
+    return function()
+      if f_before then f_before() end
+      count = count + 1
+      if count >= n then
+        f()
+      end
+    end 
+  end
+end)
+
+
+fixture('pixels', function(monkeypatch) 
+  local pixels = list{
+    Pixel(10, 10),
+
+  }
+  local function _getColor(x, y) 
+    for p in iter(pixels) do if p.x == x and p.y == y then return p.expected_color end end
+  end
+  local function _getColors(pos) 
+    local colors = list()
+    for p in iter(pos) do colors:append(_getColor(p[1], p[2])) end
+    return colors
+  end
+  
+  monkeypatch.setattr('getColor', _getColor)
+  monkeypatch.setattr('getColors', _getColors)
+  return pixels
+end)
+
+
+fixture('taps', function(monkeypatch)
+  screen.before_action_funcs = set()
+  screen.after_action_funcs = set()
+  screen.before_check_funcs = set()
+  screen.after_check_funcs = set()
+  screen.before_tap_funcs = set()
+  screen.after_tap_funcs = set() 
+  screen.on_stall_funcs = set()
+  screen.check_interval = 150
+  local taps = list()
+  monkeypatch.setattr('tap', function(x, y) taps:append(list{x, y}) end)
+  return taps
+end)
+
+
+fixture('touches', function(monkeypatch)
+  local touches = list()
+  monkeypatch.setattr('usleep', function(...) end)
+  monkeypatch.setattr('touchDown', function(i, x, y) touches:append({'down', i, x, y}) end)
+  monkeypatch.setattr('touchUp', function(i, x, y) touches:append({'up', i, x, y}) end)
+  monkeypatch.setattr('touchMove', function(i, x, y) touches:append({'move', i, x, y}) end)
+  return touches
+end)
+
+
+describe('screen',
+    
+  it('can detect and recover from stall', function(monkeypatch, pixels, taps)
+    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
+    -- TODO: fix this hashing craziness
+    screen.on_stall(setmetatable({function() end}, {__hash=function() return 'abc' end}))
+    local calls = list()
+    screen.on_stall(function() 
+      calls:append(true)
+      pixels:clear()
+    end)
+
+    local pix = screen.stall_indicators:copy()
+    pixels:extend(pix.pixels)
+    screen.tap_while(pix)
+    assert(len(calls) == 1, 'Did not call on stall')
+  end),
+  
+  it('can swipe between pixels', function(touches) 
+    local start_pix = Pixel(10, 10)
+    local end_pix = Pixel(100, 100)
+    for speed in iter{1, 5, 10} do
+      screen.swipe(start_pix, end_pix, speed)
+      assert(len(touches) == 50 / speed + 1, 'Did not touch and move correctly')
+      assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+      assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+      assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+      touches:clear()
+    end
+  end),
+
+  it('can swipe in a direction', function(touches) 
+    local positions = {'left', 'right', 'top', 'bottom', 'center', 'top_left', 'top_right', 'bottom_left', 'bottom_right'}
+    for pos1 in iter(positions) do
+      for pos2 in iter(positions) do
+        if pos1 ~= pos2 then
+          screen.swipe(pos1, pos2, 10)
+          assert(len(touches) == 6, 'Did not touch and move correctly')
+          assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+          assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+          assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+          touches:clear()
+        end
+      end
+    end
+  end),
+
+  it('can tap a position', function(taps) 
+    local x, y, times = 10, 10, 5
+    screen.tap(x, y, times)
+    assert(len(taps) == times, 'Did not tap screen at position')
+    assert(taps[1][1] == x, 'Did not tap screen at correct position')
+  end),
+  
+  it('can tap a pixel', function(taps) 
+    local pix, times = Pixel(10, 10), 5
+    screen.tap(pix, times)
+    assert(len(taps) == times, 'Did not tap screen at pixel')
+    assert(taps[1][1] == pix.x, 'Did not tap screen at correct pixel position')
+  end),
+  
+  it('can tap with context', function(taps, do_after) 
+    local action_calls = list()
+    local check_calls = list()
+    local tap_calls = list()
+    screen.before_action(function() action_calls:append('begin') end)
+    screen.after_action(function() action_calls:append('end') end)
+    screen.before_check(function() check_calls:append('begin') end)
+    screen.after_check(function() check_calls:append('end') end)
+    screen.before_tap(function() tap_calls:append('begin') end)
+    screen.after_tap(function() tap_calls:append('end') end)
+    
+    local count = 0
+    screen.tap_while(function() count = count + 1; return count < 3 end, Pixel(100, 100))
+    
+    assertRequal(action_calls, {'begin', 'end'}, 'action calls order incorrect')
+    assertRequal(check_calls, {'begin', 'end', 'begin', 'end', 'begin', 'end'}, 'check calls order incorrect')
+    assertRequal(tap_calls, {'begin', 'end', 'begin', 'end'}, 'tap calls order incorrect')
+  end),
+  
+  it('can tap if a pixel is visible', function(taps, pixels) 
+    local pix = Pixel(100, 100)
+    screen.tap_if(pix)
+    assert(len(taps) == 0, 'Tapped when pixel is not visible')
+    pixels:append(pix)
+    screen.tap_if(pix)
+    assert(len(taps) == 1, 'Did not tap when pixel is visible')
+    assert(taps[-1][1] == 100, 'Did not tap correct position')
+    screen.tap_if(pix, Pixel(200, 200))
+    assert(taps[-1][1] == 200, 'Did not tap correct position')
+  end),
+  
+  it('can tap while a pixel is visible', function(taps, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    pixels:append(pix)
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() pixels:remove(pix) end
+    ))
+    screen.tap_while(pix)
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap until a pixel is visible', function(taps, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() pixels:append(pix) end
+    ))
+    screen.tap_until(pix)
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap if a condition is met', function(taps) 
+    screen.tap_if(function() return false end, Pixel(100, 100))
+    assert(len(taps) == 0, 'Tapped when condition not met')
+    screen.tap_if(function() return true end, Pixel(100, 100))
+    assert(len(taps) == 1, 'Did not tap when condition is met')
+    assert(taps[-1][1] == 100, 'Did not tap correct position')
+  end),
+  
+  it('can tap while a condition is met', function(taps, do_after) 
+    local cond = true
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() cond = false end
+    ))
+    screen.tap_while(function() return cond end, Pixel(100, 100))
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap until a condition is met', function(taps, do_after) 
+    local cond = false
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() cond = true end
+    ))
+    screen.tap_until(function() return cond end, Pixel(100, 100))
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can wait for a pixel', function(taps, pixels, do_after) 
+    local checks = 0
+    local pix = Pixel(100, 100)
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() pixels:append(pix) end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(pix)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end),
+  
+  it('can wait for a condition', function(taps, do_after) 
+    local checks = 0
+    local cond = false
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() cond = true end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(function() return cond end)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end)
+
+)
+
 
 run_tests()

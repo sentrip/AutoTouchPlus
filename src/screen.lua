@@ -3,14 +3,18 @@
 
 screen = {
   
-  before_action_funcs = list(),
-  after_action_funcs = list(),
-  before_check_funcs = list(),
-  after_check_funcs = list(),
-  before_tap_funcs = list(),
-  after_tap_funcs = list(),
-  
-  check_interval = 150000, --checks every 150ms (0.15s)
+  before_action_funcs = set(),
+  after_action_funcs = set(),
+  before_check_funcs = set(),
+  after_check_funcs = set(),
+  before_tap_funcs = set(),
+  after_tap_funcs = set(),
+  on_stall_funcs = set(),
+
+  check_interval = 150000,              -- every 150ms (0.15s)
+  stall_after_checks = 5,               -- after 5 same screens
+  stall_after_checks_interval = 3 * 60, -- every 180s
+
   wait_before_action = 0,
   wait_after_action = 0,
   wait_before_tap = 0,
@@ -18,26 +22,50 @@ screen = {
   
 }
 ---
+local _stall = {count = 0, last_check=0, last_colors={}, cyclers=list()}
+---
 
 ---
 if Not.Nil(getScreenResolution) then
   screen.width, screen.height = getScreenResolution()
 else
-  screen.width, screen.height = 0, 0
+  screen.width, screen.height = 200, 400
 end
 ---
 
+---
+screen.edge = {
+  top_left = Pixel(0, 0),
+  top_right = Pixel(screen.width, 0),
+  bottom_left = Pixel(0, screen.height),
+  bottom_right = Pixel(screen.width, screen.height)
+}
 ---
 screen.mid = {
   left = Pixel(0, screen.height / 2),
   right = Pixel(screen.width, screen.height / 2),
   top = Pixel(screen.width / 2, 0),
-  bottom = Pixel(screen.height, screen.width / 2),
+  bottom = Pixel(screen.width / 2, screen.height),
   center = Pixel(screen.width / 2, screen.height / 2)
 }
 ---
-
+screen.stall_indicators = Pixels{
+  -- TODO: add more pixels for screen recovery check
+  screen.mid.center
+}
 ---
+
+--@local
+getColor = getColor or function(...) return 0 end
+getColors = getColors or function(...) return {0} end
+tap = tap or function(...) end
+touchDown = touchDown or function(...) end
+touchMove = touchDown or function(...) end
+touchUp = touchDown or function(...) end
+usleep = usleep or function(...) end
+---
+
+-- @local
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
   
   sleep(before_wait)
@@ -57,14 +85,15 @@ local create_context = contextmanager(function(before_wait, after_wait, before_f
 end)
 ---
 
----
-local action_context = contextmanager(function(condition)
+---- Context manager for screen actions and checking
+-- @param condition 
+screen.action_context = contextmanager(function(condition)
   
   local ctx = create_context(
     screen.wait_before_action, screen.wait_after_action, 
     screen.before_action_funcs, screen.after_action_funcs
   )
-  
+
   with(ctx, function()
       
       local check
@@ -80,7 +109,23 @@ local action_context = contextmanager(function(condition)
           for func in iter(screen.before_check_funcs) do
             func()
           end
-          
+
+          -- Run stalling escape procedures if screen is stalled
+          if screen.is_stalled() then
+            -- Create stall function cyclers if not created
+            if len(_stall.cyclers) == 0 then
+              for f in iter(screen.on_stall_funcs) do
+                local fs
+                if is.func(f) then fs = {f} else fs = f end
+                _stall.cyclers:append(itertools.cycle(iter(fs)))
+              end
+            end
+            -- Get and execute next function for each cycler 
+            for func in iter(_stall.cyclers) do
+              func()()
+            end
+          end
+
           local result = check()
           
           for func in iter(screen.after_check_funcs) do
@@ -95,8 +140,8 @@ local action_context = contextmanager(function(condition)
 end)
 ---
 
----
-local tap_context = contextmanager(function()
+--- Context manager for tapping
+screen.tap_context = contextmanager(function()
   
   local ctx = create_context(
     screen.wait_before_tap, screen.wait_after_tap,
@@ -111,42 +156,49 @@ end)
 ---- Register a function to be run before a screen action
 -- @param func function to run before action (no arguments)
 function screen.before_action(func)
-  screen.before_action_funcs:append(func)
+  screen.before_action_funcs:add(func)
 end
 ---
 
 ---- Register a function to be run after a screen action
 -- @param func function to run after action (no arguments)
 function screen.after_action(func)
-  screen.after_action_funcs:append(func)
+  screen.after_action_funcs:add(func)
 end
 ---
 
 ---- Register a function to be run before a screen check
 -- @param func function to run before check (no arguments)
 function screen.before_check(func)
-  screen.before_check_funcs:append(func)
+  screen.before_check_funcs:add(func)
 end
 ---
 
 ---- Register a function to be run after a screen check
 -- @param func function to run after check (no arguments)
 function screen.after_check(func)
-  screen.after_check_funcs:append(func)
+  screen.after_check_funcs:add(func)
 end
 ---
 
 ---- Register a function to be run before a screen tap
 -- @param func function to run before tap (no arguments)
 function screen.before_tap(func)
-  screen.before_tap_funcs:append(func)
+  screen.before_tap_funcs:add(func)
 end
 ---
 
 ---- Register a function to be run after a screen tap
 -- @param func function to run after tap (no arguments)
 function screen.after_tap(func)
-  screen.after_tap_funcs:append(func)
+  screen.after_tap_funcs:add(func)
+end
+---
+
+---- Register a function to be run when the screen is stalled
+-- @param func function to run when stalled (no arguments)
+function screen.on_stall(func)
+  screen.on_stall_funcs:add(func)
 end
 ---
 
@@ -155,6 +207,31 @@ end
 -- @treturn boolean does the screen contain the pixel(s)
 function screen.contains(pixel)
   return pixel:visible()
+end
+---
+
+--- Check if the screen has stalled on the same pixels for a while
+function screen.is_stalled()
+  local current, previous
+  local now = tonumber(exe('date +%s%N')) / 1000000000
+  if now - _stall.last_check > screen.stall_after_checks_interval then
+    _stall.last_check = now
+    current = screen.stall_indicators.colors
+    local result = false
+    if requal(current, _stall.last_colors) then
+      _stall.count = _stall.count + 1
+      if _stall.count > screen.stall_after_checks then
+        result = true
+      end
+    else
+      _stall.count = 0
+      _stall.cyclers = list()
+    end
+    _stall.last_colors = current
+    return result
+  end
+
+  return false
 end
 ---
 
@@ -172,7 +249,7 @@ function screen.tap(x, y, times, interval)
     pixel, times, interval = x, y, times
   end
   
-  with(tap_context(screen), function()
+  with(screen.tap_context(screen), function()
     for i=1, times or 1 do
       tap(pixel.x, pixel.y)
       usleep(10000)
@@ -189,7 +266,7 @@ end
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
 function screen.tap_if(condition, to_tap)
-  with(action_context(condition), function(check) 
+  with(screen.action_context(condition), function(check) 
     
     if check() then
       screen.tap(to_tap or condition)
@@ -205,7 +282,7 @@ end
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
 function screen.tap_while(condition, to_tap)
-  with(action_context(condition), function(check) 
+  with(screen.action_context(condition), function(check) 
     
     while check() do
       screen.tap(to_tap or condition)
@@ -222,7 +299,7 @@ end
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
 function screen.tap_until(condition, to_tap)
-  with(action_context(condition), function(check) 
+  with(screen.action_context(condition), function(check) 
     
     repeat  
       screen.tap(to_tap or condition)
@@ -238,7 +315,7 @@ end
 -- @tparam Pixel|func condition see @{screen.tap_if}
 -- @treturn screen screen for method chaining
 function screen.wait(condition)
-  with(action_context(condition), function(check) 
+  with(screen.action_context(condition), function(check) 
     
     repeat
       usleep(screen.check_interval)
@@ -250,39 +327,25 @@ end
 ---
 
 ---- Swipe the screen
--- @tparam Pixel|string start pixel at which to start the swipe, or one of 'left, 'right', 'top', 'bottom'
--- @tparam Pixel|string _end pixel at which to end the swipe, or one of 'left, 'right', 'top', 'bottom'
+-- @tparam Pixel|string start pixel at which to start the swipe
+-- @tparam Pixel|string _end pixel at which to end the swipe
+-- Possible string arguments for start and _end:
+--     left, right, top, bottom, center, 
+--     top_left, top_right, bottom_left, bottom_right
 -- @tparam number speed swipe speed (1-10)
 -- @treturn screen screen for method chaining
 function screen.swipe(start, _end, speed)
   if is.str(start) then
-    assert(screen.mid[start], 
-      'Incorrect identifier: use one of (left, right, top, bottom)')
-    start = screen.mid[start]
+    assert(screen.mid[start] or screen.edge[start], 
+      'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+    start = screen.mid[start] or screen.edge[start]
   end
   
   if is.str(_end) then
-    assert(screen.mid[_end], 
-      'Incorrect identifier: use one of (left, right, top, bottom)')
-    _end = screen.mid[_end]
+    assert(screen.mid[_end] or screen.edge[_end], 
+      'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+    _end = screen.mid[_end] or screen.edge[_end]
   end
   
-  with(action_context(function() return true end), function(check) 
-    local steps = 50 / speed
-    local x, y = start[1], start[2]
-    local deltaX = (_end[1] - start[1]) / steps
-    local deltaY = (_end[2] - start[2]) / steps
-    touchDown(2, x, y)
-    usleep(16000)
-    for i=1, steps do
-      x = x + deltaX
-      y = y + deltaY
-      touchMove(2, x, y)
-      usleep(16000)
-    end
-    touchUp(2, x, y)
-    end)
-
-  return screen
+  return Path.linear(start, _end):swipe{speed=speed}
 end
----
