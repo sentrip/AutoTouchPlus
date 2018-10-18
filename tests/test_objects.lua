@@ -20,22 +20,26 @@ fixture('set_c', function() return set{'a', 'b', 'c'} end)
 
 
 describe('objects - dict',
+
   it('creation', function(dict_a, dict_b)
     assertNotRequal(dict_a, dict_b, 'Different dicts requal')
     assertRequal(dict_a, {}, 'Dict and table not requal')
     assertRequal(dict_b, {a=1, b=2}, 'Dict and table not requal')
     assertEqual(dict_a['thing'], nil, 'Unknown key does not return nil')
-    end),
+  end),
+
   it('addition', function(dict_a, dict_b)
     assertEqual(dict_a + dict_b, dict_b, 'Added dicts not equal')
     assertEqual(dict_b + {b=9}, dict{a=1, b=9}, 'Added dicts not equal')
-    end),
+  end),
+
   it('equality', function(dict_a, dict_b)
     dict_a:update(dict_b)
     assertEqual(dict_a, dict_b, 'Dicts not equal')
     assertRequal(dict_a, {a=1, b=2}, 'Dict and table not requal')
     assertNotEqual(dict_a, {a=1, b=2}, 'Dict and table equal')
-    end),
+  end),
+
   it('for', function(dict_a, dict_b)
     local expected
     local expected1 = {'a', 'b'}
@@ -51,52 +55,68 @@ describe('objects - dict',
       assertEqual(k, expected[i], 'incorrect key returned in for loop')
       i = i + 1
     end
-    end),
+  end),
+
   it('pairs', function(dict_a, dict_b)
     local expected = {a=1, b=2}
     for i, v in pairs(dict_b) do
       assertEqual(v, expected[i], 'Pairs returns incorrect result')
     end
-    end),
+  end),
+
+  it('pop', function(dict_a, dict_b)
+    assertEqual(dict_b:pop('a'), 1, 'Incorrect value popped from dict')
+    assertEqual(dict_b, dict{b=2}, 'Dict and new dict not equal')
+    assert(dict_b:pop(), 'Did not pop value from dict')
+    assertEqual(dict_b, dict(), 'Dict and new dict not equal')
+  end),
+
   it('clear', function(dict_a, dict_b)
     dict_a:clear()
     dict_b:clear()
     assertEqual(dict_a, dict_b, 'Dict not empty after clear')
-    end),
+  end),
+
   it('contains', function(dict_a, dict_b)
     assert(not dict_b:contains('q'), 'Dict contains unknown key')
     assert(dict_b:contains('a'), 'Dict does not contain key')
-    end),
+  end),
+
   it('get', function(dict_a, dict_b)
     assertEqual(dict_b:get('a'), 1, 'Dict get incorrect for known key')
     assertEqual(dict_b:get('q'), nil, 'Dict get incorrect for unknown key')
     assertEqual(dict_b:get('a', 5), 1, 'Dict get incorrect for known key with default')
     assertEqual(dict_b:get('q', 5), 5, 'Dict get incorrect for unknown key with default')
-    end),
+  end),
+
   it('keys', function(dict_a, dict_b)
     assert(Not(dict_a:keys(), 'Incorrect dict keys'))
     for i, v in pairs({'a', 'b'}) do
       assert(isin(v, dict_b:keys()), 'Dict key not found')
     end
-    end),
+  end),
+
   it('set', function(dict_a, dict_b)
     dict_b:set('b', 5)
     assertEqual(dict_b['b'], 5, 'Incorrect value after set')
-    end), 
+  end), 
+
   it('update', function(dict_a, dict_b)
     dict_a:update(dict_b)
     assertEqual(dict_a, dict_b, 'Dicts not equal after update')
-    end),
+  end),
+
   it('values', function(dict_a, dict_b)
     assert(Not(dict_a:values(), 'Incorrect dict values'))
     for i, v in pairs({1, 2}) do
       assert(isin(v, dict_b:values()), 'Dict value not found')
     end
-    end)
+  end)
 )
 
 
 describe('objects - list',
+
   it('creation', function(list_a, list_b, list_c)
     assertNotEqual(list_a, list_b, 'Different lists are equal')
     assertNotEqual(list_a, list_c, 'Different lists are equal')
@@ -107,16 +127,19 @@ describe('objects - list',
     assertRequal(list_a, {}, 'List and table not requal')
     assertRequal(list_b, {1,2,3}, 'List and table not requal')
     assertRequal(list_c, {1,{2, 3}}, 'List and table not requal')
-    end),
+  end),
+
   it('addition', function(list_a, list_b, list_c)
     assertRequal(list_a + list_b, list_b, 'Added lists returned incorrect list')
     assertRequal(list_b + list{5}, {1,2,3,5}, 'Added lists returned incorrect list')
     assertRequal(list{5} + list_b, {5,1,2,3}, 'Added lists returned incorrect list')
-    end),
+  end),
+
   it('multiplication', function(list_a, list_b)
     assertRequal(list_a * 2, list_a, 'Multiplied lists returned incorrect list')
     assertRequal(list_b * 2, list{1, 2, 3, 1, 2, 3}, 'Multiplied lists returned incorrect list')
-    end),
+  end),
+
   it('equality', function(list_a, list_b, list_c)
     assertEqual(list_a, list(), 'Lists not equal')
     assertRequal(list_a, {}, 'List not requals table')
@@ -124,7 +147,8 @@ describe('objects - list',
     assertRequal(list_b, {1,2,3}, 'List not requals table')
     assertEqual(list_b, list{1,2,3}, 'Lists not equal')
     assertNotEqual(list_b, {1,2,3}, 'List equals table')
-    end),
+  end),
+
   it('for', function(list_a, list_b, list_c)
     local count = 0
     local expected = {1, 2, 3}
@@ -133,17 +157,20 @@ describe('objects - list',
       assertEqual(v, expected[count], 'Unknown element returned')
     end
     assertEqual(count, len(list_b), 'Incorrect number of elements')
-    end),
+  end),
+
   it('indexing', function(list_a, list_b, list_c)
     assertEqual(list_b[2], 2, 'Positive index returned incorrect result')
     assertEqual(list_b[-2], 2, 'Negative index returned incorrect result')
-    end),  
+  end),  
+
   it('pairs', function(list_a, list_b, list_c)
     local expected = {1,2,3}
     for i, v in pairs(list_b) do
       assertEqual(v, expected[i], 'Incorrect item returned in list pairs')
     end
-    end),
+  end),
+
   it('slicing', function(list_a, list_b, list_c)
     assertEqual(list_b(1), list_b, 'list slice failed')
     assertEqual(list_b(1, 2), list{1,2}, 'list slice failed')
@@ -151,7 +178,8 @@ describe('objects - list',
     assertEqual(list_b(1, -2), list{1,2}, 'list slice failed')
     assertEqual(list_b(3, 1, -1), reversed(list_b), 'list slice failed')
     assertEqual(list_b{2, -1, 1}, list{2, 3, 1}, 'list slice failed')
-    end),
+  end),
+
   it('append', function(list_a, list_b, list_c)
     list_a:append(5)
     assertEqual(list_a, list{5}, 'List and new list not equal')
@@ -160,7 +188,8 @@ describe('objects - list',
     assertRequal(list_a, {5}, 'List and table not requal')
     assertRequal(list_b, {1,2,3}, 'Other lists changed after append')
     assertRequal(list_c, {1,{2,3}}, 'Other lists changed after append')
-    end),
+  end),
+
   it('clear', function(list_a, list_b, list_c) 
     list_a:clear()
     assertEqual(len(list_a), 0, 'Did not clear list')
@@ -168,47 +197,55 @@ describe('objects - list',
     assertEqual(len(list_c), 2, 'Cleared more than one list')
     list_b:clear()
     assertEqual(len(list_b), 0, 'Did not clear list')
-    end),
+  end),
+
   it('contains', function(list_a, list_b, list_c)
     assert(list_b:contains(1), 'List does not contain number')
     assert(list_c:contains({2,3}), 'List does not contain table')
-    end),
+  end),
+
   it('extend', function(list_a, list_b, list_c)
     list_a:extend{1,2}
     assertEqual(list_a, list{1,2}, 'List and new list not equal')
     assertRequal(list_a, {1,2}, 'List and table not requal')
-    end),
+  end),
+
   it('index', function(list_a, list_b, list_c)
     assertEqual(list_b:index(1), 1, 'Incorrect list index')
-    end),
+  end),
+
   it('insert', function(list_a, list_b, list_c)
     list_b:insert(2, 5)
     assertEqual(list_b, list{1,5,2,3}, 'List and new list not equal')
     assertRequal(list_b, {1,5,2,3}, 'List and table not requal')
-    end),
+  end),
+
   it('pop', function(list_a, list_b, list_c)
     assertEqual(list_b:pop(2), 2, 'Incorrect value popped from list')
     assertEqual(list_b, list{1,3}, 'List and new list not equal')
     assertRequal(list_b, {1,3}, 'List and table not requal')
     assertEqual(list_b:pop(), 1, 'Incorrect value popped from list')
     assertEqual(list_b, list{3}, 'List and new list not equal')
-    end)
+  end)
 )
 
 
-describe('objects - set', 
+describe('objects - set',
+
   it('creation', function(set_a, set_b, set_c)
     assertNotRequal(set_a, set_b, 'Different sets requal')
     assertRequal(set_a, {}, 'Set and table not requal')
     assertRequal(set_b, set{1,2,3}, 'Same sets not requal')
-    end),
+  end),
+
   it('equality', function(set_a, set_b, set_c)
     assertEqual(set_a, set(), 'Empty sets not equal')
     assertEqual(set_b, set{1, 2, 3}, 'Number sets not equal')
     assertEqual(set_c, set{'a', 'b', 'c'}, 'String sets not equal')
     assertNotEqual(set_b, {1, 2, 3}, 'Set and table equal')
     assertRequal(set_b, {1, 2, 3}, 'Set and table not requal')
-    end),
+  end),
+
   it('for', function(set_a, set_b, set_c)
     local count = 0
     for v in set_b() do 
@@ -216,14 +253,16 @@ describe('objects - set',
       assert(isin(v, set_b), 'Unknown element returned')
     end
     assertEqual(count, len(set_b), 'Incorrect number of elements')
-    end),
+  end),
+
   it('pairs', function(set_a, set_b, set_c)
     for _, s in pairs({set_b, set_c}) do
       for k, v in pairs(s) do
         assertEqual(k, str(hash(v)), 'Set key is not hash of value')
       end
     end
-    end),
+  end),
+
   it('add', function(set_a, set_b, set_c)
     set_a:add(1)
     assertEqual(set_a, set{1}, 'Did not add element to set')
@@ -234,40 +273,47 @@ describe('objects - set',
     set_a:add(2)
     set_a:add(3)
     assertEqual(set_a, set_b, 'Did not add elements to set')
-    end),
+  end),
+
   it('clear', function(set_a, set_b, set_c)
     set_b:clear()
     assertEqual(set_a, set_b, 'Did not clear set')
     set_c:clear()
     assertEqual(set_a, set_c, 'Did not clear set')
-    end),
+  end),
+
   it('contains', function(set_a, set_b, set_c)
     assert(set_b:contains(1), 'Set does not contain number element')
     assert(set_c:contains('b'), 'Set does not contain string element')
-    end),
+  end),
+
   it('difference', function(set_a, set_b, set_c)
     assertEqual(set_b - set{1}, set{2, 3}, 'Set subtraction with number items failed')
     assertEqual(set_c - set{'a', 'c'}, set{'b'}, 'Set subtraction with string items failed')
-    end),
+  end),
+
   it('pop', function(set_a, set_b, set_c)
     assertEqual(set_b:pop(1), 1, 'Did not return correct number value from pop')
     assertEqual(set_b, set{2, 3}, 'Did not return correct value from set after pop')
     assertEqual(set_c:pop('c'), 'c', 'Did not return correct value from pop')
     assertEqual(set_c, set{'a', 'b'}, 'Did not return correct value from set after pop')
-    set_b:pop()
+    assert(set_b:pop(), 'Did not pop any value from set')
     assertEqual(len(set_b), 1, 'Did not pop any value from set')
-    end),
+  end),
+
   it('remove', function(set_a, set_b, set_c)
     set_b:remove(2)
     assertEqual(set_b, set{1, 3}, 'Did not remove number item from set')
     set_c:remove('b')
     assertEqual(set_c, set{'a', 'c'}, 'Did not remove number item from set')
-    end),
+  end),
+
   it('update', function(set_a, set_b, set_c)
     set_a:update(set_b)
     assertEqual(set_a, set_b, 'Update of empty set incorrect')
     assertEqual(set_b + set_c, set{'a', 'b', 'c', 1, 2, 3}, 'Addition of filled sets incorrect')
-    end),
+  end),
+
   it('values', function(set_a, set_b, set_c)
     for k, v in pairs(set_a:values()) do
       assert(set_a:contains(v), 'Set does not contain number element in values')
@@ -275,7 +321,7 @@ describe('objects - set',
     for k, v in pairs(set_b:values()) do
       assert(set_b:contains(v), 'Set does not contain string element in values')
     end
-    end)
+  end)
 )
 
 

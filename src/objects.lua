@@ -9,9 +9,8 @@ local function namedRequality(name)
     local mt = getmetatable(other)
     if mt and mt.__name == name then
       return requal(me, other) 
-    else
-      return false
     end
+    return false
   end
 end
 
@@ -82,9 +81,15 @@ end
 -- @param key key index of dictionary
 -- @param default default value to return
 function dict:pop(key, default) 
-  result = rawget(self, key) or default
-  rawset(self, key, nil) 
-  return result
+  if key then
+    result = rawget(self, key) or default
+    rawset(self, key, nil) 
+    return result
+  else
+    local k, v = pairs(self)(self)
+    rawset(self, k, nil)
+    return v
+  end
 end
 
 --- Set the value indexed by given key to given value
@@ -269,8 +274,9 @@ function set:pop(value)
     self:remove(value) 
     return value 
   else
-    local k, _ = pairs(self)(self)
+    local k, v = pairs(self)(self)
     rawset(self, k, nil)
+    return v
   end
 end
 
