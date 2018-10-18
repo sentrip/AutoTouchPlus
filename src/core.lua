@@ -4,42 +4,8 @@
 --Global variable patching
 abs = math.abs
 unpack = table.unpack
-
-
---convert table to string with special cases for custom objects
-local function table2string(input)
-  local m = getmetatable(input)
-  local function idxstr(idx, val, custom_type) 
-    if custom_type then return str(val) 
-    elseif is.str(val) then val = '"'..val..'"'
-    else val = str(val) end
-    if is.str(idx) then idx = '"'..idx..'"'
-    else idx = str(idx) end
-    return string.format('%s: %s', idx, val)
-  end
-  
-  local custom = m and m.__name and list{'list', 'set'}:contains(m.__name)
-  local count, all_int = 0, true
-  for i, v in pairs(input) do
-    count = count + 1
-    if not is.num(i) or i ~= count then 
-      all_int = false
-      break
-    end
-  end
-  if count ~= #input then all_int = false end
-  custom = custom or all_int   
-  
-  local pre, suf = '{', '}'
-  if input == list(input) then  pre, suf = '[', ']' end
-  local s = pre
-  for i, v in pairs(input) do
-    if s ~= pre then s = s .. ', ' end
-    s = s .. idxstr(i, v, custom)
-  end
-  return s .. suf
-end
-
+-- Index of string converting functions (at end of file)
+local _string_converters = {}
 
 
 --Index of class names
@@ -48,13 +14,12 @@ local classes = {}
 --They are only created upon being indexed for memory efficiency
 local private_tables = {}
   
----- Create a new class instance
+---- Create a new class type
 -- @param name 
 -- @param ...
 function class(name, ...)
-  local c --a new class instance
-  local getters, setters = {}, {}
-  local bases = {}
+  local c --a new class type
+  local bases, getters, setters = {}, {}, {}
   for i, v in pairs({...}) do
     if is.str(v) then v = classes[v] end
     table.insert(bases, v)
@@ -83,13 +48,6 @@ function class(name, ...)
     
     if cls.__init then 
       cls.__init(self, ...) 
-    else
-      for _, base in pairs(bases) do
-        if base.__init then 
-          base.__init(self, ...)
-          break
-        end
-      end
     end
     
     self.__getters.__base_repr = function(s) return table_string end
@@ -106,25 +64,6 @@ function class(name, ...)
     rawset(cls, key, value) 
   end
   
-  --slight improvement of tostring(<table>)
-  local function class_repr(cls)
-    local obj_name, value = 'class', tostring(cls)
-    if getmetatable(cls) == c then 
-      obj_name = 'instance'
-      value = cls.__base_repr or tostring(getmetatable(cls))
-    end
-    return '<'..string.gsub(value, 'table:', name..' '..obj_name..' at')..'>'
-  end
-  
-    --custom strings for dict, list and set
-  local function class_str(cls)
-    if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
-      return table2string(cls)
-    else
-      return class_repr(cls)
-    end
-  end
-  
   c = {
     __name = name,
     __bases = bases,
@@ -132,31 +71,37 @@ function class(name, ...)
     __setters = setters,
     __index = getattr,
     __newindex = setattr,
-    __repr = class_repr,
-    __tostring = class_str,
+    __repr = _string_converters.class_repr,
+    __tostring = _string_converters.class_str,
     -- convience methods
     copy = copy,
     isinstance = isinstance
   }
 
-  -- copy any methods from base classes in order of inheritance (youngest first)
+  -- copy any methods/properties from base classes in order of inheritance (youngest first)
   for _, base in pairs(bases) do
     for k, v in pairs(base) do
       if not c[k] then c[k] = v end
     end
+    for k, v in pairs(base.__getters) do
+      if not c.__getters[k] then c.__getters[k] = v end
+    end
+    for k, v in pairs(base.__setters) do
+      if not c.__setters[k] then c.__setters[k] = v end
+    end
   end
 
   classes[name] = setmetatable(c, {
+      __class = c,
       __call = constructor,
       __index = class_meta_index,
       __newindex = class_meta_newindex,
-      __repr = class_repr,
+      __repr = _string_converters.class_repr,
     })
   return classes[name]
 end
 
-
----- indexing that supports Python-like property getters
+---- Indexing that supports Python-like property getters
 -- @param cls 
 -- @param value
 function getattr(cls, value)  
@@ -178,7 +123,7 @@ function getattr(cls, value)
   end
 end
 
----- new indexing that supports Python-like property setters
+---- Index setting that supports Python-like property setters
 -- @param cls 
 -- @param key
 -- @param value
@@ -345,61 +290,219 @@ function num(input)
   if is.num(input) then return input else return tonumber(input) end 
 end
 
+
+--defaults to log in AutoTouch, otherwise print in IDEs or terminal for developement
+local _print = log or print
+---- Improved print function
+-- @param ... 
+-- @return
+function print(...) 
+  local strings = {}
+  for i, v in pairs({...}) do strings[#strings + 1] = str(v) end
+  _print(table.concat(strings, '\t')) 
+end
+
+---- Pretty print a table
+-- @tparam table tbl 
+function pprint(tbl)
+  return print("\n{\n" .. _string_converters.traverseTable(tbl,{[tbl]=true},1, ',') .. "}")
+end
+
+---- Create a property on a class
+-- @param klass class type to add the property to
+-- @tparam string name name of the property
+-- @tparam function getter function to get the value of the property
+-- @tparam function setter function to set the value of the property
+-- @usage A = class('A')
+-- function A:__init(value) 
+--   self._private = value
+-- end
+--
+-- property(A, 'value', 
+--   function(self) return self._private * 2 end,
+--   function(self, value) self._private = value * 2 end,
+-- )
+-- a = A(1)
+-- assert(a.value == 2)
+-- a.value = 2
+-- assert(a.value == 4)
+function property(klass, name, getter, setter) 
+  assert(klass and name and getter, 'Must provide a class, name and getter function')
+  klass.__getters[name] = getter
+  klass.__setters[name] = setter
+end
+
+
+---- Simple string representation of an object
+-- @param input
+-- @return 
+function repr(input) 
+  local m = getmetatable(input)
+  if m and m.__repr then return input:__repr()
+  else return tostring(input) end
+end
+
+
+---- Convert any object into a string
+-- @param input any object
+-- @treturn string string representation of object
+function str(input) 
+  local m = getmetatable(input)
+  if m then
+    local _m = getmetatable(m)
+    if m.__tostring then return tostring(input)
+    elseif _m and _m.__tostring then return _m.__tostring(input) end
+  elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
+  elseif isType(input, 'nil') then return 'nil'
+  elseif isType(input, 'string') then return input 
+  elseif isType(input, 'table') then return _string_converters.table2string(input) end
+  return repr(input)
+end
+
+
+
+---- Reverse the order of the elements in a table or list
+-- @param object object to reverse order of
+-- @treturn table copy of object with elements in reverse order
+function reversed(object)
+  if is.str(object) then return object:reverse() end
+  local result = list()
+  for i, v in pairs(object) do result:insert(1, v) end
+  return result
+end
+
+---- Sort an object
+-- @param object
+-- @param key
+-- @return 
+function sorted(object, key) 
+  local sorter
+  local cp = copy(object)
+  if isType(key, 'function') then
+    sorter = function(v1, v2)
+      v1, v2 = key(v1), key(v2)
+      return v1 < v2
+    end
+  end
+  table.sort(cp, sorter)
+  return cp
+end
+
+
+--@local
+--slight improvement of tostring(<table>)
+function _string_converters.class_repr(cls)
+  local obj_name, value = 'class', tostring(cls)
+  if getmetatable(cls) and getmetatable(cls).__name then 
+    obj_name = 'instance'
+    value = cls.__base_repr or tostring(getmetatable(cls))
+  end
+  return '<'..string.gsub(value, 'table:', cls.__name..' '..obj_name..' at')..'>'
+end
+
+--@local
+--custom strings for dict, list and set
+function _string_converters.class_str(cls)
+  if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
+    return _string_converters.table2string(cls)
+  else
+    return _string_converters.class_repr(cls)
+  end
+end
+
+
+--@local
+--convert table to string with special cases for custom objects
+function _string_converters.table2string(input)
+  local m = getmetatable(input)
+  local function idxstr(idx, val, custom_type) 
+    if custom_type then return str(val) 
+    elseif is.str(val) then val = '"'..val..'"'
+    else val = str(val) end
+    if is.str(idx) then idx = '"'..idx..'"'
+    else idx = str(idx) end
+    return string.format('%s: %s', idx, val)
+  end
+  
+  local custom = m and m.__name and list{'list', 'set'}:contains(m.__name)
+  local count, all_int = 0, true
+  for i, v in pairs(input) do
+    count = count + 1
+    if not is.num(i) or i ~= count then 
+      all_int = false
+      break
+    end
+  end
+  if count ~= #input then all_int = false end
+  custom = custom or all_int   
+  
+  local pre, suf = '{', '}'
+  if input == list(input) then  pre, suf = '[', ']' end
+  local s = pre
+  for i, v in pairs(input) do
+    if s ~= pre then s = s .. ', ' end
+    s = s .. idxstr(i, v, custom)
+  end
+  return s .. suf
+end
+
+
+--@local
 --pretty printing code modified from
 --https://github.com/Anaminus/lua-pretty-print/blob/master/PrettyPrint.lua
-local isPrimitiveType = {string=true, number=true, boolean=true}
-local typeSortOrder = {
-  ['boolean']  = 1;
-  ['number']   = 2;
-  ['string']   = 3;
-  ['function'] = 4;
-  ['thread']   = 5;
-  ['table']    = 6;
-  ['userdata'] = 7;
-  ['nil']      = 8;
-}
-
-
-local function isPrimitiveArray(array)
-  local max,n = 0,0
-  for k,v in pairs(array) do
-    if not (type(k) == 'number' and k > 0 and math.floor(k) == k) or not isPrimitiveType[type(v)] then
-      return false
-    end
-    max = k > max and k or max
-    n = n + 1
-  end
-  return n == max
-end
-
-
-local function formatValue(value)
-  if type(value) == 'string' then
-    return string.format('%q',value)
-  else
-    return tostring(value)
-  end
-end
-
-
-local function formatKey(key,seq)
-  if seq then return "" end
-  if type(key) == 'string' then
-    if key:match('^[%a_][%w_]-$') == key then -- key is variable name
-      return key .. " = "
-    else
-      return "[" .. string.format('%q',key) .. "] = "
-    end
-  else
-    return "[" .. tostring(key) .. "] = "
-  end
-end
-
-
-local function traverseTable(dataTable,tableRef,indent,delim)
+function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
   delim = delim or ','
   local output = ""
   local indentStr = string.rep("\t",indent)
+
+  local isPrimitiveType = {string=true, number=true, boolean=true, ['function']=true, thread=true, userdata=true, ['nil']=true}
+  local typeSortOrder = {
+    ['boolean']  = 1;
+    ['number']   = 2;
+    ['string']   = 3;
+    ['function'] = 4;
+    ['thread']   = 5;
+    ['table']    = 6;
+    ['userdata'] = 7;
+    ['nil']      = 8;
+  }
+  
+  
+  local function isPrimitiveArray(array)
+    local max,n = 0,0
+    if array.isinstance and (array:isinstance(list) or array:isinstance(set)) then return true end
+    for k,v in pairs(array) do
+      if not (type(k) == 'number' and k > 0 and math.floor(k) == k) or not isPrimitiveType[type(v)] then
+        return false
+      end
+      max = k > max and k or max
+      n = n + 1
+    end
+    return n == max
+  end
+  
+  
+  local function formatValue(value)
+    if type(value) == 'string' then
+      return string.format('%q',value)
+    else
+      return tostring(value)
+    end
+  end
+  
+  
+  local function formatKey(key,seq)
+    if seq then return "" end
+    if type(key) == 'string' then
+      if key:match('^[%a_][%w_]-$') == key then -- key is variable name
+        return key .. " = "
+      else
+        return "[" .. string.format('%q',key) .. "] = "
+      end
+    else
+      return "[" .. tostring(key) .. "] = "
+    end
+  end
 
   local keyList = {}
   for k,v in pairs(dataTable) do
@@ -448,18 +551,19 @@ local function traverseTable(dataTable,tableRef,indent,delim)
         if has_items then -- table contains values
           if isPrimitiveArray(value) then -- collapse primitive arrays
             output = output .. indentStr .. formatKey(key,in_seq) .. "{"
-            local n = #value
-            for i=1,n do
-              output = output .. formatValue(value[i])
-              if i < n then
+            local i = 1
+            for _, v in pairs(value) do
+              output = output .. formatValue(v)
+              if i < len(value) then
                 output = output .. ", "
               end
+              i = i + 1
             end
             output = output .. "}"..delim.."\n"
           else -- table is not primitive array
             output = output
             .. indentStr .. formatKey(key,in_seq) .. "{\n"
-            .. traverseTable(value,tableRef,indent+1, delim)
+            .. _string_converters.traverseTable(value,tableRef,indent+1, delim)
             .. indentStr .. "}"..delim.."\n"
           end
         else -- table is empty
@@ -473,94 +577,4 @@ local function traverseTable(dataTable,tableRef,indent,delim)
     end
   end
   return output
-end
-
-
---defaults to log in AutoTouch, otherwise print in IDEs or terminal for developement
-local _print = log or print
----- Improved print function
--- @param ... 
--- @return
-function print(...) 
-  local strings = {}
-  for i, v in pairs({...}) do strings[#strings + 1] = str(v) end
-  _print(table.concat(strings, '\t')) 
-end
-
----- Pretty print a table
--- @tparam table tbl 
-function pprint(tbl)
-  print("\n{\n" .. traverseTable(tbl,{[tbl]=true},1, ',') .. "}")
-end
-
-
----- Simple string representation of an object
--- @param input
--- @return 
-function repr(input) 
-  local m = getmetatable(input)
-  if m and m.__repr then return input:__repr()
-  else return tostring(input) end
-end
-
-
----- Sleep for a certain amount of seconds.
--- The precision is +-0.1ms
--- @tparam number seconds number of seconds to sleep for
-function sleep(seconds) 
-  seconds = (seconds^2)^0.5
-  local remainder = seconds
-  if seconds > 0.01 then
-    local rnd = round(seconds, 5)
-    remainder = seconds - rnd
-    io.popen('sleep ' .. rnd) :close()
-  end
-  local start = os.clock()
-  while os.clock() - start < remainder do end
-end
-
-
----- Convert an input into a string
--- @param input any object
--- @treturn string string representation of object
-function str(input) 
-  local m = getmetatable(input)
-  if m then
-    local _m = getmetatable(m)
-    if m.__tostring then return tostring(input)
-    elseif _m and _m.__tostring then return _m.__tostring(input) end
-  elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
-  elseif isType(input, 'nil') then return 'nil'
-  elseif isType(input, 'string') then return input 
-  elseif isType(input, 'table') then return table2string(input) end
-  return repr(input)
-end
-
-
-
----- Reverse the order of the elements in a table or list
--- @param object object to reverse order of
--- @treturn table copy of object with elements in reverse order
-function reversed(object)
-  if is.str(object) then return object:reverse() end
-  local result = list()
-  for i, v in pairs(object) do result:insert(1, v) end
-  return result
-end
-
----- Sort an object
--- @param object
--- @param key
--- @return 
-function sorted(object, key) 
-  local sorter
-  local cp = copy(object)
-  if isType(key, 'function') then
-    sorter = function(v1, v2)
-      v1, v2 = key(v1), key(v2)
-      return v1 < v2
-    end
-  end
-  table.sort(cp, sorter)
-  return cp
 end

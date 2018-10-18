@@ -6,8 +6,8 @@ require('src/string')
 require('src/system')
 
 
- -- todo add instance checking
 describe('core',
+
   it('class_definition', function()
     --definition
     local A = class("A")
@@ -48,7 +48,8 @@ describe('core',
     local instance_loc = repr(a):match('<%w+ instance at (.*)')
     assert(repr(a):startswith('<A instance at'), 'repr(instance) is incorrect '..repr(a))
     assert(class_loc ~= instance_loc, 'class and instance memory locations are the same')
-    end),
+  end),
+
   it('class_single_inheritance', function()
     local A = class("A")
     function A:__init(value)
@@ -58,7 +59,13 @@ describe('core',
       self.value = self.value + value
     end
     local B = class("B", A)
-    local a, b = A(1), B(10)
+    function B:__init(value)
+      self.value2 = value
+      A.__init(self, value)
+    end
+    local C = class("C", A)
+    local a, b, c = A(1), B(10), C(1)
+    assert(a.value == c.value, 'Child class with no init did not inherit and call init')
     assertEqual(a.value, 1, 'Parent class has incorrect attribute value')
     assertEqual(b.value, 10, 'Child class has incorrect attribute value')
     assert(a.add, 'Parent class does not have required method')
@@ -69,7 +76,12 @@ describe('core',
     b:add(10)
     assertEqual(b.value, 20, 'Child class method failure')
     assertEqual(a.value, 2, 'Difference class has incorrect attribute value')
-    end),
+    assert(not a.value2, 'Parent class inherited properties of child')
+    assert(b.value and b.value2, 'Did not inherit and add properties on child')
+    assert(a:isinstance(A), 'Class not instance of itself')
+    assert(b:isinstance(A), 'Child not instance of parent')
+  end),
+
   it('class_multiple_inheritance', function()
     local A = class("A")
     function A:__init(value)
@@ -81,11 +93,19 @@ describe('core',
     function A:run5(value)
       return self.value + value
     end
-    local B = class("B", A)
+    local B = class("B")
+    function B:__init(value)
+      self.value2 = value
+    end
     function B:run5(value)
-      return self.value + value * 5
+      return self.value2 + value * 5
     end
     local C = class("C", B, A)
+    function C:__init(value)
+      self.value3 = value
+      A.__init(self, value)
+      B.__init(self, value)
+    end
     function C:run(value)
       return self.value + value * 3
     end
@@ -99,7 +119,12 @@ describe('core',
       'Did not inherit methods in correct order')
     assertEqual(c:run5(1), b:run5(1) - 1, 
       'Inherited method different from original method')
-    end),
+    assert(c.value and c.value2 and c.value3, 'Did not set attributes of sub classes')
+    assert(not b:isinstance(a), 'Unrelated classes are instances of eachother')
+    assert(c:isinstance(A), 'Child not instance of oldest parent')
+    assert(c:isinstance(B), 'Child not instance of youngest parent')
+  end),
+
   it('class_get_set_properties', function()
     local A = class("A")
     function A:__init(value)
@@ -111,14 +136,24 @@ describe('core',
     A.__setters['v'] = function(self, value)
       self.value = max(0, min(10, value))
     end
+    local B = class("B", A)
+    
     a = A(1)
-    assert(a.v, 'Getter proprty was not created on class')
+    assert(a.v, 'Getter property was not created on class')
     assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
     a.v = -1
     assertEqual(a.v, 0, 'Setter did not set custom value')
     a.v = 10
     assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
-    end),
+    b = B(1)
+    assert(b.v, 'Getter property was not created on child class')
+    assertEqual(b.v, b.value * 2, 'Getter did not return custom value with child class')
+    b.v = -1
+    assertEqual(b.v, 0, 'Setter did not set custom value with child class')
+    b.v = 10
+    assertEqual(b.v, b.value * 2, 'Getter did not return custom value with child class')
+  end),
+
   it('copy', function()
     local t1, t2 = {1, 2}, {1, {1, 2}}
     local nt1 = copy(t1)
@@ -135,11 +170,13 @@ describe('core',
     local l = list{1, {1, 2}}
     local nl = copy(l, true)
     assert(nl:isinstance(list), 'Did not copy object type')
-    end),
+  end),
+
   it('eval', function()
     assertEqual(eval('return 1 + 1'), 2, 'eval 1 + 1 failed')
     assertRaises('Syntax', function() eval('x =') end, 'eval of syntax error did not fail')
-    end),
+  end),
+
   it('hash', function()
     local h
     local values = {}
@@ -153,7 +190,8 @@ describe('core',
       assert(isnotin(h, values), 'Hash collision in first 50 +/- numbers')
       values[#values + 1] = h
     end
-    end),
+  end),
+
   it('isin', function()
     assert(isin('a', 'abc'), 'Character not in string when it should be')
     assert(not isin('t', 'abc'), "Character in string when it shouldn't be")
@@ -162,33 +200,38 @@ describe('core',
     assert(not isin(5, {1,2,3}), "Number in table when it shouldn't be")
     assert(isin({1,2,3}, {{1,2,3}, {4,5,6}}), 'Table not in nested table when it should be')
     assert(not isin({5}, {{1,2,3}, {4,5,6}}), "Table in nested table when it shouldn't be")
-    end),
+  end),
+
   it('max', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.max(unpack(t)), max(t), 'table max not same as math.max')
     assertEqual(math.max(unpack(t)), max(l), 'list max not same as math.max')
     assertEqual(math.max(unpack(t)), max(s), 'set max not same as math.max')
-    end),
+  end),
+
   it('min', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.min(unpack(t)), min(t), 'table min not same as math.min')
     assertEqual(math.min(unpack(t)), min(l), 'list min not same as math.min')
     assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
-    end),
+  end),
+
   it('num', function()
     assert(is.num(num(1)), 'Converted int to non number')
     assert(is.num(num(1.0)), 'Converted float to non number')
     assert(is.num(num(-1)), 'Converted negative to non number')
     assertEqual(num('1'), 1, 'Converted string int to non number')
     assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
-    end),
+  end),
+
   it('str', function()
     assertEqual(str(1), '1', 'str number failed')
     assertEqual(str('1'), '1', 'str string failed')
     assertEqual(str({1,2}), '{1, 2}', 'table number failed')
     assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
     assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
-    end),
+  end),
+
   it('getattr', function()
     local A = class('A')
     function A:__init()
@@ -198,7 +241,8 @@ describe('core',
     assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
     assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
     assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-    end),
+  end),
+
   it('setattr', function()
     local A = class('A')
     function A:__init()
@@ -208,7 +252,8 @@ describe('core',
     setattr(a, 'val', 3)
     assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
     assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-    end),
+  end),
+
   it('reversed', function()
     local l, s = {1, 2, 3}, 'abc'
     local e1, e2 = {3, 2, 1}, {'c', 'b', 'a'}
@@ -218,7 +263,8 @@ describe('core',
     for i, v in pairs(reversed(s)) do 
       assertEqual(e2[i], v, 'Did not reverse string correctly')
     end
-    end),
+  end),
+
   it('sorted', function()
     --basic sort
     local a, b = {3, 1, 2}, {'c', 'a', 'b'}
@@ -234,7 +280,31 @@ describe('core',
     for i, v in pairs(sorted(list(a2), function(m) return m[2] end)) do
       assertEqual(v, e2[i], 'String sorting failed')
     end
-    end)
+  end),
+
+  it('pretty prints nested table', function(monkeypatch) 
+    monkeypatch.setattr('print', function(...) return ... end)
+    local text = pprint{
+      n=1,
+      s='a',
+      t={
+        n=1,
+        s='a',
+        t={
+          d=dict{a=1, b=2},
+          l=list{1, 2},
+          st=set{1, 2},
+
+        }
+      },
+      c=coroutine.create(function() coroutine.yield() end),
+      f=io.tmpfile()
+    }
+    local expected = '{\n\tn = %d,\n\ts = "%w",\n\tc = thread: [%w%d]+,\n\tt = {\n\t\t'..
+    'n = %d,\n\t\ts = "%w",\n\t\tt = {\n\t\t\td = {\n\t\t\t\ta = %d,\n\t\t\t\tb = %d,\n\t\t\t},'..
+    '\n\t\t\tl = {%d, %d},\n\t\t\tst = {%d, %d},\n\t\t},\n\t},\n\tf = file %([%w%d]+%),\n}'
+    assert(text:match(expected), 'pprint did not print correctly')
+  end)
 )
 
 run_tests()
