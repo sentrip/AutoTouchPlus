@@ -213,7 +213,7 @@ end
 --- Check if the screen has stalled on the same pixels for a while
 function screen.is_stalled()
   local current, previous
-  local now = tonumber(exe('date +%s%N')) / 1000000000
+  local now = os.time()
   if now - _stall.last_check > screen.stall_after_checks_interval then
     _stall.last_check = now
     current = screen.stall_indicators.colors

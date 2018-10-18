@@ -149,14 +149,8 @@ function sleep(seconds)
     while os.clock() - current < seconds do end
     return
   end
-  local function get_time()
-    local f = io.popen('date +%s%N')
-    local t = tonumber(f:read())
-    f:close()
-    return t
-  end
-  local time_ns = get_time()
-  while (get_time() - time_ns) < seconds * 1000000000 do 
+  local time_ns = os.time()
+  while (os.time() - time_ns) < seconds do 
     io.popen('sleep 0.001'):close()
   end
 end
@@ -180,4 +174,13 @@ function writeLines(lines, filename, mode)
     for i, v in pairs(lines) do f:write(v .. '\n') end 
   end
   with(open(filename, mode or 'w'), write) 
+end
+
+
+-- @local
+function os.time()
+  local f = io.popen('date +%s%N')
+  local t = tonumber(f:read()) / 1000000000
+  f:close()
+  return t
 end
