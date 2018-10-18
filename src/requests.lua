@@ -68,12 +68,25 @@ end
 
 ---Parse wget debug output and patch attributes of response
 local function parse_data(lines, request, response)         
-  
   local err_msg = 'error in '..request.method..' request: '
   assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
   
-  local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
-  local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
+  local req_begin, req_end, resp_begin, resp_end
+
+  for i, l in pairs(lines) do 
+    if l == '---request begin---' then
+      req_begin = i + 1
+    elseif l == '---request end---' then
+      req_end = i - 1
+    elseif l == '---response begin---' then
+      resp_begin = i + 1
+    elseif l == '---response end---' then
+      resp_end = i - 1
+    end
+  end
+
+  local req = lines(req_begin, req_end)
+  local resp = lines(resp_begin, resp_end)
   
   _, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '))
   response.status_code = num(response.status_code)
@@ -120,7 +133,7 @@ function Request:__init(request)
   for k, v in pairs(request) do
     setattr(self, k, v)
   end
-  self.headers = dict()
+  self.headers = dict(self.headers or dict())
   self.method = request.method or "GET"
   self.url = request.url or request[1] or ''
   self._response_fn = '_response.txt'
@@ -143,6 +156,7 @@ function Request:build()
   cmd:extend{"'"..self.url.."'"}
   cmd:extend{'--output-file', '-'}
   cmd:extend{'--output-document', self._response_fn}
+  cmd:append('-d')  -- debug output for response code parsing
   return cmd
 end
 ---
@@ -190,7 +204,7 @@ function Request:_add_auth()
   if is(self.auth) then
     local usr = self.auth.user or self.auth[1]
     local pwd = self.auth.password or self.auth[2]
-    retur {'--http-user', usr, '--http-password', pwd}
+    return {'--http-user', usr, '--http-password', pwd}
   end
 end
 ---
@@ -208,11 +222,13 @@ end
 
 ---
 function Request:_add_headers()
+  local cmd = list()
   if is(self.headers) then
     for k, v in pairs(self.headers) do 
       cmd:append("--header='"..k..': '..str(v).."'")
     end
   end
+  return cmd
 end
 ---
 
@@ -229,7 +245,7 @@ end
 
 ---
 function Request:_add_ssl()
-  if not self.verify or (self.url:startswith('https') and self.verify) then
+  if not self.verify_ssl or (self.url:startswith('https') and self.verify_ssl) then
     return {'--no-check-certificate'}
   end
 end
@@ -247,7 +263,9 @@ end
 -- @type Response
 Response = class('Response')
 function Response:__init(request)
+  assert(request, 'Cannot create response with no request')
   self.request = request or {}
+  self.method = self.request.method
   self.url = self.request.url
   self.status_code = -1
   self.text = ''
