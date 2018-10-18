@@ -64,14 +64,19 @@ function with(context, _do)
   local ctx = context()
   local success, result = coroutine.resume(ctx)
   if success then
-    local _type, e
+    local error_type, error_message
     try(
       function() _do(result) end,
       except(function(err) 
-          e = err
-          if err.type then _type, e = err.type, err.msg end
+          if err.type then 
+            error_type = err.type 
+            error_message = err.message 
+          else 
+            error_type = 'Exception'
+            error_message = err 
+          end
         end),
-      function() context:__exit(_type, e) end
+      function() context:__exit(error_type, error_message) end
     )
   end
   coroutine.resume(ctx)
@@ -200,14 +205,12 @@ end
 -- @param _type
 -- @param value
 function ContextManager:__exit(_type, value) 
-  if _type or value then
-    if _type then 
-      value = Exception(_type, value) 
-    else
-      value = _type or value
-    end
-    error(err)
+  if _type then 
+    value = Exception(_type, value).message 
+  else
+    value = _type or value
   end
+  if value then error(value) end
 end
   
 
