@@ -6,23 +6,25 @@ require('src/string')
 require('src/system')
 
 
+fixture('app', function(monkeypatch) 
+  local calls = list()
+  monkeypatch.setattr('appRun', function() calls:append('run') end)
+  monkeypatch.setattr('appKill', function() calls:append('kill') end)
+  return calls
+end)
+
 fixture('temp_dir', function(monkeypatch, request) 
-  -- local l = {}
-  -- local _open = io.open
   local dir_name = '_tmp_tst'
   io.popen('mkdir '..dir_name):close()
-  -- monkeypatch.setattr(io, 'open', function(...) 
-  --   local f = _open(...)
-  --   table.insert(l, f)
-  --   return f
-  -- end)
   request.addfinalizer(function() io.popen('rm -R '..dir_name):close() end)
   return dir_name .. '/'
 end)
 
 
 describe('contextlib',
+
   it('Exception', function()
+    -- TODO: Exception test
     --local Ex = Exception('Ex')
     --local x, y = tostring(Ex), tostring(Ex())
     --local s = ''
@@ -36,7 +38,8 @@ describe('contextlib',
     --local _, e1 = pcall(error, tostring(Ex))
     --local _, e2 = pcall(error, tostring(Ex()))
     --assertRequal(e1, e2, 'Exceptions return different messages')
-    end),
+  end),
+
   it('try', function()
     local result = try(function() return 1 end)
     assertEqual(result, 1, 'try did not return function result')
@@ -51,7 +54,8 @@ describe('contextlib',
     assertEqual(result, nil, 'Failing try did not return nil')
     assertEqual(l, list{1,2,3}, 
       'Incorrect execution order for try, except, finally')
-    end),
+  end),
+
   it('except', function()
     local l = list()
     local x
@@ -97,7 +101,8 @@ describe('contextlib',
         )(e)
     assertEqual(l[-1], '<Ex> err1', 'Did not catch Exception')
     assertEqual(x, e, 'Caught Exception returned error')
-    end),
+  end),
+
   it('try_except', function()
     local Ex = Exception('Ex')
     local e = Ex('err1')
@@ -157,7 +162,8 @@ describe('contextlib',
           except({Exception('other'), Exception('other2')})
         )
       end, 'Uncaught exception did not raise')
-   end),
+  end),
+  
   it('try_except_nested', function()
     local Ex = Exception('Ex')
     local Ex2 = Exception('Xe2')
@@ -187,7 +193,8 @@ describe('contextlib',
           )
       end, 'Uncaught exception did not raise')
     assertEqual(l[-1], e2, 'Caught exception returned incorrect error')
-    end),
+  end),
+
   it('ContextManager', function()
     local l = list()
     local Q = class('Q', ContextManager)
@@ -201,7 +208,8 @@ describe('contextlib',
     end
     with(Q(), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with ContextManager: incorrect execution order')
-    end),
+  end),
+
   it('contextmanager', function()
     local l = list()
     local q = contextmanager(function(a) 
@@ -211,7 +219,11 @@ describe('contextlib',
         end)
     with(q(2), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with contextmanager: incorrect execution order')
-    end),
+  end),
+
+  it('nested with', function() 
+  end),
+
   it('open', function(temp_dir)
     -- TODO: fix this for mobile
     -- local fle
@@ -225,7 +237,8 @@ describe('contextlib',
     -- assert(isFile(temp_dir..'t.txt'), 'open did not create file')
     -- assertEqual(readLines(temp_dir..'t.txt'), list{'hello'}, 
     --   'with open did not write to file')
-    end),
+  end),
+
   it('suppress', function()
     assertEqual(with(suppress(), function() error(ValueError) end), nil,
       'Empty suppress raised error')
@@ -236,7 +249,34 @@ describe('contextlib',
     assertRaises(ValueError, function()
         with(suppress(AssertionError), function() error(ValueError) end) 
       end, 'AssertionError suppress did not return error')
-    end)
+  end),
+
+  it('run_and_close', function(monkeypatch, app) 
+    monkeypatch.setattr('appState', function() return 'ACTIVE' end)
+    with(run_and_close('app'), function() app:append('do') end)
+    assert(requal(app, {'kill', 'run', 'do', 'kill'}), 'Did not run and kill in correct order')
+    app:clear()
+    monkeypatch.setattr('appState', function() return 'NOT RUNNING' end)
+    with(run_and_close('app', false), function() app:append('do') end)
+    assert(requal(app, {'run', 'do'}), 'Did not run and kill in correct order')
+  end),
+
+  it('run_if_closed', function(monkeypatch, app) 
+    monkeypatch.setattr('appState', function() return 'ACTIVE' end)
+    with(run_if_closed('app'), function() app:append('do') end)
+    assert(requal(app, {'do'}), 'Did not run if closed in correct order')
+    app:clear()
+    monkeypatch.setattr('appState', function() return 'NOT RUNNING' end)
+    with(run_if_closed('app'), function() app:append('do') end)
+    assert(requal(app, {'run', 'do', 'kill'}), 'Did not run if closed in correct order')
+  end),
+
+  it('time_ensured', function() 
+    local time_ns = num(exe('date +%s%N'))
+    with(time_ensured(0.01), function() end)
+    local diff = round((num(exe('date +%s%N')) - time_ns) / 1000000000, 2)
+    assert(diff == 0.01, 'Ensure time did not take correct amount of time')
+  end)
 )
 
 run_tests()
