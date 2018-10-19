@@ -26,6 +26,7 @@ end)
 
 --modified from https://github.com/rxi/json.lua/blob/master/test/test.lua
 describe('json',
+
   it("numbers", function()
     local t = {
       [ "123.456"       ] = 123.456,
@@ -44,7 +45,8 @@ describe('json',
     assert( json.decode("13e2") == 13e2 )
     assert( json.decode("13E+2") == 13e2 )
     assert( json.decode("13e-2") == 13e-2 )
-    end),
+  end),
+
   it("literals", function()
     assert( json.decode("true") == true )
     assert( json.encode(true) == "true" ) 
@@ -52,25 +54,30 @@ describe('json',
     assert( json.encode(false) == "false" )
     assert( json.decode("null") == nil )
     assert( json.encode(nil) == "null")
-    end),
+  end),
+
   it("strings", function()
     local s = "Hello world"
     assert( s == json.decode( json.encode(s) ) )
     local s = "\0 \13 \27"
     assert( s == json.decode( json.encode(s) ) )
-    end),
+  end),
+
   it("unicode", function()
     local s = "こんにちは世界"
     assert( s == json.decode( json.encode(s) ) )
-    end),
+  end),
+
   it("arrays", function(equal)
     local t = { "cat", "dog", "owl" }
     assert( equal( t, json.decode( json.encode(t) ) ) )
-    end),
+  end),
+
   it("objects", function(equal)
     local t = { x = 10, y = 20, z = 30 }
     assert( equal( t, json.decode( json.encode(t) ) ) )
-    end),
+  end),
+
   it("decode invalid", function()
     local t = {
       '',
@@ -91,7 +98,8 @@ describe('json',
       local status = pcall(json.decode, v)
       assert( not status, string.format("'%s' was parsed without error", v) )
     end
-    end),
+  end),
+
   it("decode invalid string", function()
     local t = {
       [["\z"]],
@@ -105,7 +113,8 @@ describe('json',
       local status, err = pcall(json.decode, v)
       assert( not status, string.format("'%s' was parsed without error", v) )
     end
-    end),
+  end),
+
   it("decode escape", function()
     local t = {
       [ [["\u263a"]]        ] = '☺',
@@ -119,7 +128,8 @@ describe('json',
       local res = json.decode(k)
       assert( res == v, string.format("expected '%s', got '%s'", v, res) )
     end
-    end),
+  end),
+
   it("decode empty", function(equal)
     local t = {
       [ '[]' ] = {},
@@ -130,7 +140,8 @@ describe('json',
       local res = json.decode(k)
       assert( equal(res, v), string.format("'%s' did not equal expected", k) )
     end
-    end),
+  end),
+
   it("decode collection", function(equal)
     local t = {
       [ '[1, 2, 3, 4, 5, 6]'            ] = {1, 2, 3, 4, 5, 6},
@@ -142,7 +153,8 @@ describe('json',
       local res = json.decode(k)
       assert( equal(res, v), string.format("'%s' did not equal expected", k) )
     end
-    end),
+  end),
+
   it("encode invalid", function()
     local t = {
       { [1000] = "b" },
@@ -156,7 +168,8 @@ describe('json',
       local status, res = pcall(json.encode, v)
       assert( not status, string.format("encoding idx %d did not result in an error", i) )
     end
-    end),
+  end),
+
   it("encode invalid number", function()
     local t = {
       math.huge,      -- inf
@@ -167,7 +180,8 @@ describe('json',
       local status, res = pcall(json.encode, v)
       assert( not status, string.format("encoding '%s' did not result in an error", v) )
     end
-    end),
+  end),
+
   it("encode escape", function()
     local t = {
       [ '"x"'       ] = [["\"x\""]],
@@ -180,7 +194,7 @@ describe('json',
       local res = json.encode(k)
       assert( res == v, string.format("'%s' was not escaped properly", k) )
     end
-    end)
+  end)
 )
 
 run_tests()

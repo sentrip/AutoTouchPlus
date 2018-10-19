@@ -119,7 +119,7 @@ list = class('list')
 
 
 function list:__init(lst) 
-  if is.table(lst) and lst[1] then self:extend(lst) end
+  if is.table(lst) then self:extend(lst) end
 end
 
 function list:__add(other) local new = list(self); new:extend(other); return new end
