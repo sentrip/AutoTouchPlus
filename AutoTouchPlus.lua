@@ -709,45 +709,18 @@ local function parse_data(lines, request, response)
 local err_msg = 'error in '..request.method..' request: '
 assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
 
-local req_begin, req_end, resp_begin, resp_end
-
-for i, l in pairs(lines) do
-if l == '---request begin---' then
-req_begin = i + 1
-elseif l == '---request end---' then
-req_end = i - 1
-elseif l == '---response begin---' then
-resp_begin = i + 1
-elseif l == '---response end---' then
-resp_end = i - 1
+if not response.status_code or num(response.status_code) == -1 then
+for i, ln in pairs(lines) do
+local code, reason = ln:match('HTTP request sent, awaiting response[^%d]*(%d+) (.*)')
+local content_length, mime_type = ln:match('Length: (%d+) %[(.*)%]')
+if code then response.status_code = code end
+if reason then response.reason = reason end
+if content_length then response.content_length = content_length end
+if mime_type then response.mime_type = mime_type end
 end
 end
-
-local req = lines(req_begin, req_end)
-local resp = lines(resp_begin, resp_end)
-
-_, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '))
 response.status_code = num(response.status_code)
 response.ok = response.status_code < 400
-
-local k, v
-for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
-for line in lns() do
-k = line:split(':')[1]:strip('\13')
-v = line:replace(k..': ', ''):strip('\13')
-v = tonumber(v) or v
-if v then
-if i == 'request' then
-request.headers[k] = v
-else
-response.headers[k] = v
-if k == 'Content-Type' then
-if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
-end
-end
-end
-end
-end
 end
 
 local function urlencode(params)
@@ -786,7 +759,6 @@ cmd:extend(self:_add_user_agent() or {})
 cmd:extend{"'"..self.url.."'"}
 cmd:extend{'--output-file', '-'}
 cmd:extend{'--output-document', self._response_fn}
-cmd:append('-d')  -- debug output for response code parsing
 return cmd
 end
 
@@ -876,9 +848,10 @@ self.request = request or {}
 self.method = self.request.method
 self.url = self.request.url
 self.status_code = -1
-self.text = ''
-self.encoding = ''
 self.reason = ''
+self.text = ''
+self.encoding = 'utf-8'
+self.mime_type = 'text/html'
 self.headers = dict()
 self.ok = false
 end
