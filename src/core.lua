@@ -6,7 +6,13 @@ abs = math.abs
 unpack = table.unpack
 -- Index of string converting functions (at end of file)
 local _string_converters = {}
-
+-- List of overwritable metamethods
+local _metamethods = {
+  '__add', '__sub', '__mul', '__div', '__idiv', '__pow', 
+  '__mod', '__concat', '__index', '__newindex', '__call',
+  '__pairs', '__ipairs', '__tostring', '__len', 
+  '__mode', '__metatable', '__gc'
+}
 
 --Index of class names
 local classes = {} 
@@ -82,6 +88,11 @@ function class(name, ...)
   for _, base in pairs(bases) do
     for k, v in pairs(base) do
       if not c[k] then c[k] = v end
+      for _, meth in pairs(_metamethods) do
+        if base[meth] and (meth == '__index' or meth == '__newindex' or meth == '__tostring' or not c[meth]) then 
+          c[meth] = base[meth] 
+        end
+      end
     end
     for k, v in pairs(base.__getters) do
       if not c.__getters[k] then c.__getters[k] = v end
