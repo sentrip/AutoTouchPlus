@@ -15,23 +15,25 @@ assert(is(exe('dpkg-query -W wget')),
 
 
 
+fixture('app', function(monkeypatch) 
+  local calls = list()
+  monkeypatch.setattr('appRun', function() calls:append('run') end)
+  monkeypatch.setattr('appKill', function() calls:append('kill') end)
+  return calls
+end)
+
 fixture('temp_dir', function(monkeypatch, request) 
-  -- local l = {}
-  -- local _open = io.open
   local dir_name = '_tmp_tst'
   io.popen('mkdir '..dir_name):close()
-  -- monkeypatch.setattr(io, 'open', function(...) 
-  --   local f = _open(...)
-  --   table.insert(l, f)
-  --   return f
-  -- end)
   request.addfinalizer(function() io.popen('rm -R '..dir_name):close() end)
   return dir_name .. '/'
 end)
 
 
 describe('contextlib',
+
   it('Exception', function()
+    -- TODO: Exception test
     --local Ex = Exception('Ex')
     --local x, y = tostring(Ex), tostring(Ex())
     --local s = ''
@@ -45,7 +47,8 @@ describe('contextlib',
     --local _, e1 = pcall(error, tostring(Ex))
     --local _, e2 = pcall(error, tostring(Ex()))
     --assertRequal(e1, e2, 'Exceptions return different messages')
-    end),
+  end),
+
   it('try', function()
     local result = try(function() return 1 end)
     assertEqual(result, 1, 'try did not return function result')
@@ -60,7 +63,8 @@ describe('contextlib',
     assertEqual(result, nil, 'Failing try did not return nil')
     assertEqual(l, list{1,2,3}, 
       'Incorrect execution order for try, except, finally')
-    end),
+  end),
+
   it('except', function()
     local l = list()
     local x
@@ -106,7 +110,8 @@ describe('contextlib',
         )(e)
     assertEqual(l[-1], '<Ex> err1', 'Did not catch Exception')
     assertEqual(x, e, 'Caught Exception returned error')
-    end),
+  end),
+
   it('try_except', function()
     local Ex = Exception('Ex')
     local e = Ex('err1')
@@ -166,7 +171,8 @@ describe('contextlib',
           except({Exception('other'), Exception('other2')})
         )
       end, 'Uncaught exception did not raise')
-   end),
+  end),
+  
   it('try_except_nested', function()
     local Ex = Exception('Ex')
     local Ex2 = Exception('Xe2')
@@ -196,7 +202,8 @@ describe('contextlib',
           )
       end, 'Uncaught exception did not raise')
     assertEqual(l[-1], e2, 'Caught exception returned incorrect error')
-    end),
+  end),
+
   it('ContextManager', function()
     local l = list()
     local Q = class('Q', ContextManager)
@@ -210,7 +217,8 @@ describe('contextlib',
     end
     with(Q(), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with ContextManager: incorrect execution order')
-    end),
+  end),
+
   it('contextmanager', function()
     local l = list()
     local q = contextmanager(function(a) 
@@ -220,12 +228,16 @@ describe('contextlib',
         end)
     with(q(2), function(v) l:append(v) end)
     assertEqual(l, list{1,2,3}, 'with contextmanager: incorrect execution order')
-    end),
+  end),
+
+  it('nested with', function() 
+  end),
+
   it('open', function(temp_dir)
+    -- TODO: fix this for mobile
     -- local fle
     -- with(open(temp_dir..'t.txt', 'w'), function(f) fle = f; f:write('hello') end)
     -- assert(type(fle == 'userdata'), 'with open did not open a file')
-    -- TODO: fix this for mobile
     -- assertRaises(
     --   'attempt to use a closed file',  
     --   function() fle:read() end, 
@@ -234,7 +246,8 @@ describe('contextlib',
     -- assert(isFile(temp_dir..'t.txt'), 'open did not create file')
     -- assertEqual(readLines(temp_dir..'t.txt'), list{'hello'}, 
     --   'with open did not write to file')
-    end),
+  end),
+
   it('suppress', function()
     assertEqual(with(suppress(), function() error(ValueError) end), nil,
       'Empty suppress raised error')
@@ -245,7 +258,34 @@ describe('contextlib',
     assertRaises(ValueError, function()
         with(suppress(AssertionError), function() error(ValueError) end) 
       end, 'AssertionError suppress did not return error')
-    end)
+  end),
+
+  it('run_and_close', function(monkeypatch, app) 
+    monkeypatch.setattr('appState', function() return 'ACTIVE' end)
+    with(run_and_close('app'), function() app:append('do') end)
+    assert(requal(app, {'kill', 'run', 'do', 'kill'}), 'Did not run and kill in correct order')
+    app:clear()
+    monkeypatch.setattr('appState', function() return 'NOT RUNNING' end)
+    with(run_and_close('app', false), function() app:append('do') end)
+    assert(requal(app, {'run', 'do'}), 'Did not run and kill in correct order')
+  end),
+
+  it('run_if_closed', function(monkeypatch, app) 
+    monkeypatch.setattr('appState', function() return 'ACTIVE' end)
+    with(run_if_closed('app'), function() app:append('do') end)
+    assert(requal(app, {'do'}), 'Did not run if closed in correct order')
+    app:clear()
+    monkeypatch.setattr('appState', function() return 'NOT RUNNING' end)
+    with(run_if_closed('app'), function() app:append('do') end)
+    assert(requal(app, {'run', 'do', 'kill'}), 'Did not run if closed in correct order')
+  end),
+
+  it('time_ensured', function() 
+    local time_ns = num(exe('date +%s%N'))
+    with(time_ensured(0.01), function() end)
+    local diff = round((num(exe('date +%s%N')) - time_ns) / 1000000000, 2)
+    assert(diff == 0.01, 'Ensure time did not take correct amount of time')
+  end)
 )
 
 
@@ -256,19 +296,24 @@ describe('contextlib',
 
 
 
- -- todo add instance checking
 describe('core',
+
   it('class_definition', function()
     --definition
     local A = class("A")
     function A:__init(value)
       self.value = value
     end
+    function A:__tostring()
+      return '['..self.value..']'
+    end
     function A:run()
       return self.value
     end
     --attribute access
     local a = A(5)
+    assert(isinstance(a, A), 'a not instance of A')
+    assert(not isinstance({}, A), 'table is instance of A')
     assert(a.value, 'Class instance does not have required attributes')
     assertEqual(a.value, 5, 
       'Class instance does not have correct attribute values')
@@ -287,7 +332,16 @@ describe('core',
     assert(p1, 'Class instance does not have private table')
     assert(p1, 'Class instance does not have private table')
     assertNotEqual(p1, p2, 'Unique instance private tables are equal')
-    end),
+    
+    local class_loc = repr(A):match('<%w+ class at (.*)')
+    assert(str(A):startswith('<A class at'), 'str(class) is incorrect '..str(A))
+    assert(repr(A):startswith('<A class at'), 'repr(class) is incorrect '..repr(A))
+    assert(str(a):startswith('['), 'str(instance) is incorrect '..str(a))
+    local instance_loc = repr(a):match('<%w+ instance at (.*)')
+    assert(repr(a):startswith('<A instance at'), 'repr(instance) is incorrect '..repr(a))
+    assert(class_loc ~= instance_loc, 'class and instance memory locations are the same')
+  end),
+
   it('class_single_inheritance', function()
     local A = class("A")
     function A:__init(value)
@@ -297,7 +351,13 @@ describe('core',
       self.value = self.value + value
     end
     local B = class("B", A)
-    local a, b = A(1), B(10)
+    function B:__init(value)
+      self.value2 = value
+      A.__init(self, value)
+    end
+    local C = class("C", A)
+    local a, b, c = A(1), B(10), C(1)
+    assert(a.value == c.value, 'Child class with no init did not inherit and call init')
     assertEqual(a.value, 1, 'Parent class has incorrect attribute value')
     assertEqual(b.value, 10, 'Child class has incorrect attribute value')
     assert(a.add, 'Parent class does not have required method')
@@ -308,7 +368,12 @@ describe('core',
     b:add(10)
     assertEqual(b.value, 20, 'Child class method failure')
     assertEqual(a.value, 2, 'Difference class has incorrect attribute value')
-    end),
+    assert(not a.value2, 'Parent class inherited properties of child')
+    assert(b.value and b.value2, 'Did not inherit and add properties on child')
+    assert(a:isinstance(A), 'Class not instance of itself')
+    assert(b:isinstance(A), 'Child not instance of parent')
+  end),
+
   it('class_multiple_inheritance', function()
     local A = class("A")
     function A:__init(value)
@@ -320,11 +385,19 @@ describe('core',
     function A:run5(value)
       return self.value + value
     end
-    local B = class("B", A)
+    local B = class("B")
+    function B:__init(value)
+      self.value2 = value
+    end
     function B:run5(value)
-      return self.value + value * 5
+      return self.value2 + value * 5
     end
     local C = class("C", B, A)
+    function C:__init(value)
+      self.value3 = value
+      A.__init(self, value)
+      B.__init(self, value)
+    end
     function C:run(value)
       return self.value + value * 3
     end
@@ -338,7 +411,12 @@ describe('core',
       'Did not inherit methods in correct order')
     assertEqual(c:run5(1), b:run5(1) - 1, 
       'Inherited method different from original method')
-    end),
+    assert(c.value and c.value2 and c.value3, 'Did not set attributes of sub classes')
+    assert(not b:isinstance(a), 'Unrelated classes are instances of eachother')
+    assert(c:isinstance(A), 'Child not instance of oldest parent')
+    assert(c:isinstance(B), 'Child not instance of youngest parent')
+  end),
+
   it('class_get_set_properties', function()
     local A = class("A")
     function A:__init(value)
@@ -350,14 +428,24 @@ describe('core',
     A.__setters['v'] = function(self, value)
       self.value = max(0, min(10, value))
     end
+    local B = class("B", A)
+    
     a = A(1)
-    assert(a.v, 'Getter proprty was not created on class')
+    assert(a.v, 'Getter property was not created on class')
     assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
     a.v = -1
     assertEqual(a.v, 0, 'Setter did not set custom value')
     a.v = 10
     assertEqual(a.v, a.value * 2, 'Getter did not return custom value')
-    end),
+    b = B(1)
+    assert(b.v, 'Getter property was not created on child class')
+    assertEqual(b.v, b.value * 2, 'Getter did not return custom value with child class')
+    b.v = -1
+    assertEqual(b.v, 0, 'Setter did not set custom value with child class')
+    b.v = 10
+    assertEqual(b.v, b.value * 2, 'Getter did not return custom value with child class')
+  end),
+
   it('copy', function()
     local t1, t2 = {1, 2}, {1, {1, 2}}
     local nt1 = copy(t1)
@@ -374,11 +462,13 @@ describe('core',
     local l = list{1, {1, 2}}
     local nl = copy(l, true)
     assert(nl:isinstance(list), 'Did not copy object type')
-    end),
+  end),
+
   it('eval', function()
     assertEqual(eval('return 1 + 1'), 2, 'eval 1 + 1 failed')
     assertRaises('Syntax', function() eval('x =') end, 'eval of syntax error did not fail')
-    end),
+  end),
+
   it('hash', function()
     local h
     local values = {}
@@ -392,7 +482,8 @@ describe('core',
       assert(isnotin(h, values), 'Hash collision in first 50 +/- numbers')
       values[#values + 1] = h
     end
-    end),
+  end),
+
   it('isin', function()
     assert(isin('a', 'abc'), 'Character not in string when it should be')
     assert(not isin('t', 'abc'), "Character in string when it shouldn't be")
@@ -401,33 +492,38 @@ describe('core',
     assert(not isin(5, {1,2,3}), "Number in table when it shouldn't be")
     assert(isin({1,2,3}, {{1,2,3}, {4,5,6}}), 'Table not in nested table when it should be')
     assert(not isin({5}, {{1,2,3}, {4,5,6}}), "Table in nested table when it shouldn't be")
-    end),
+  end),
+
   it('max', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.max(unpack(t)), max(t), 'table max not same as math.max')
     assertEqual(math.max(unpack(t)), max(l), 'list max not same as math.max')
     assertEqual(math.max(unpack(t)), max(s), 'set max not same as math.max')
-    end),
+  end),
+
   it('min', function()
     local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
     assertEqual(math.min(unpack(t)), min(t), 'table min not same as math.min')
     assertEqual(math.min(unpack(t)), min(l), 'list min not same as math.min')
     assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
-    end),
+  end),
+
   it('num', function()
     assert(is.num(num(1)), 'Converted int to non number')
     assert(is.num(num(1.0)), 'Converted float to non number')
     assert(is.num(num(-1)), 'Converted negative to non number')
     assertEqual(num('1'), 1, 'Converted string int to non number')
     assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
-    end),
+  end),
+
   it('str', function()
     assertEqual(str(1), '1', 'str number failed')
     assertEqual(str('1'), '1', 'str string failed')
     assertEqual(str({1,2}), '{1, 2}', 'table number failed')
     assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
     assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
-    end),
+  end),
+
   it('getattr', function()
     local A = class('A')
     function A:__init()
@@ -437,7 +533,8 @@ describe('core',
     assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
     assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
     assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-    end),
+  end),
+
   it('setattr', function()
     local A = class('A')
     function A:__init()
@@ -447,7 +544,8 @@ describe('core',
     setattr(a, 'val', 3)
     assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
     assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-    end),
+  end),
+
   it('reversed', function()
     local l, s = {1, 2, 3}, 'abc'
     local e1, e2 = {3, 2, 1}, {'c', 'b', 'a'}
@@ -457,7 +555,8 @@ describe('core',
     for i, v in pairs(reversed(s)) do 
       assertEqual(e2[i], v, 'Did not reverse string correctly')
     end
-    end),
+  end),
+
   it('sorted', function()
     --basic sort
     local a, b = {3, 1, 2}, {'c', 'a', 'b'}
@@ -473,7 +572,31 @@ describe('core',
     for i, v in pairs(sorted(list(a2), function(m) return m[2] end)) do
       assertEqual(v, e2[i], 'String sorting failed')
     end
-    end)
+  end),
+
+  it('pretty prints nested table', function(monkeypatch) 
+    monkeypatch.setattr('print', function(...) return ... end)
+    local text = pprint{
+      n=1,
+      s='a',
+      t={
+        n=1,
+        s='a',
+        t={
+          d=dict{a=1, b=2},
+          l=list{1, 2},
+          st=set{1, 2},
+
+        }
+      },
+      c=coroutine.create(function() coroutine.yield() end),
+      f=io.tmpfile()
+    }
+    local expected = '{\n\tn = %d,\n\ts = "%w",\n\tc = thread: [%w%d]+,\n\tt = {\n\t\t'..
+    'n = %d,\n\t\ts = "%w",\n\t\tt = {\n\t\t\td = {\n\t\t\t\ta = %d,\n\t\t\t\tb = %d,\n\t\t\t},'..
+    '\n\t\t\tl = {%d, %d},\n\t\t\tst = {%d, %d},\n\t\t},\n\t},\n\tf = file %([%w%d]+%),\n}'
+    assert(text:match(expected), 'pprint did not print correctly')
+  end)
 )
 
 
@@ -588,6 +711,16 @@ describe("itertools",
     for i = 1, #data do
          assertEqual(data[i], sorted[i])
     end
+    end),
+  it('can repeat values', function() 
+    local finite = itertools.value(1, 3)
+    local infinite = itertools.value(1)
+    for i=1, 3 do
+      assert(finite() == 1)
+      assert(infinite() == 1)
+    end
+    assert(finite() == nil)
+    assert(infinite() == 1)
     end)
 )
 
@@ -623,6 +756,7 @@ end)
 
 --modified from https://github.com/rxi/json.lua/blob/master/test/test.lua
 describe('json',
+
   it("numbers", function()
     local t = {
       [ "123.456"       ] = 123.456,
@@ -641,7 +775,8 @@ describe('json',
     assert( json.decode("13e2") == 13e2 )
     assert( json.decode("13E+2") == 13e2 )
     assert( json.decode("13e-2") == 13e-2 )
-    end),
+  end),
+
   it("literals", function()
     assert( json.decode("true") == true )
     assert( json.encode(true) == "true" ) 
@@ -649,25 +784,30 @@ describe('json',
     assert( json.encode(false) == "false" )
     assert( json.decode("null") == nil )
     assert( json.encode(nil) == "null")
-    end),
+  end),
+
   it("strings", function()
     local s = "Hello world"
     assert( s == json.decode( json.encode(s) ) )
     local s = "\0 \13 \27"
     assert( s == json.decode( json.encode(s) ) )
-    end),
+  end),
+
   it("unicode", function()
     local s = "こんにちは世界"
     assert( s == json.decode( json.encode(s) ) )
-    end),
+  end),
+
   it("arrays", function(equal)
     local t = { "cat", "dog", "owl" }
     assert( equal( t, json.decode( json.encode(t) ) ) )
-    end),
+  end),
+
   it("objects", function(equal)
     local t = { x = 10, y = 20, z = 30 }
     assert( equal( t, json.decode( json.encode(t) ) ) )
-    end),
+  end),
+
   it("decode invalid", function()
     local t = {
       '',
@@ -688,7 +828,8 @@ describe('json',
       local status = pcall(json.decode, v)
       assert( not status, string.format("'%s' was parsed without error", v) )
     end
-    end),
+  end),
+
   it("decode invalid string", function()
     local t = {
       [["\z"]],
@@ -702,7 +843,8 @@ describe('json',
       local status, err = pcall(json.decode, v)
       assert( not status, string.format("'%s' was parsed without error", v) )
     end
-    end),
+  end),
+
   it("decode escape", function()
     local t = {
       [ [["\u263a"]]        ] = '☺',
@@ -716,7 +858,8 @@ describe('json',
       local res = json.decode(k)
       assert( res == v, string.format("expected '%s', got '%s'", v, res) )
     end
-    end),
+  end),
+
   it("decode empty", function(equal)
     local t = {
       [ '[]' ] = {},
@@ -727,7 +870,8 @@ describe('json',
       local res = json.decode(k)
       assert( equal(res, v), string.format("'%s' did not equal expected", k) )
     end
-    end),
+  end),
+
   it("decode collection", function(equal)
     local t = {
       [ '[1, 2, 3, 4, 5, 6]'            ] = {1, 2, 3, 4, 5, 6},
@@ -739,7 +883,8 @@ describe('json',
       local res = json.decode(k)
       assert( equal(res, v), string.format("'%s' did not equal expected", k) )
     end
-    end),
+  end),
+
   it("encode invalid", function()
     local t = {
       { [1000] = "b" },
@@ -753,7 +898,8 @@ describe('json',
       local status, res = pcall(json.encode, v)
       assert( not status, string.format("encoding idx %d did not result in an error", i) )
     end
-    end),
+  end),
+
   it("encode invalid number", function()
     local t = {
       math.huge,      -- inf
@@ -764,7 +910,8 @@ describe('json',
       local status, res = pcall(json.encode, v)
       assert( not status, string.format("encoding '%s' did not result in an error", v) )
     end
-    end),
+  end),
+
   it("encode escape", function()
     local t = {
       [ '"x"'       ] = [["\"x\""]],
@@ -777,7 +924,7 @@ describe('json',
       local res = json.encode(k)
       assert( res == v, string.format("'%s' was not escaped properly", k) )
     end
-    end)
+  end)
 )
 
 
@@ -967,22 +1114,26 @@ fixture('set_c', function() return set{'a', 'b', 'c'} end)
 
 
 describe('objects - dict',
+
   it('creation', function(dict_a, dict_b)
     assertNotRequal(dict_a, dict_b, 'Different dicts requal')
     assertRequal(dict_a, {}, 'Dict and table not requal')
     assertRequal(dict_b, {a=1, b=2}, 'Dict and table not requal')
     assertEqual(dict_a['thing'], nil, 'Unknown key does not return nil')
-    end),
+  end),
+
   it('addition', function(dict_a, dict_b)
     assertEqual(dict_a + dict_b, dict_b, 'Added dicts not equal')
     assertEqual(dict_b + {b=9}, dict{a=1, b=9}, 'Added dicts not equal')
-    end),
+  end),
+
   it('equality', function(dict_a, dict_b)
     dict_a:update(dict_b)
     assertEqual(dict_a, dict_b, 'Dicts not equal')
     assertRequal(dict_a, {a=1, b=2}, 'Dict and table not requal')
     assertNotEqual(dict_a, {a=1, b=2}, 'Dict and table equal')
-    end),
+  end),
+
   it('for', function(dict_a, dict_b)
     local expected
     local expected1 = {'a', 'b'}
@@ -998,52 +1149,68 @@ describe('objects - dict',
       assertEqual(k, expected[i], 'incorrect key returned in for loop')
       i = i + 1
     end
-    end),
+  end),
+
   it('pairs', function(dict_a, dict_b)
     local expected = {a=1, b=2}
     for i, v in pairs(dict_b) do
       assertEqual(v, expected[i], 'Pairs returns incorrect result')
     end
-    end),
+  end),
+
+  it('pop', function(dict_a, dict_b)
+    assertEqual(dict_b:pop('a'), 1, 'Incorrect value popped from dict')
+    assertEqual(dict_b, dict{b=2}, 'Dict and new dict not equal')
+    assert(dict_b:pop(), 'Did not pop value from dict')
+    assertEqual(dict_b, dict(), 'Dict and new dict not equal')
+  end),
+
   it('clear', function(dict_a, dict_b)
     dict_a:clear()
     dict_b:clear()
     assertEqual(dict_a, dict_b, 'Dict not empty after clear')
-    end),
+  end),
+
   it('contains', function(dict_a, dict_b)
     assert(not dict_b:contains('q'), 'Dict contains unknown key')
     assert(dict_b:contains('a'), 'Dict does not contain key')
-    end),
+  end),
+
   it('get', function(dict_a, dict_b)
     assertEqual(dict_b:get('a'), 1, 'Dict get incorrect for known key')
     assertEqual(dict_b:get('q'), nil, 'Dict get incorrect for unknown key')
     assertEqual(dict_b:get('a', 5), 1, 'Dict get incorrect for known key with default')
     assertEqual(dict_b:get('q', 5), 5, 'Dict get incorrect for unknown key with default')
-    end),
+  end),
+
   it('keys', function(dict_a, dict_b)
     assert(Not(dict_a:keys(), 'Incorrect dict keys'))
     for i, v in pairs({'a', 'b'}) do
       assert(isin(v, dict_b:keys()), 'Dict key not found')
     end
-    end),
+  end),
+
   it('set', function(dict_a, dict_b)
     dict_b:set('b', 5)
     assertEqual(dict_b['b'], 5, 'Incorrect value after set')
-    end), 
+  end), 
+
   it('update', function(dict_a, dict_b)
     dict_a:update(dict_b)
     assertEqual(dict_a, dict_b, 'Dicts not equal after update')
-    end),
+  end),
+
   it('values', function(dict_a, dict_b)
     assert(Not(dict_a:values(), 'Incorrect dict values'))
     for i, v in pairs({1, 2}) do
       assert(isin(v, dict_b:values()), 'Dict value not found')
     end
-    end)
+  end)
 )
 
 
 describe('objects - list',
+
   it('creation', function(list_a, list_b, list_c)
     assertNotEqual(list_a, list_b, 'Different lists are equal')
     assertNotEqual(list_a, list_c, 'Different lists are equal')
@@ -1054,12 +1221,19 @@ describe('objects - list',
     assertRequal(list_a, {}, 'List and table not requal')
     assertRequal(list_b, {1,2,3}, 'List and table not requal')
     assertRequal(list_c, {1,{2, 3}}, 'List and table not requal')
-    end),
+  end),
+
   it('addition', function(list_a, list_b, list_c)
     assertRequal(list_a + list_b, list_b, 'Added lists returned incorrect list')
     assertRequal(list_b + list{5}, {1,2,3,5}, 'Added lists returned incorrect list')
     assertRequal(list{5} + list_b, {5,1,2,3}, 'Added lists returned incorrect list')
-    end),
+  end),
+
+  it('multiplication', function(list_a, list_b)
+    assertRequal(list_a * 2, list_a, 'Multiplied lists returned incorrect list')
+    assertRequal(list_b * 2, list{1, 2, 3, 1, 2, 3}, 'Multiplied lists returned incorrect list')
+  end),
+
   it('equality', function(list_a, list_b, list_c)
     assertEqual(list_a, list(), 'Lists not equal')
     assertRequal(list_a, {}, 'List not requals table')
@@ -1067,7 +1241,8 @@ describe('objects - list',
     assertRequal(list_b, {1,2,3}, 'List not requals table')
     assertEqual(list_b, list{1,2,3}, 'Lists not equal')
     assertNotEqual(list_b, {1,2,3}, 'List equals table')
-    end),
+  end),
+
   it('for', function(list_a, list_b, list_c)
     local count = 0
     local expected = {1, 2, 3}
@@ -1076,17 +1251,20 @@ describe('objects - list',
       assertEqual(v, expected[count], 'Unknown element returned')
     end
     assertEqual(count, len(list_b), 'Incorrect number of elements')
-    end),
+  end),
+
   it('indexing', function(list_a, list_b, list_c)
     assertEqual(list_b[2], 2, 'Positive index returned incorrect result')
     assertEqual(list_b[-2], 2, 'Negative index returned incorrect result')
-    end),  
+  end),  
+
   it('pairs', function(list_a, list_b, list_c)
     local expected = {1,2,3}
     for i, v in pairs(list_b) do
       assertEqual(v, expected[i], 'Incorrect item returned in list pairs')
     end
-    end),
+  end),
+
   it('slicing', function(list_a, list_b, list_c)
     assertEqual(list_b(1), list_b, 'list slice failed')
     assertEqual(list_b(1, 2), list{1,2}, 'list slice failed')
@@ -1094,7 +1272,8 @@ describe('objects - list',
     assertEqual(list_b(1, -2), list{1,2}, 'list slice failed')
     assertEqual(list_b(3, 1, -1), reversed(list_b), 'list slice failed')
     assertEqual(list_b{2, -1, 1}, list{2, 3, 1}, 'list slice failed')
-    end),
+  end),
+
   it('append', function(list_a, list_b, list_c)
     list_a:append(5)
     assertEqual(list_a, list{5}, 'List and new list not equal')
@@ -1103,45 +1282,64 @@ describe('objects - list',
     assertRequal(list_a, {5}, 'List and table not requal')
     assertRequal(list_b, {1,2,3}, 'Other lists changed after append')
     assertRequal(list_c, {1,{2,3}}, 'Other lists changed after append')
-    end),
+  end),
+
+  it('clear', function(list_a, list_b, list_c) 
+    list_a:clear()
+    assertEqual(len(list_a), 0, 'Did not clear list')
+    assertEqual(len(list_b), 3, 'Cleared more than one list')
+    assertEqual(len(list_c), 2, 'Cleared more than one list')
+    list_b:clear()
+    assertEqual(len(list_b), 0, 'Did not clear list')
+  end),
+
   it('contains', function(list_a, list_b, list_c)
     assert(list_b:contains(1), 'List does not contain number')
     assert(list_c:contains({2,3}), 'List does not contain table')
-    end),
+  end),
+
   it('extend', function(list_a, list_b, list_c)
     list_a:extend{1,2}
     assertEqual(list_a, list{1,2}, 'List and new list not equal')
     assertRequal(list_a, {1,2}, 'List and table not requal')
-    end),
+  end),
+
   it('index', function(list_a, list_b, list_c)
     assertEqual(list_b:index(1), 1, 'Incorrect list index')
-    end),
+  end),
+
   it('insert', function(list_a, list_b, list_c)
     list_b:insert(2, 5)
     assertEqual(list_b, list{1,5,2,3}, 'List and new list not equal')
     assertRequal(list_b, {1,5,2,3}, 'List and table not requal')
-    end),
+  end),
+
   it('pop', function(list_a, list_b, list_c)
     assertEqual(list_b:pop(2), 2, 'Incorrect value popped from list')
     assertEqual(list_b, list{1,3}, 'List and new list not equal')
     assertRequal(list_b, {1,3}, 'List and table not requal')
-    end)
+    assertEqual(list_b:pop(), 1, 'Incorrect value popped from list')
+    assertEqual(list_b, list{3}, 'List and new list not equal')
+  end)
 )
 
 
-describe('objects - set', 
+describe('objects - set',
+
   it('creation', function(set_a, set_b, set_c)
     assertNotRequal(set_a, set_b, 'Different sets requal')
     assertRequal(set_a, {}, 'Set and table not requal')
     assertRequal(set_b, set{1,2,3}, 'Same sets not requal')
-    end),
+  end),
+
   it('equality', function(set_a, set_b, set_c)
     assertEqual(set_a, set(), 'Empty sets not equal')
     assertEqual(set_b, set{1, 2, 3}, 'Number sets not equal')
     assertEqual(set_c, set{'a', 'b', 'c'}, 'String sets not equal')
     assertNotEqual(set_b, {1, 2, 3}, 'Set and table equal')
     assertRequal(set_b, {1, 2, 3}, 'Set and table not requal')
-    end),
+  end),
+
   it('for', function(set_a, set_b, set_c)
     local count = 0
     for v in set_b() do 
@@ -1149,14 +1347,16 @@ describe('objects - set',
       assert(isin(v, set_b), 'Unknown element returned')
     end
     assertEqual(count, len(set_b), 'Incorrect number of elements')
-    end),
+  end),
+
   it('pairs', function(set_a, set_b, set_c)
     for _, s in pairs({set_b, set_c}) do
       for k, v in pairs(s) do
         assertEqual(k, str(hash(v)), 'Set key is not hash of value')
       end
     end
-    end),
+  end),
+
   it('add', function(set_a, set_b, set_c)
     set_a:add(1)
     assertEqual(set_a, set{1}, 'Did not add element to set')
@@ -1167,38 +1367,47 @@ describe('objects - set',
     set_a:add(2)
     set_a:add(3)
     assertEqual(set_a, set_b, 'Did not add elements to set')
-    end),
+  end),
+
   it('clear', function(set_a, set_b, set_c)
     set_b:clear()
     assertEqual(set_a, set_b, 'Did not clear set')
     set_c:clear()
     assertEqual(set_a, set_c, 'Did not clear set')
-    end),
+  end),
+
   it('contains', function(set_a, set_b, set_c)
     assert(set_b:contains(1), 'Set does not contain number element')
     assert(set_c:contains('b'), 'Set does not contain string element')
-    end),
+  end),
+
   it('difference', function(set_a, set_b, set_c)
     assertEqual(set_b - set{1}, set{2, 3}, 'Set subtraction with number items failed')
     assertEqual(set_c - set{'a', 'c'}, set{'b'}, 'Set subtraction with string items failed')
-    end),
+  end),
+
   it('pop', function(set_a, set_b, set_c)
     assertEqual(set_b:pop(1), 1, 'Did not return correct number value from pop')
-    assertEqual(set_b, set{2, 3}, 'Did not number value from set after pop')
-    assertEqual(set_c:pop('c'), 'c', 'Did not return correct number value from pop')
-    assertEqual(set_c, set{'a', 'b'}, 'Did not number value from set after pop')
-    end),
+    assertEqual(set_b, set{2, 3}, 'Did not return correct value from set after pop')
+    assertEqual(set_c:pop('c'), 'c', 'Did not return correct value from pop')
+    assertEqual(set_c, set{'a', 'b'}, 'Did not return correct value from set after pop')
+    assert(set_b:pop(), 'Did not pop any value from set')
+    assertEqual(len(set_b), 1, 'Did not pop any value from set')
+  end),
+
   it('remove', function(set_a, set_b, set_c)
     set_b:remove(2)
     assertEqual(set_b, set{1, 3}, 'Did not remove number item from set')
     set_c:remove('b')
     assertEqual(set_c, set{'a', 'c'}, 'Did not remove number item from set')
-    end),
+  end),
+
   it('update', function(set_a, set_b, set_c)
     set_a:update(set_b)
     assertEqual(set_a, set_b, 'Update of empty set incorrect')
     assertEqual(set_b + set_c, set{'a', 'b', 'c', 1, 2, 3}, 'Addition of filled sets incorrect')
-    end),
+  end),
+
   it('values', function(set_a, set_b, set_c)
     for k, v in pairs(set_a:values()) do
       assert(set_a:contains(v), 'Set does not contain number element in values')
@@ -1206,7 +1415,7 @@ describe('objects - set',
     for k, v in pairs(set_b:values()) do
       assert(set_b:contains(v), 'Set does not contain string element in values')
     end
-    end)
+  end)
 )
 
 
@@ -1217,7 +1426,144 @@ describe('objects - set',
 
 
 
--- TODO: pixel tests
+
+fixture('touches', function(monkeypatch)
+  local touches = list()
+  monkeypatch.setattr('usleep', function(...) end)
+  monkeypatch.setattr('touchDown', function(i, x, y) touches:append({'down', i, x, y}) end)
+  monkeypatch.setattr('touchUp', function(i, x, y) touches:append({'up', i, x, y}) end)
+  monkeypatch.setattr('touchMove', function(i, x, y) touches:append({'move', i, x, y}) end)
+  return touches
+end)
+
+
+describe('path', 
+
+  it('can stringify Path and RelativePath', function() 
+    local absolute = Path{{x=0, y=0}, {x=10, y=10}}
+    local relative = RelativePath{{x=0, y=0}, {x=10, y=10}}
+    assert(tostring(absolute) == string.format('<Path(points=%s, duration=%.2fs)>', len(absolute.locations), absolute.duration))
+    assert(tostring(relative) == string.format('<RelativePath(points=%s, duration=%.2fs)>', len(relative.locations), relative.duration))
+  end),
+
+  it('can do Path + Path', function() 
+    local path = Path{{x=0, y=0}, {x=10, y=10}}
+    assert(path.point_count == 2, 'Did not create path with correct number of points')
+    assert(path.absolute, 'Path is not absolute')
+    assert(path.locations[-1].x == 10, 'Did not add correct points to path')
+    path = path + Path{{x=10, y=10}, {x=20, y=20}}
+    assert(path.point_count == 3, 'Did not create path with correct number of points')
+    assert(path.locations[-1].x == 20, 'Did not add correct points to path')
+    path = path + Path{{x=30, y=30}, {x=40, y=40}}
+    assert(path.point_count == 5, 'Did not create path with correct number of points')
+    assert(path.locations[-1].x == 40, 'Did not add correct points to path')
+  end),
+
+  it('can do Path + RelativePath', function() 
+    local path = Path{{x=0, y=0}, {x=10, y=10}}
+    assert(path.point_count == 2, 'Did not create path with correct number of points')
+    assert(path.absolute, 'Path is not absolute')
+    assert(path.locations[-1].x == 10, 'Did not add correct points to path')
+    path = path + RelativePath{{x=0, y=0}, {x=10, y=10}}
+    assert(path.point_count == 3, 'Did not create path with correct number of points')
+    assert(path.absolute, 'Path is not absolute')
+    assert(path.locations[-1].x == 20, 'Did not add correct points to path')
+    path = path + RelativePath{{x=10, y=10}}
+    assert(path.point_count == 4, 'Did not create path with correct number of points')
+    assert(path.locations[-1].x == 30, 'Did not add correct points to path')
+  end),
+
+  it('can do RelativePath + RelativePath', function() 
+    local path = RelativePath{{x=0, y=0}, {x=10, y=10}}
+    assert(path.point_count == 2, 'Did not create path with correct number of points')
+    assert(not path.absolute, 'Path is absolute')
+    assert(path.locations[-1].x == 10, 'Did not add correct points to path')
+    path = path + RelativePath{{x=0, y=0}, {x=10, y=10}}
+    assert(path.point_count == 3, 'Did not create path with correct number of points')
+    assert(not path.absolute, 'Path is absolute')
+    assert(path.locations[-1].x == 20, 'Did not add correct points to path')
+    path = path + RelativePath{{x=10, y=10}}
+    assert(path.point_count == 4, 'Did not create path with correct number of points')
+    assert(path.locations[-1].x == 30, 'Did not add correct points to path')
+  end),
+
+  it('cannot do RelativePath + Path', function() 
+    assertRaises('Can only add RelativePath objects to other RelativePath objects', function() 
+      local path = RelativePath{{x=0, y=0}, {x=10, y=10}} + Path{{x=0, y=0}, {x=10, y=10}}
+    end, 'RelativePath + Path did not raise error')
+  end),
+
+  it('can step through path manually', function(touches) 
+    local path = Path.linear(Pixel(10, 10), Pixel(100, 100))
+    local calls = list()
+    local actions = list()
+    screen.before_action(function() actions:append('before') end)
+    screen.after_action(function() actions:append('after') end)
+
+    for speed in iter{1, 5, 10} do
+      path:begin_swipe(2, speed)
+      local done, l = false, 1
+      while not done do
+        done = path:step(2, function() calls:append(1) end)
+        assert(len(calls) == math.min(l, 50 / speed - 1), 'Did not increment calls')
+        l = l + 1
+      end
+      assert(len(touches) == 50 / speed + 1, 'Did not touch and move correctly')
+      assert(len(calls) == 50 / speed - 1, 'Did not call on_move correct number of times')
+      assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+      assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+      assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+      assert(len(actions) == 0, 'Called action context functions in manual step')
+      touches:clear()
+      calls:clear()
+    end
+
+    screen.before_action_funcs:clear()
+    screen.after_action_funcs:clear()
+  end),
+  
+  it('can swipe path', function(touches) 
+    local path = Path.linear(Pixel(10, 10), Pixel(100, 100))
+    local calls = list()
+    local actions = list()
+    screen.before_action(function() actions:append('before') end)
+    screen.after_action(function() actions:append('after') end)
+
+    for speed in iter{1, 5, 10} do
+      path:swipe{speed=speed, on_move=function() calls:append(1) end}
+      assert(len(touches) == 50 / speed + 1, 'Did not touch and move correctly')
+      assert(len(calls) == 50 / speed - 1, 'Did not call on_move correct number of times')
+      assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+      assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+      assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+      assert(requal(actions, {'before', 'after'}), 'Did not call action context functions')
+      touches:clear()
+      calls:clear()
+      actions:clear()
+    end
+
+    screen.before_action_funcs:clear()
+    screen.after_action_funcs:clear()
+  end),
+
+  it('can create arc', function() 
+    local absolute = Path.arc(5, 45, 90, {x=10, y=10})
+    local relative = Path.arc(5, 45, 90)
+    local relative_origin = Path.arc(5, 45)
+    -- TODO assertions about arcs
+  end),
+  
+  it('can create line', function() 
+    local absolute = Path.linear({x=50, y=50}, {x=100, y=100})
+    local relative = Path.linear({x=50, y=50})
+    local relative_neg = Path.linear({x=-50, y=-50})
+    assert(absolute.absolute, 'Absolute linear path not absolute')
+    assert(not relative.absolute, 'Relative linear path is absolute')
+    assert(absolute[1].x == 50, 'Incorrect absolute location')
+    assert(relative[1].x == 0, 'Incorrect relative location')
+    assert(relative_neg[-1].x == -50, 'Incorrect relative location')
+  end)
+)
 
 
 
@@ -1225,29 +1571,310 @@ describe('objects - set',
 
 
 
+
+
+
+fixture('pixels', function(monkeypatch) 
+  local pixels = list{
+    Pixel(10, 10, 10),
+    Pixel(20, 20, 20),
+    Pixel(30, 30, 30),
+    Pixel(40, 40, 40),
+  }
+  local function _getColor(x, y) 
+    for p in iter(pixels) do if p.x == x and p.y == y then return p.expected_color end end
+  end
+  local function _getColors(pos) 
+    local colors = list()
+    for p in iter(pos) do colors:append(_getColor(p[1], p[2])) end
+    return colors
+  end
+
+  monkeypatch.setattr('getColor', _getColor)
+  monkeypatch.setattr('getColors', _getColors)
+  return pixels
+end)
+
+
+describe('pixel - Pixel', 
+
+  it('can create and hash pixel objects', function() 
+    local pixels = set()
+    local length = 0
+    for i=1, 1000, 100 do
+      for j=1, 1000, 100 do
+        for color=1, 100000, 10000 do
+          pixels:add(Pixel(i, j, color))
+          assert(len(pixels) == length + 1, 'Did not create unique pixel')
+          length = length + 1
+        end
+      end
+    end
+  end),
+
+  it('can add and subtract pixel objects', function()
+    local pix = Pixel(10, 10, 10) 
+    local added = pix + Pixel(10, 10)
+    local subbed = pix - Pixel(10, 10)
+    assert(added:isinstance(Pixel), 'Adding pixel objects did not return pixel')
+    assert(subbed:isinstance(Pixel), 'Subtracting pixel objects did not return pixel')
+    assert(added.x == 20 and added.y == 20, 'Did not add pixel positions correctly')
+    assert(subbed.x == 0 and subbed.y == 0, 'Did not add pixel positions correctly')
+    assert(pix.expected_color == added.expected_color, 'Changed pixel color on add')
+    assert(pix.expected_color == subbed.expected_color, 'Changed pixel color on sub')
+    local added_table = pix + {10, 10}
+    local subbed_table = pix - {10, 10}
+    assert(added:isinstance(Pixel), 'Adding pixel and table did not return pixel')
+    assert(subbed:isinstance(Pixel), 'Subtracting pixel and table did not return pixel')
+    assert(added_table.x == 20 and added_table.y == 20, 'Did not add pixel positions correctly')
+    assert(subbed_table.x == 0 and subbed_table.y == 0, 'Did not add pixel positions correctly')
+    assert(pix.expected_color == added_table.expected_color, 'Changed pixel color on add with table')
+    assert(pix.expected_color == subbed_table.expected_color, 'Changed pixel color on sub with table')
+  end),
+
+  it('can evaluate pixel equality', function(pixels) 
+    assert(Pixel(10, 10, 10) == Pixel(10, 10, 10), 'Equal pixels not equal')
+    assert(Pixel(0, 10, 10) ~= Pixel(10, 10, 10), 'Non-equal pixels equal')
+    assert(Pixel(10, 0, 10) ~= Pixel(10, 10, 10), 'Non-equal pixels equal')
+    assert(Pixel(10, 10, 0) ~= Pixel(10, 10, 10), 'Non-equal pixels equal')
+  end),
+  
+  it('can stringify pixel', function() 
+    assert(tostring(Pixel(10, 10, 10)) == string.format('<Pixel(%d, %d)>', 10, 10), 'Pixel tostring not correct')
+  end),
+
+  it('can get color of pixel', function(pixels)
+    assert(Pixel(10, 10).color == 10, 'Did not get color of pixel') 
+  end),
+
+  it('can detect pixel color change', function(pixels) 
+    local pix = Pixel(10, 10)
+    local changed = pix:color_changed()
+    assert(not changed(), 'Detected change in color when there was none')
+    assert(not changed(), 'Detected change in color when there was none')
+    pixels[1].expected_color = 10000
+    assert(changed(), 'Did not detect change in pixel color')
+    assert(not changed(), 'Detected change in color when there was none')
+  end),
+
+  it('can detect pixel visibility', function(pixels) 
+    assert(Pixel(10, 10, 10):visible(), 'Visible pixel not visible') 
+    assert(not Pixel(0, 10, 10):visible(), 'Non visible pixel visible') 
+    assert(not Pixel(10, 0, 10):visible(), 'Non visible pixel visible') 
+    assert(not Pixel(10, 10, 0):visible(), 'Non visible pixel visible') 
+  end)
+)
+
+
+describe('pixel - Pixels',
+
+  it('can add and subtract Pixels objects', function() 
+    local pixels = Pixels{Pixel(0, 0), Pixel(10, 10), Pixel(10, 10)}
+    local added = pixels + Pixels{Pixel(10, 10), Pixel(20, 20)}
+    local subbed = pixels - Pixels{Pixel(10, 10), Pixel(20, 20)}
+    assert(added:isinstance(Pixels), 'Add did not return Pixels object')
+    assert(subbed:isinstance(Pixels), 'Subtract did not return Pixels object')
+    assert(len(pixels.pixels) == 2, 'Did not create pixels correctly')
+    assert(len(added.pixels) == 3, 'Did not add pixels correctly')
+    assert(len(subbed.pixels) == 1, 'Did not sub pixels correctly')
+  end),
+
+  it('can evaluate Pixels equality', function() 
+    assert(Pixels{Pixel(10, 10)} == Pixels{{10, 10}, {10, 10}}, 'Pixels are not equal')
+    assert(Pixels{Pixel(10, 10)} == Pixels{Pixel(10, 10)}, 'Equal Pixels objects are not equal')
+    assert(Pixels{Pixel(10, 10)} ~= Pixels{Pixel(10, 10), Pixel(10, 20)}, 'Not equal Pixels objects are equal')
+    assert(Pixels{Pixel(0, 10)} ~= Pixels{Pixel(10, 10)}, 'Not equal Pixels objects are equal')
+  end),
+
+  it('can stringify Pixels', function() 
+    local pixels = Pixels{Pixel(10, 10), Pixel(20, 20)}
+    assert(tostring(pixels) == string.format('<Pixels(n=%d)>', len(pixels.pixels)))
+  end),
+
+  it('can get colors of Pixels', function(pixels) 
+    local pix = Pixels{Pixel(10, 10, 10), Pixel(20, 20, 20)}
+    local expected = {pixels[1].expected_color, pixels[2].expected_color}
+    assert(requal(pix.colors, expected), 'Did not get all correct colors of Pixels')
+  end),
+
+  it('can detect Pixels visibility', function(pixels) 
+    assert(Pixels{Pixel(10, 10, 10), Pixel(20, 20, 20)}:visible(), 'Visible pixel is not visible')
+    assert(not Pixels{Pixel(10, 10, 0), Pixel(20, 20, 20)}:visible(), 'Non visible pixel is visible')
+  end),
+
+  it('can count number of different pixels', function(pixels) 
+    local pix = Pixels{Pixel(10, 10, 10), Pixel(20, 20, 20), Pixel(100, 100, 10), Pixel(200, 200, 20)}
+    assert(pix:count() == 2, 'Did not get correct pixel count')
+  end),
+
+  it('can detect specific Pixels color change configurations', function(pixels) 
+    local pix = Pixels{
+      Pixel(10, 10),
+      Pixel(20, 20),
+      Pixel(30, 30),
+      Pixel(40, 40)
+    }
+    local any_change = pix:any_colors_changed()
+    local all_change = pix:all_colors_changed()
+    local two_change = pix:n_colors_changed(2)
+    assert(not any_change(), 'Detected change when there was not one')
+    assert(not all_change(), 'Detected change when there was not one')
+    assert(not two_change(), 'Detected change when there was not one')
+    pixels[1].expected_color = 0
+    assert(any_change(), 'Did not detect change')
+    assert(not all_change(), 'Detected change when there was not one')
+    assert(not two_change(), 'Detected change when there was not one')
+    pixels[1].expected_color = 1000
+    pixels[2].expected_color = 1000
+    assert(any_change(), 'Did not detect change')
+    assert(not all_change(), 'Detected change when there was not one')
+    assert(two_change(), 'Did not detect change')
+    pixels[3].expected_color = 1000000
+    pixels[4].expected_color = 1000000
+    pixels[3].expected_color = 1000000
+    pixels[4].expected_color = 1000000
+    assert(any_change(), 'Did not detect change')
+    assert(all_change(), 'Did not detect change')
+    assert(two_change(), 'Did not detect change')
+  end)
+)
+
+-- TODO: Ellipse and Triangle tests
+
+describe('pixel - Region',
+
+  it('can add and subtract Region objects', function() 
+    local region = Region{Pixel(0, 0), Pixel(10, 10)}
+    local added = region + Region{Pixel(10, 10), Pixel(20, 20)}
+    local subbed = region - Region{Pixel(10, 10), Pixel(20, 20)}
+    assert(added:isinstance(Region), 'Add did not return Region object')
+    assert(subbed:isinstance(Region), 'Subtract did not return Region object')
+    assertRaises('Can only', function() 
+      local fail = Region{Pixel(0, 0)} + Pixels{Pixel(10, 10)}
+    end, 'Adding Region to pixels did not fail')
+    assertRaises('Can only', function() 
+      local fail = Region{Pixel(0, 0)} - Pixels{Pixel(10, 10)}
+    end, 'Subtracting Region to pixels did not fail')
+  end),
+
+  it('can stringify Region', function() 
+    local region = Region{Pixel(0, 0), Pixel(10, 10)}
+    assert(tostring(region) == string.format('<Region(pixels=%d, color=%d)>', len(region.pixels), region.color))
+  end),
+
+  it('can get center of Region', function() 
+    local region = Region{Pixel(0, 0), Pixel(10, 10)}
+    assert(region.center == Pixel(5, 5), 'Did not get correct center of region')
+  end),
+  
+  it('can create Ellipse', function() 
+  end),
+  
+  it('can create Rectangle', function() 
+    local rect = Rectangle{
+      x=10,
+      y=10,
+      width=100,
+      height=100,
+      spacing=10
+    }
+    assert(rect.x == 10, 'Rectangle has incorrect ')
+    assert(rect.y == 10, 'Rectangle has incorrect y')
+    assert(rect.width == 100, 'Rectangle has incorrect width')
+    assert(rect.height == 100, 'Rectangle has incorrect height')
+    assert(rect.spacing == 10, 'Rectangle has incorrect spacing')
+    assert(len(rect.pixels) == 121, 'Incorrect number of pixels in Rectangle')
+    assert(rect.pixels[1].x == rect.x and rect.pixels[1].y == rect.y, 'Incorrect first pixel location')
+    assert(rect.pixels[-1].x == rect.x + rect.width and rect.pixels[-1].y == rect.y + rect.height, 'Incorrect last pixel location')
+  end),
+  
+  it('can create Triangle', function() 
+  end)
+  
+)
+
+
+
+
+
+
+
+
+
+
+-- TODO: fixture to mock wget
+
+fixture('response', function() 
+  local resp = Response({url='http://example.com', method='GET'})
+  resp.status_code = 400
+  resp.text = '{\n\t"a":"1",\n\t"b":"2"\n}'
+  return resp
+end)
 
 
 describe('requests',
+
   it('gets json', function()
     local url = 'http://httpbin.org/get'
-    local resp = requests.get(url)
+    local header_key = 'X-Stuff'
+    local head, ua = {[header_key]='abc'}, 'myAgent'
+    local resp = requests.get{url, params={stuff=1}, headers=head, user_agent=ua}
+    assert(resp.status_code == 200, 'Did not return 200')
     assert(resp, 'Json request did not return response')
     local j = resp:json()
     assert(j.headers, 'Incorrect json returned')
     assert(j.origin, 'Incorrect json returned')
-    assertEqual(j.url, url, 'Incorrect json returned')
-    end),
+    assertEqual(j.url, url..'?stuff=1', 'Incorrect json returned')
+    assertEqual(j.url, resp.url, 'Incorrect json returned')
+    assert(j.headers['User-Agent'] == ua, 'Did not get correct user agent header')
+    assert(j.headers[header_key] == head[header_key], 'Did not get correct custom header')
+  end),
+  
   it('posts json', function()
     local resp = requests.post{'http://httpbin.org/post', data={amount=10}}
+    assert(resp.status_code == 200, 'Did not return 200')
     assertEqual(str(resp:json().form.amount), '10', 'Did not post correct data')
-    end),
+  end),
+  
   it('gets text', function()
     local resp = requests.get('https://httpbin.org/base64/SFRUUEJJTiBpcyBhd2Vzb21l')
+    assert(resp.status_code == 200, 'Did not return 200')
     assert(resp, 'Text request did not return response')
     assertEqual(resp.text, 'HTTPBIN is awesome', 'Incorrect text returned')
-    end)
+  end),
+
+  it('makes request with auth', function() 
+    local resp = requests.get{'https://httpbin.org/basic-auth/name/password', auth={user='name', password='password'}, verify_ssl=true}
+    assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp:json().authenticated == true, 'Not authenticated with basic http auth')
+    assert(resp:json().user == 'name', 'Did not get correct username')
+  end),
+
+  it('Response tostring', function(response) 
+    assert(tostring(response) == string.format('<Response [%d]>', response.status_code), 
+    'Response does not have correct tostring')
+  end),
+  
+  it('Response iter_lines', function(response) 
+    local expected = {'{', '\t"a":"1",', '\t"b":"2"', '}'}
+    local count = 1
+    for line in response:iter_lines() do
+      assert(line == expected[count], 'Incorrect line in response')
+      count = count + 1
+    end
+    assert(count, 'Did not iterate over response text')
+  end),
+  
+  it('Response json', function(response) 
+    assert(response:json().b == '2', 'Did not parse response json')
+  end),
+  
+  it('Response raise_for_status', function(response) 
+    assertRaises(response.method..' request: '..response.status_code, function() 
+      response:raise_for_status()
+    end, 'Did not raise error for response')
+  end)
 )
--- TODO: failing request test
 
 
 
@@ -1258,7 +1885,234 @@ describe('requests',
 
 
 
--- TODO: screen tests
+fixture('do_after', function() 
+  return function(n, f, f_before)
+    local count = 0
+    return function()
+      if f_before then f_before() end
+      count = count + 1
+      if count >= n then
+        f()
+      end
+    end 
+  end
+end)
+
+
+fixture('pixels', function(monkeypatch) 
+  local pixels = list{
+    Pixel(10, 10, 10),
+    Pixel(20, 20, 20),
+    Pixel(30, 30, 30),
+    Pixel(40, 40, 40),
+  }
+  local function _getColor(x, y) 
+    for p in iter(pixels) do if p.x == x and p.y == y then return p.expected_color end end
+  end
+  local function _getColors(pos) 
+    local colors = list()
+    for p in iter(pos) do colors:append(_getColor(p[1], p[2])) end
+    return colors
+  end
+  
+  monkeypatch.setattr('getColor', _getColor)
+  monkeypatch.setattr('getColors', _getColors)
+  return pixels
+end)
+
+
+fixture('taps', function(monkeypatch)
+  screen.before_action_funcs = set()
+  screen.after_action_funcs = set()
+  screen.before_check_funcs = set()
+  screen.after_check_funcs = set()
+  screen.before_tap_funcs = set()
+  screen.after_tap_funcs = set() 
+  screen.on_stall_funcs = set()
+  screen.check_interval = 150
+  local taps = list()
+  monkeypatch.setattr('tap', function(x, y) taps:append(list{x, y}) end)
+  return taps
+end)
+
+
+fixture('touches', function(monkeypatch)
+  local touches = list()
+  monkeypatch.setattr('usleep', function(...) end)
+  monkeypatch.setattr('touchDown', function(i, x, y) touches:append({'down', i, x, y}) end)
+  monkeypatch.setattr('touchUp', function(i, x, y) touches:append({'up', i, x, y}) end)
+  monkeypatch.setattr('touchMove', function(i, x, y) touches:append({'move', i, x, y}) end)
+  return touches
+end)
+
+
+describe('screen',
+    
+  it('can detect and recover from stall', function(monkeypatch, pixels, taps)
+    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
+    screen.on_stall({function() end})
+    
+    local calls = list()
+    screen.on_stall(function() 
+      calls:append(true)
+      pixels:clear()
+    end)
+
+    local pix = screen.stall_indicators:copy()
+    pixels:extend(pix.pixels)
+    screen.tap_while(pix)
+    assert(len(calls) == 1, 'Did not call on stall')
+  end),
+  
+  it('can swipe between pixels', function(touches) 
+    local start_pix = Pixel(10, 10)
+    local end_pix = Pixel(100, 100)
+    for speed in iter{1, 5, 10} do
+      screen.swipe(start_pix, end_pix, speed)
+      assert(len(touches) == 50 / speed + 1, 'Did not touch and move correctly')
+      assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+      assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+      assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+      touches:clear()
+    end
+  end),
+
+  it('can swipe in a direction', function(touches) 
+    local positions = {'left', 'right', 'top', 'bottom', 'center', 'top_left', 'top_right', 'bottom_left', 'bottom_right'}
+    for pos1 in iter(positions) do
+      for pos2 in iter(positions) do
+        if pos1 ~= pos2 then
+          screen.swipe(pos1, pos2, 10)
+          assert(len(touches) == 6, 'Did not touch and move correctly')
+          assert(touches[1][1] == 'down', 'Did not swipe in correct order')
+          assert(touches[2][1] == 'move', 'Did not swipe in correct order')
+          assert(touches[-1][1] == 'up', 'Did not swipe in correct order')
+          touches:clear()
+        end
+      end
+    end
+  end),
+
+  it('can tap a position', function(taps) 
+    local x, y, times = 10, 10, 5
+    screen.tap(x, y, times)
+    assert(len(taps) == times, 'Did not tap screen at position')
+    assert(taps[1][1] == x, 'Did not tap screen at correct position')
+  end),
+  
+  it('can tap a pixel', function(taps) 
+    local pix, times = Pixel(10, 10), 5
+    screen.tap(pix, times)
+    assert(len(taps) == times, 'Did not tap screen at pixel')
+    assert(taps[1][1] == pix.x, 'Did not tap screen at correct pixel position')
+  end),
+  
+  it('can tap with context', function(taps, do_after) 
+    local action_calls = list()
+    local check_calls = list()
+    local tap_calls = list()
+    screen.before_action(function() action_calls:append('begin') end)
+    screen.after_action(function() action_calls:append('end') end)
+    screen.before_check(function() check_calls:append('begin') end)
+    screen.after_check(function() check_calls:append('end') end)
+    screen.before_tap(function() tap_calls:append('begin') end)
+    screen.after_tap(function() tap_calls:append('end') end)
+    
+    local count = 0
+    screen.tap_while(function() count = count + 1; return count < 3 end, Pixel(100, 100))
+    
+    assertRequal(action_calls, {'begin', 'end'}, 'action calls order incorrect')
+    assertRequal(check_calls, {'begin', 'end', 'begin', 'end', 'begin', 'end'}, 'check calls order incorrect')
+    assertRequal(tap_calls, {'begin', 'end', 'begin', 'end'}, 'tap calls order incorrect')
+  end),
+  
+  it('can tap if a pixel is visible', function(taps, pixels) 
+    local pix = Pixel(100, 100)
+    screen.tap_if(pix)
+    assert(len(taps) == 0, 'Tapped when pixel is not visible')
+    pixels:append(pix)
+    screen.tap_if(pix)
+    assert(len(taps) == 1, 'Did not tap when pixel is visible')
+    assert(taps[-1][1] == 100, 'Did not tap correct position')
+    screen.tap_if(pix, Pixel(200, 200))
+    assert(taps[-1][1] == 200, 'Did not tap correct position')
+  end),
+  
+  it('can tap while a pixel is visible', function(taps, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    pixels:append(pix)
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() pixels:remove(pix) end
+    ))
+    screen.tap_while(pix)
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap until a pixel is visible', function(taps, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() pixels:append(pix) end
+    ))
+    screen.tap_until(pix)
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap if a condition is met', function(taps) 
+    screen.tap_if(function() return false end, Pixel(100, 100))
+    assert(len(taps) == 0, 'Tapped when condition not met')
+    screen.tap_if(function() return true end, Pixel(100, 100))
+    assert(len(taps) == 1, 'Did not tap when condition is met')
+    assert(taps[-1][1] == 100, 'Did not tap correct position')
+  end),
+  
+  it('can tap while a condition is met', function(taps, do_after) 
+    local cond = true
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() cond = false end
+    ))
+    screen.tap_while(function() return cond end, Pixel(100, 100))
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can tap until a condition is met', function(taps, do_after) 
+    local cond = false
+    local required_taps = 3
+    screen.before_tap(do_after(required_taps, 
+      function() cond = true end
+    ))
+    screen.tap_until(function() return cond end, Pixel(100, 100))
+    assert(len(taps) == required_taps, 'Tapped less than required amount')
+  end),
+  
+  it('can wait for a pixel', function(taps, pixels, do_after) 
+    local checks = 0
+    local pix = Pixel(100, 100)
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() pixels:append(pix) end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(pix)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end),
+  
+  it('can wait for a condition', function(taps, do_after) 
+    local checks = 0
+    local cond = false
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() cond = true end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(function() return cond end)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end)
+
+)
+
 
 
 
@@ -1269,14 +2123,17 @@ describe('requests',
 
 
 describe('string', 
+  
   it('startswith', function() 
      assert(('\nabc'):startswith('\n'), 'Startswith \\n')
      assert(not ('abc'):startswith('\n'), 'Not Startswith \\n')
-    end),
+  end),
+
   it('endswith', function() 
     assert(('abc\n'):endswith('\n'), 'Endswith \\n')
     assert(not ('abc'):endswith('\n'), 'Not endswith \\n')
-    end),
+  end),
+
   it('format', function() 
     local o = 'Hello {}, {} and {}'
     local x = 'Hello {:-8}, {:2}, {:3}'
@@ -1288,16 +2145,19 @@ describe('string',
     assertEqual(x:format('k', 'bob', 1000), ex, 'Bad string format')
     assertEqual(y:format{j='john', d='djordje'}, ey, 'Bad string format')
     assertEqual(('%s, %d'):format('hello', 100), 'hello, 100', 'Bad string format')
-    end),
+  end),
+
   it('join', function() 
     assertEqual(('\n'):join({'a', 'b'}), 'a\nb', 
       'String join table failed')
     assertEqual(('\n'):join(list{'a', 'b'}), 'a\nb', 
       'String join list failed')
-    end),
+  end),
+
   it('replace', function()  
     assertEqual(('abcba'):replace('b', 'q'), 'aqcqa', 'String replacement incorrect') 
-    end),
+  end),
+
   it('split', function()
     local s1 = 'abc'
     local s2 = 'aabbcc'
@@ -1306,18 +2166,22 @@ describe('string',
     assertRequal(s1:split('b'), {'a', 'c'}, 'Split with char arg')
     assertRequal(s2:split('bb'), {'aa', 'cc'}, 'Split with string arg')
     assertRequal(s3:split(' '), {'a', '20', '300', 'dddd'}, 'Split with spaces')
-    end),
+  end),
+
   it('strip', function()
     local x = 'abacbabacabab'
     local expected = 'cbabac'
     assertEqual(x:strip('ab'), expected, 'String not stripped correctly')
-    end),
+  end),
+
   it('str_add', function() 
     assertEqual('a' + 'b', 'ab', 'String add incorrect')
-    end),
+  end),
+
   it('str_mul', function() 
     assertEqual('ab' * 2, 'abab', 'String mul incorrect') 
-    end),
+  end),
+
   it('str_pairs', function() 
     local c = 1
     local _t = {'a', 'b', 'c'}
@@ -1326,7 +2190,8 @@ describe('string',
       assertEqual(v, _t[c], 'String pairs value incorrect')
       c = c + 1 
     end
-    end),
+  end),
+
   it('str_index', function() 
     local s = 'abc'
     for i, v in pairs(string) do
@@ -1334,7 +2199,10 @@ describe('string',
     end
     assertEqual(s[1], 'a', 'Positive string index failed')
     assertEqual(s[-1], 'c', 'Negative string index failed')
-    end)
+    local x = 'abcde'
+    assert(x(2, 4) == 'bcd', 'Did not slice string correctly')
+    assert(x{1, -2, 3} == 'adc', 'Did not slice string correctly')
+  end)
 )
 
 
@@ -1362,6 +2230,15 @@ end)
   
 
 describe('system', 
+
+  it('exe', function(filesystem)
+    local result = set(exe('ls _tmp_tst'))
+    assertEqual(result, set{'t1.txt', 't.txt'}, 'ls returned incorrect files')
+    assertRequal(exe('echo "1\n2"'), {'1', '2'}, 'Multi line output failed')
+    assertEqual(exe('echo "1\n"'), '1', 'Multi line output with single usable failed')
+    assertEqual(exe('echo "1\n2"', false), '1\n2', 'Single output failed')
+  end),
+
   it('fcopy', function(filesystem)
     local function check_lines(fname, expected)
       expected = expected or {'1', '2', '3'}
@@ -1381,54 +2258,81 @@ describe('system',
     assertEqual(listdir('_tmp_tst2'), listdir('_tmp_tst'), 
       'fcopy did not correctly copy directory contents')
     check_lines('_tmp_tst/tmp/t1.txt')
-    end),
+  end),
+
   it('find', function(filesystem)
     assertEqual(find('tests.lua'), './tests.lua', 
       'find returned incorrect file path')
     assertEqual(find{dir='_tmp_tst'}, './_tmp_tst', 
       'find returned incorrect directory path')
-    end),
-  it('exe', function(filesystem) 
-    local result = set(exe('ls _tmp_tst'))
-    assertEqual(result, set{'t1.txt', 't.txt'}, 'ls returned incorrect files')
-    assertRequal(exe('echo "1\n2"'), {'1', '2'}, 'Multi line output failed')
-    assertEqual(exe('echo "1\n"'), '1', 'Multi line output with single usable failed')
-    assertEqual(exe('echo "1\n2"', false), '1\n2', 'Single output failed')
-    end),
+    assertRaises('Incorrect table arguments', function() 
+      find{stuff='abc'}
+    end, 'find with incorrect args did not raise error')
+  end),
+
+  it('get_cwd', function() 
+    assert(isin('/', get_cwd()), 'get_cwd did not return directory')
+  end),
+
   it('isDir', function(filesystem) 
     assert(isDir('_tmp_tst'), '_tmp_tst not a directory') 
-    end),
+  end),
+
   it('isFile', function(filesystem)
     assert(isFile('_tmp_tst/t.txt'), '_tmp_tst/t.txt not a file')
-    end),
+  end),
+
   it('listdir', function(filesystem)
     local result = listdir('_tmp_tst')
     local expected = {'t.txt', 't1.txt'}
     for i, v in pairs(result) do 
       assertEqual(v, expected[i], 'listdir has incorrect file name') 
     end
-    end),
+  end),
+
   it('pathExists', function(filesystem)
     assert(not pathExists('randompath_sdas'), 'Invalid path exists')
     assert(pathExists('/etc'), '/usr does not exist')
-    end),
+  end),
+
+  it('pathJoin', function() 
+    assert(pathJoin('dir', 'file') == 'dir/file', 'Did not join paths correctly')
+    assert(pathJoin('dir', '/file') == 'dir/file', 'Did not join paths correctly')
+    assert(pathJoin('dir/', 'file') == 'dir/file', 'Did not join paths correctly')
+    assert(pathJoin('dir/', '/file') == 'dir/file', 'Did not join paths correctly')
+  end),
+
   it('readLine', function(filesystem) 
     local line = readLine('_tmp_tst/t.txt', 2)
     assertEqual(line, 'line2', 'Second line read incorrectly')
-    end),
+  end),
+
   it('readLines', function(filesystem) 
     local expected = {'line1', 'line2', 'line3'}
     local lines = readLines('_tmp_tst/t.txt')
     for i, v in pairs(lines) do 
       assertEqual(v, expected[i], 'line read incorrectly') 
     end
-    end),
+  end),
+
   it('sizeof', function(filesystem)
     local size = sizeof('_tmp_tst/t.txt')
     --Don't know why text files are so drastically different 
     --in size accross linux and various IOS versions
     assert(size >= 4, 'Incorrect file size') 
-    end),
+  end),
+
+  it('can sleep', function() 
+    local time_ns = num(exe('date +%s%N'))
+    sleep(0.01)
+    local c_time_ns = num(exe('date +%s%N'))
+    assert(round((c_time_ns - time_ns) / 1000000000, 2) == 0.01, 'Did not sleep for correct amount of time')
+    time_ns = c_time_ns
+    sleep(0.1)
+    c_time_ns = num(exe('date +%s%N'))
+    assert(round((c_time_ns - time_ns) / 1000000000, 1) == 0.1, 'Did not sleep for correct amount of time')
+  end),
+
   it('writeLine', function(filesystem)
     writeLine('5', 2, '_tmp_tst/t1.txt')
     local lines = readLines('_tmp_tst/t1.txt')
@@ -1436,7 +2340,8 @@ describe('system',
     for i, v in pairs(lines) do 
       assertEqual(v, expected[i], 'Incorrect line written') 
     end
-    end),
+  end),
+
   it('writeLines', function(filesystem) 
     local expected = {'2', '5', '6'}
     writeLines(expected, '_tmp_tst/t1.txt')
@@ -1444,7 +2349,7 @@ describe('system',
     for i, v in pairs(lines) do 
       assertEqual(v, expected[i], 'Incorrect lines written') 
     end
-    end)
+  end)
 )
 
 
