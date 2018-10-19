@@ -22,6 +22,8 @@ describe('core',
     end
     --attribute access
     local a = A(5)
+    assert(isinstance(a, A), 'a not instance of A')
+    assert(not isinstance({}, A), 'table is instance of A')
     assert(a.value, 'Class instance does not have required attributes')
     assertEqual(a.value, 5, 
       'Class instance does not have correct attribute values')

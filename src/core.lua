@@ -238,7 +238,11 @@ function isnotin(sub, main) return not isin(sub, main) end
 function isinstance(klass, other)
   local m = getmetatable(klass)
   if not m or not m.__name then 
-    if not is.str(other) then other = type(other) end
+    if other and other.__name then
+      other = ''
+    elseif not is.str(other) then 
+      other = type(other) 
+    end
     return type(klass) == other
   else 
     if is.str(other) then other = {__name = other} end 
