@@ -1,11 +1,8 @@
 ---- Web requests and data parsing.
 -- Mirrors basic methods and api of Python's 'requests' module.
--- Requires wget to work, as @{requests} is simply a lua wrapper for the wget cli.
--- @module requests
+-- Requires wget to work, as @{requests.lua} is simply a lua wrapper for the wget cli.
+-- @module requests.lua
 
-
----- Api object for @{requests}
--- @type requests
 requests = {}
 
 ---- Make a DELETE request
@@ -259,7 +256,7 @@ function Request:_add_user_agent()
 end
 ---
 
----- Response object returned by methods of @{requests}
+---- Response object returned by @{requests.request}
 -- @type Response
 Response = class('Response')
 function Response:__init(request)

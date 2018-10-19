@@ -7,50 +7,20 @@
 
 abs = math.abs
 unpack = table.unpack
-
-
-local function table2string(input)
-local m = getmetatable(input)
-local function idxstr(idx, val, custom_type)
-if custom_type then return str(val)
-elseif is.str(val) then val = '"'..val..'"'
-else val = str(val) end
-if is.str(idx) then idx = '"'..idx..'"'
-else idx = str(idx) end
-return string.format('%s: %s', idx, val)
-end
-
-local custom = m and m.__name and list{'list', 'set'}:contains(m.__name)
-local count, all_int = 0, true
-for i, v in pairs(input) do
-count = count + 1
-if not is.num(i) or i ~= count then
-all_int = false
-break
-end
-end
-if count ~= #input then all_int = false end
-custom = custom or all_int
-
-local pre, suf = '{', '}'
-if input == list(input) then  pre, suf = '[', ']' end
-local s = pre
-for i, v in pairs(input) do
-if s ~= pre then s = s .. ', ' end
-s = s .. idxstr(i, v, custom)
-end
-return s .. suf
-end
-
-
+local _string_converters = {}
+local _metamethods = {
+'__add', '__sub', '__mul', '__div', '__idiv', '__pow',
+'__mod', '__concat', '__index', '__newindex', '__call',
+'__pairs', '__ipairs', '__tostring', '__len',
+'__mode', '__metatable', '__gc'
+}
 
 local classes = {}
 local private_tables = {}
 
 function class(name, ...)
-local c --a new class instance
-local getters, setters = {}, {}
-local bases = {}
+local c --a new class type
+local bases, getters, setters = {}, {}, {}
 for i, v in pairs({...}) do
 if is.str(v) then v = classes[v] end
 table.insert(bases, v)
@@ -74,19 +44,14 @@ end
 --class constructor
 local function constructor(cls, ...)
 local self = {}
+local table_string = tostring(self)
 setmetatable(self, c)
 
 if cls.__init then
 cls.__init(self, ...)
-else
-for _, base in pairs(bases) do
-if base.__init then
-base.__init(self, ...)
-break
-end
-end
 end
 
+self.__getters.__base_repr = function(s) return table_string end
 return self
 end
 
@@ -100,20 +65,6 @@ local function class_meta_newindex(cls, key, value)
 rawset(cls, key, value)
 end
 
---slight improvement of tostring(<table>)
-local function class_repr(cls)
-return '<'..string.gsub(tostring(cls), 'table:', name..' instance at')..'>'
-end
-
---custom strings for dict, list and set
-local function class_str(cls)
-if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
-return table2string(cls)
-else
-return class_repr(cls)
-end
-end
-
 c = {
 __name = name,
 __bases = bases,
@@ -121,28 +72,40 @@ __getters = getters,
 __setters = setters,
 __index = getattr,
 __newindex = setattr,
-__repr = class_repr,
+__repr = _string_converters.class_repr,
+__tostring = _string_converters.class_str,
 -- convience methods
 copy = copy,
 isinstance = isinstance
 }
 
--- copy any methods from base classes in order of inheritance (youngest first)
+-- copy any methods/properties from base classes in order of inheritance (youngest first)
 for _, base in pairs(bases) do
 for k, v in pairs(base) do
 if not c[k] then c[k] = v end
+for _, meth in pairs(_metamethods) do
+if base[meth] and (meth == '__index' or meth == '__newindex' or meth == '__tostring' or not c[meth]) then
+c[meth] = base[meth]
+end
+end
+end
+for k, v in pairs(base.__getters) do
+if not c.__getters[k] then c.__getters[k] = v end
+end
+for k, v in pairs(base.__setters) do
+if not c.__setters[k] then c.__setters[k] = v end
 end
 end
 
 classes[name] = setmetatable(c, {
+__class = c,
 __call = constructor,
 __index = class_meta_index,
 __newindex = class_meta_newindex,
-__tostring = class_str,
+__repr = _string_converters.class_repr,
 })
 return classes[name]
 end
-
 
 function getattr(cls, value)
 if cls and isType(cls, 'table') then
@@ -202,8 +165,12 @@ end
 end
 
 function hash(input)
+if is.func(input) then
+input = tostring(input):match('function: (.*)')
+else
 local m = getmetatable(input)
-if m and m.__hash then return input:__hash() end
+if m and m.__hash then return m.__hash(input) end
+end
 
 local hsh
 local mod = 2 ^ 64
@@ -211,7 +178,7 @@ if is.num(input) then
 if input > 0 then hsh = -input * 2
 elseif input < 0 then hsh = input * 2 - 1
 else hsh = input end
-elseif not is.str(input) then error("Can only hash integers and strings")
+elseif not is.str(input) then error("Can only hash functions, integers and strings")
 else
 hsh = string.byte(input[1]) * 2 ^ 7
 for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
@@ -248,7 +215,11 @@ function isnotin(sub, main) return not isin(sub, main) end
 function isinstance(klass, other)
 local m = getmetatable(klass)
 if not m or not m.__name then
-if not is.str(other) then other = type(other) end
+if other and other.__name then
+other = ''
+elseif not is.str(other) then
+other = type(other)
+end
 return type(klass) == other
 else
 if is.str(other) then other = {__name = other} end
@@ -291,7 +262,126 @@ function num(input)
 if is.num(input) then return input else return tonumber(input) end
 end
 
-local isPrimitiveType = {string=true, number=true, boolean=true}
+
+local _print = log or print
+function print(...)
+local strings = {}
+for i, v in pairs({...}) do strings[#strings + 1] = str(v) end
+_print(table.concat(strings, '\t'))
+end
+
+function pprint(tbl)
+return print("\n{\n" .. _string_converters.traverseTable(tbl,{[tbl]=true},1, ',') .. "}")
+end
+
+function property(klass, name, getter, setter)
+assert(klass and name and getter, 'Must provide a class, name and getter function')
+klass.__getters[name] = getter
+klass.__setters[name] = setter
+end
+
+
+function repr(input)
+local m = getmetatable(input)
+if m and m.__repr then return input:__repr()
+else return tostring(input) end
+end
+
+
+function str(input)
+local m = getmetatable(input)
+if m then
+local _m = getmetatable(m)
+if m.__tostring then return tostring(input)
+elseif _m and _m.__tostring then return _m.__tostring(input) end
+elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
+elseif isType(input, 'nil') then return 'nil'
+elseif isType(input, 'string') then return input
+elseif isType(input, 'table') then return _string_converters.table2string(input) end
+return repr(input)
+end
+
+
+
+function reversed(object)
+if is.str(object) then return object:reverse() end
+local result = list()
+for i, v in pairs(object) do result:insert(1, v) end
+return result
+end
+
+function sorted(object, key)
+local sorter
+local cp = copy(object)
+if isType(key, 'function') then
+sorter = function(v1, v2)
+v1, v2 = key(v1), key(v2)
+return v1 < v2
+end
+end
+table.sort(cp, sorter)
+return cp
+end
+
+
+function _string_converters.class_repr(cls)
+local obj_name, value = 'class', tostring(cls)
+if getmetatable(cls) and getmetatable(cls).__name then
+obj_name = 'instance'
+value = cls.__base_repr or tostring(getmetatable(cls))
+end
+return '<'..string.gsub(value, 'table:', cls.__name..' '..obj_name..' at')..'>'
+end
+
+function _string_converters.class_str(cls)
+if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
+return _string_converters.table2string(cls)
+else
+return _string_converters.class_repr(cls)
+end
+end
+
+
+function _string_converters.table2string(input)
+local m = getmetatable(input)
+local function idxstr(idx, val, custom_type)
+if custom_type then return str(val)
+elseif is.str(val) then val = '"'..val..'"'
+else val = str(val) end
+if is.str(idx) then idx = '"'..idx..'"'
+else idx = str(idx) end
+return string.format('%s: %s', idx, val)
+end
+
+local custom = m and m.__name and list{'list', 'set'}:contains(m.__name)
+local count, all_int = 0, true
+for i, v in pairs(input) do
+count = count + 1
+if not is.num(i) or i ~= count then
+all_int = false
+break
+end
+end
+if count ~= #input then all_int = false end
+custom = custom or all_int
+
+local pre, suf = '{', '}'
+if input == list(input) then  pre, suf = '[', ']' end
+local s = pre
+for i, v in pairs(input) do
+if s ~= pre then s = s .. ', ' end
+s = s .. idxstr(i, v, custom)
+end
+return s .. suf
+end
+
+
+function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
+delim = delim or ','
+local output = ""
+local indentStr = string.rep("\t",indent)
+
+local isPrimitiveType = {string=true, number=true, boolean=true, ['function']=true, thread=true, userdata=true, ['nil']=true}
 local typeSortOrder = {
 ['boolean']  = 1;
 ['number']   = 2;
@@ -306,6 +396,7 @@ local typeSortOrder = {
 
 local function isPrimitiveArray(array)
 local max,n = 0,0
+if array.isinstance and (array:isinstance(list) or array:isinstance(set)) then return true end
 for k,v in pairs(array) do
 if not (type(k) == 'number' and k > 0 and math.floor(k) == k) or not isPrimitiveType[type(v)] then
 return false
@@ -338,12 +429,6 @@ else
 return "[" .. tostring(key) .. "] = "
 end
 end
-
-
-local function traverseTable(dataTable,tableRef,indent,delim)
-delim = delim or ','
-local output = ""
-local indentStr = string.rep("\t",indent)
 
 local keyList = {}
 for k,v in pairs(dataTable) do
@@ -392,18 +477,19 @@ end
 if has_items then -- table contains values
 if isPrimitiveArray(value) then -- collapse primitive arrays
 output = output .. indentStr .. formatKey(key,in_seq) .. "{"
-local n = #value
-for i=1,n do
-output = output .. formatValue(value[i])
-if i < n then
+local i = 1
+for _, v in pairs(value) do
+output = output .. formatValue(v)
+if i < len(value) then
 output = output .. ", "
 end
+i = i + 1
 end
 output = output .. "}"..delim.."\n"
 else -- table is not primitive array
 output = output
 .. indentStr .. formatKey(key,in_seq) .. "{\n"
-.. traverseTable(value,tableRef,indent+1, delim)
+.. _string_converters.traverseTable(value,tableRef,indent+1, delim)
 .. indentStr .. "}"..delim.."\n"
 end
 else -- table is empty
@@ -417,539 +503,6 @@ output = output .. indentStr .. formatKey(key,in_seq) .. formatValue(value) .. "
 end
 end
 return output
-end
-
-
-local _print = log or print
-function print(...)
-local strings = {}
-for i, v in pairs({...}) do strings[#strings + 1] = str(v) end
-_print(table.concat(strings, '\t'))
-end
-
-function pprint(tbl)
-print("\n{\n" .. traverseTable(tbl,{[tbl]=true},1, ',') .. "}")
-end
-
-
-function repr(input)
-local m = getmetatable(input)
-if m and m.__repr then return input:__repr()
-else return tostring(input) end
-end
-
-
-function sleep(seconds)
-seconds = (seconds^2)^0.5
-local remainder = seconds
-if seconds > 0.01 then
-local rnd = round(seconds, 5)
-remainder = seconds - rnd
-io.popen('sleep ' .. rnd) :close()
-end
-local start = os.clock()
-while os.clock() - start < remainder do end
-end
-
-
-function str(input)
-local m = getmetatable(input)
-if m then
-local _m = getmetatable(m)
-if m.__tostring then return tostring(input)
-elseif _m and _m.__tostring then return _m.__tostring(input) end
-elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
-elseif isType(input, 'nil') then return 'nil'
-elseif isType(input, 'string') then return input
-elseif isType(input, 'table') then return table2string(input) end
-return repr(input)
-end
-
-
-
-function reversed(object)
-if is.str(object) then return object:reverse() end
-local result = list()
-for i, v in pairs(object) do result:insert(1, v) end
-return result
-end
-
-function sorted(object, key)
-local sorter
-local cp = copy(object)
-if isType(key, 'function') then
-sorter = function(v1, v2)
-v1, v2 = key(v1), key(v2)
-return v1 < v2
-end
-end
-table.sort(cp, sorter)
-return cp
-end
-
-
-requests = {}
-
-function requests.delete(url, args)
-return requests.request("DELETE", url, args)
-end
-
-function requests.get(url, args)
-return requests.request("GET", url, args)
-end
-
-function requests.post(url, args)
-return requests.request("POST", url, args)
-end
-
-function requests.put(url, args)
-return requests.request("PUT", url, args)
-end
-
-function requests.request(method, url, args)
-local _req = args or {}
-
-if is.table(url) then
-_req = url
-else
-_req.url = url
-end
-
-_req.method = method
-local request = Request(_req)
-
-if request:verify() then
-local cmd = request:build()
-return request:send(cmd)
-else
-return "failed"
-end
-end
-
-local function parse_data(lines, request, response)
-
-local err_msg = 'error in '..request.method..' request: '
-assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
-
-local req = lines(lines:index('---request begin---') + 1, lines:index('---request end---') - 1)
-local resp = lines(lines:index('---response begin---') + 1, lines:index('---response end---') - 1)
-
-_, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '))
-response.status_code = num(response.status_code)
-response.ok = response.status_code < 400
-
-local k, v
-for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
-for line in lns() do
-k = line:split(':')[1]:strip('\13')
-v = line:replace(k..': ', ''):strip('\13')
-v = tonumber(v) or v
-if v then
-if i == 'request' then
-request.headers[k] = v
-else
-response.headers[k] = v
-if k == 'Content-Type' then
-if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
-end
-end
-end
-end
-end
-end
-
-local function urlencode(params)
-if is.str(params) then return params end
-local s = ''
-if not params or next(params) == nil then return s end
-for key, value in pairs(params) do
-if is(s) then s = s..'&' end
-if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
-end
-return s
-end
-
-Request = class('Request')
-function Request:__init(request)
-for k, v in pairs(request) do
-setattr(self, k, v)
-end
-self.headers = dict()
-self.method = request.method or "GET"
-self.url = request.url or request[1] or ''
-self._response_fn = '_response.txt'
-end
-
-function Request:build()
-local cmd = list{'wget', '--method', self.method:upper()}
-if is(self.params) then
-self.url = self.url .. '?' .. urlencode(self.params)
-end
-cmd:extend(self:_add_auth() or {})
-cmd:extend(self:_add_data() or {})
-cmd:extend(self:_add_headers() or {})
-cmd:extend(self:_add_proxies() or {})
-cmd:extend(self:_add_ssl() or {})
-cmd:extend(self:_add_user_agent() or {})
-cmd:extend{"'"..self.url.."'"}
-cmd:extend{'--output-file', '-'}
-cmd:extend{'--output-document', self._response_fn}
-return cmd
-end
-
-function Request:send(cmd)
-local response = Response(self)
-
-try(function()
-local lines = exe(cmd)
-
-with(open(self._response_fn), function(f)
-response.text = f:read('*a') end)
-
-try(function() parse_data(lines, self, response) end)
-
-end,
-
-except(function(err)
-print('Requesting '..self.url..' failed - ' .. str(err))
-end),
-
-function()
-exe{'rm', self._response_fn}
-end
-)
-
-return response
-end
-
-function Request:verify()
-assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
-assert(self.url:startswith('http'), 'Only http(s) urls are supported')
-return true
-end
-
-function Request:_add_auth()
-if is(self.auth) then
-local usr = self.auth.user or self.auth[1]
-local pwd = self.auth.password or self.auth[2]
-retur {'--http-user', usr, '--http-password', pwd}
-end
-end
-
-function Request:_add_data()
-if is(self.data) then
-if Not.string(self.data) then
-self.data = urlencode(self.data)
-end
-return {'--body-data', "'"..self.data.."'"}
-end
-end
-
-function Request:_add_headers()
-if is(self.headers) then
-for k, v in pairs(self.headers) do
-cmd:append("--header='"..k..': '..str(v).."'")
-end
-end
-end
-
-function Request:_add_proxies()
-if is(self.proxies) then
-local usr, pwd
-for k, v in pairs(self.proxies) do
-if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
-end
-end
-end
-
-function Request:_add_ssl()
-if not self.verify or (self.url:startswith('https') and self.verify) then
-return {'--no-check-certificate'}
-end
-end
-
-function Request:_add_user_agent()
-if is(self.user_agent) then
-return {'-U', self.user_agent}
-end
-end
-
-Response = class('Response')
-function Response:__init(request)
-self.request = request or {}
-self.url = self.request.url
-self.status_code = -1
-self.text = ''
-self.encoding = ''
-self.reason = ''
-self.headers = dict()
-self.ok = false
-end
-
-function Response:__tostring()
-return string.format('<Response [%d]>', self.status_code)
-end
-
-function Response:iter_lines()
-local i, v
-local lines = self.text:split('\n')
-return function() i, v = next(lines, i) return v end
-end
-
-function Response:json()
-return json.decode(self.text)
-end
-
-function Response:raise_for_status()
-if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
-end
-
-BLACK = 0
-WHITE = 16777215
-
-Pixel = class('Pixel')
-
-function Pixel:__init(x, y, color)
-self.x = x
-self.y = y
-self.expected_color = color or WHITE
-end
-function Pixel:__add(position)
-self.x = self.x + (position.x or position[1] or 0)
-self.y = self.y + (position.y or position[1] or 0)
-end
-
-function Pixel:__sub(position)
-self.x = self.x - (position.x or position[1] or 0)
-self.y = self.y - (position.y or position[1] or 0)
-end
-
-function Pixel:__eq(pixel)
-return self.x == pixel.x and self.y == pixel.y and self.color == pixel.color
-end
-
-Pixel.__getters['color'] = function(self)
-return getColor(self.x, self.y)
-end
-
-function Pixel:color_changed()
-local old_color = self.color
-return function()
-local current_color = self.color
-if current_color ~= old_color then
-old_color = current_color
-return true
-end
-return false
-end
-end
-
-function Pixel:visible()
-return self.color == self.expected_color
-end
-
-Pixels = class('Pixels')
-
-function Pixels:__init(pixels)
-self.pixels = list()
-self.expected_colors = list()
---table of pixels
-if is(pixels) and getmetatable(pixels[1]) then
-self.pixels = pixels
-for i, pixel in pairs(pixels) do
-self.expected_colors:append(pixel.color)
-end
---table of tables {x, y, color}
-else
-for i, t in pairs(pixels) do
-self.pixels:append(Pixel{t[1], t[2], t[3]})
-self.expected_colors:append(t[3] or WHITE)
-end
-end
-end
-
-function Pixels:__add(pixels)
-for i, pixel in pairs(pixels) do
-self.pixels:append(pixel)
-self.expected_colors:append(pixel.expected_color)
-end
-end
-
-function Pixels:__eq(pixels)
-for i, pixel in pairs(pixels.pixels) do
-if pixel ~= self.pixels[i] then return false end
-end
-return true
-end
-
-Pixels.__getters['positions'] = function(self)
-local positions = list()
-for pixel in iter(self.pixels) do
-positions:append({pixel.x, pixel.y})
-end
-return positions
-end
-
-Pixels.__getters['colors'] = function(self)
-return getColors(self.positions)
-end
-
-function Pixels:visible()
-return requal(getColors(self.positions), self.expected_colors)
-end
-
-function Pixels:count()
-local count = 0
-for i, v in pairs(self.colors) do
-if v == self.expected_colors[i] then count = count + 1 end
-end
-return count
-end
-
-local function n_colors_changed(pixels, n)
-local old_colors = pixels.colors
-
-return function()
-local count = 0
-local current_colors = pixels.colors
-for i, color in pairs(current_colors) do
-if old_colors[i] ~= color then
-count = count + 1
-end
-end
-
-local result = count >= (n or len(current_colors))
-
-if result then
-old_colors = current_colors
-end
-
-return result
-end
-end
-
-
-function Pixels:any_colors_changed()
-return n_colors_changed(self, 1)
-end
-
-function Pixels:all_colors_changed()
-return n_colors_changed(self, len(self.pixels))
-end
-
-function Pixels:n_colors_changed(n)
-return n_colors_changed(self, n)
-end
-
-
-function str_add(s, other) return s .. other end
-
-function str_call(s,i,j)
-if isType(i, 'number') then
-return string.sub(s, i, j or #s)
-elseif isType(i, 'table') then
-local t = {}
-for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
-return table.concat(t)
-end
-end
-
-function str_index(s, i) end
-
-function str_mul(s, other)
-local t = {}
-for i=1, other do t[i] = s end
-return table.concat(t)
-end
-
-function str_pairs(s)
-local function _iter(s, idx)
-if idx < #s then return idx + 1, s[idx + 1] end
-end
-return _iter, s, 0
-end
-
-_string = {
-endswith = function(s, value) return s(-#value, -1) == value end,
-
-format = function(s, ...)
-if Not.Nil(string.find(s, '{[^}]*}')) then
-local args; local modified = ''; local stringified = '';
-local index = 1; local length = 0; local pad = 0
-if is.table(...) then args = ... else args = {...} end
-
-local function formatter(prev, match)
--- replace match
-if match == '' then
-stringified = str(args[index])
-elseif match:startswith(':') then
-length = tonumber(match(2))
-stringified = str(args[index])
-else
-for i, v in pairs(args) do if i == match then stringified = v end end
-end
--- apply padding if any
-pad = math.max(0, math.abs(length) - #stringified)
-if length < 0 then modified = modified + prev + stringified + ' ' * pad
-else modified = modified + prev + ' ' *  pad + stringified end
-index = index + 1
-length = 0
-end
-
-s:gsub('(.-){([^}]*)}', formatter)
-return modified
-else return string.format(s, ...) end
-end,
-
-join = function(s, other) return table.concat(other, s) end,
-
-replace = function(s, sub, rep, limit)
-local _s, n = string.gsub(s, sub, rep, limit) return _s end,
-
-split = function(s, delim)
-local i = 1
-local idx = 1
-local values = {}
-
-while i <= #s do
-if is.Nil(delim) then values[i] = s[i]; i = i + 1
-else
-if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
-else
-if is.Nil(values[idx]) then values[idx] = '' end
-values[idx] = values[idx] .. s[i]
-end
-i = i + 1
-end
-end
-for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
-return list(values)
-end,
-
-startswith = function(s, value) return s(1, #value) == value end,
-
-strip = function(s, remove)
-local start=1
-local _end = #s
-for i=1, #s do if isnotin(s[i], remove) then start = i break end end
-for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
-return s(start, _end)
-end
-}
-
-
-getmetatable('').__add = str_add
-getmetatable('').__call = str_call
-getmetatable('').__ipairs = str_pairs
-getmetatable('').__mul = str_mul
-getmetatable('').__pairs = str_pairs
-getmetatable('').__index = function(s, i)
-if isType(i, 'number') then
-if i < 0 then i = #s + 1 + i end
-return string.sub(s, i, i)
-else
-return _string[i] or string[i]
-end
 end
 
 
@@ -1114,6 +667,627 @@ for i, v in pairs(object) do total = total + v end
 return total
 end
 
+requests = {}
+
+function requests.delete(url, args)
+return requests.request("DELETE", url, args)
+end
+
+function requests.get(url, args)
+return requests.request("GET", url, args)
+end
+
+function requests.post(url, args)
+return requests.request("POST", url, args)
+end
+
+function requests.put(url, args)
+return requests.request("PUT", url, args)
+end
+
+function requests.request(method, url, args)
+local _req = args or {}
+
+if is.table(url) then
+_req = url
+else
+_req.url = url
+end
+
+_req.method = method
+local request = Request(_req)
+
+if request:verify() then
+local cmd = request:build()
+return request:send(cmd)
+else
+return "failed"
+end
+end
+
+local function parse_data(lines, request, response)
+local err_msg = 'error in '..request.method..' request: '
+assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
+
+local req_begin, req_end, resp_begin, resp_end
+
+for i, l in pairs(lines) do
+if l == '---request begin---' then
+req_begin = i + 1
+elseif l == '---request end---' then
+req_end = i - 1
+elseif l == '---response begin---' then
+resp_begin = i + 1
+elseif l == '---response end---' then
+resp_end = i - 1
+end
+end
+
+local req = lines(req_begin, req_end)
+local resp = lines(resp_begin, resp_end)
+
+_, response.status_code, response.reason = unpack(resp[1]:strip('\13'):split(' '))
+response.status_code = num(response.status_code)
+response.ok = response.status_code < 400
+
+local k, v
+for i, lns in pairs({request=req(2, nil), response=resp(2, nil)}) do
+for line in lns() do
+k = line:split(':')[1]:strip('\13')
+v = line:replace(k..': ', ''):strip('\13')
+v = tonumber(v) or v
+if v then
+if i == 'request' then
+request.headers[k] = v
+else
+response.headers[k] = v
+if k == 'Content-Type' then
+if isin('charset=', v) then response.encoding = v:split('charset=')[2] end
+end
+end
+end
+end
+end
+end
+
+local function urlencode(params)
+if is.str(params) then return params end
+local s = ''
+if not params or next(params) == nil then return s end
+for key, value in pairs(params) do
+if is(s) then s = s..'&' end
+if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
+end
+return s
+end
+
+Request = class('Request')
+function Request:__init(request)
+for k, v in pairs(request) do
+setattr(self, k, v)
+end
+self.headers = dict(self.headers or dict())
+self.method = request.method or "GET"
+self.url = request.url or request[1] or ''
+self._response_fn = '_response.txt'
+end
+
+function Request:build()
+local cmd = list{'wget', '--method', self.method:upper()}
+if is(self.params) then
+self.url = self.url .. '?' .. urlencode(self.params)
+end
+cmd:extend(self:_add_auth() or {})
+cmd:extend(self:_add_data() or {})
+cmd:extend(self:_add_headers() or {})
+cmd:extend(self:_add_proxies() or {})
+cmd:extend(self:_add_ssl() or {})
+cmd:extend(self:_add_user_agent() or {})
+cmd:extend{"'"..self.url.."'"}
+cmd:extend{'--output-file', '-'}
+cmd:extend{'--output-document', self._response_fn}
+cmd:append('-d')  -- debug output for response code parsing
+return cmd
+end
+
+function Request:send(cmd)
+local response = Response(self)
+
+try(function()
+local lines = exe(cmd)
+
+with(open(self._response_fn), function(f)
+response.text = f:read('*a') end)
+
+try(function() parse_data(lines, self, response) end)
+
+end,
+
+except(function(err)
+print('Requesting '..self.url..' failed - ' .. str(err))
+end),
+
+function()
+exe{'rm', self._response_fn}
+end
+)
+
+return response
+end
+
+function Request:verify()
+assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
+assert(self.url:startswith('http'), 'Only http(s) urls are supported')
+return true
+end
+
+function Request:_add_auth()
+if is(self.auth) then
+local usr = self.auth.user or self.auth[1]
+local pwd = self.auth.password or self.auth[2]
+return {'--http-user', usr, '--http-password', pwd}
+end
+end
+
+function Request:_add_data()
+if is(self.data) then
+if Not.string(self.data) then
+self.data = urlencode(self.data)
+end
+return {'--body-data', "'"..self.data.."'"}
+end
+end
+
+function Request:_add_headers()
+local cmd = list()
+if is(self.headers) then
+for k, v in pairs(self.headers) do
+cmd:append("--header='"..k..': '..str(v).."'")
+end
+end
+return cmd
+end
+
+function Request:_add_proxies()
+if is(self.proxies) then
+local usr, pwd
+for k, v in pairs(self.proxies) do
+if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
+end
+end
+end
+
+function Request:_add_ssl()
+if not self.verify_ssl or (self.url:startswith('https') and self.verify_ssl) then
+return {'--no-check-certificate'}
+end
+end
+
+function Request:_add_user_agent()
+if is(self.user_agent) then
+return {'-U', self.user_agent}
+end
+end
+
+Response = class('Response')
+function Response:__init(request)
+assert(request, 'Cannot create response with no request')
+self.request = request or {}
+self.method = self.request.method
+self.url = self.request.url
+self.status_code = -1
+self.text = ''
+self.encoding = ''
+self.reason = ''
+self.headers = dict()
+self.ok = false
+end
+
+function Response:__tostring()
+return string.format('<Response [%d]>', self.status_code)
+end
+
+function Response:iter_lines()
+local i, v
+local lines = self.text:split('\n')
+return function() i, v = next(lines, i) return v end
+end
+
+function Response:json()
+return json.decode(self.text)
+end
+
+function Response:raise_for_status()
+if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
+end
+
+colors = {
+aqua    = 65535,    -- 65535
+black   = 0,        -- 0
+blue    = 255,      -- 255
+fuchsia = 16711935, -- 16711935
+gray    = 8421504,  -- 8421504
+green   = 32768,    -- 32768
+lime    = 65280,    -- 65280
+maroon  = 8388608,  -- 8388608
+navy    = 128,      -- 128
+olive   = 8421376,  -- 8421376
+orange  = 16753920, -- 16753920
+purple  = 8388736,  -- 8388736
+red     = 16711680, -- 16711680
+silver  = 12632256, -- 12632256
+teal    = 32896,    -- 32896
+yellow  = 16776960, -- 16776960
+white   = 16777215  -- 16777215
+}
+
+
+
+Pixel = class('Pixel')
+
+function Pixel:__init(x, y, color)
+self.x = x
+self.y = y
+self.expected_color = color or colors.white
+end
+
+function Pixel:__add(position)
+local x = self.x + (position.x or position[1] or 0)
+local y = self.y + (position.y or position[2] or 0)
+return Pixel(x, y, self.expected_color)
+end
+
+function Pixel:__sub(position)
+local x = self.x - (position.x or position[1] or 0)
+local y = self.y - (position.y or position[2] or 0)
+return Pixel(x, y, self.expected_color)
+end
+
+function Pixel:__eq(pixel)
+return self.x == pixel.x and self.y == pixel.y and self.expected_color == pixel.expected_color
+end
+
+function Pixel:__hash()
+return self.x * 1000000000000 + self.y * 100000000 + self.expected_color
+end
+
+function Pixel:__tostring()
+return string.format('<Pixel(%d, %d)>', self.x, self.y)
+end
+
+property(Pixel, 'color', function(self)
+return getColor(self.x, self.y)
+end)
+
+function Pixel:color_changed()
+local old_color = self.color
+return function()
+local current_color = self.color
+if current_color ~= old_color then
+old_color = current_color
+return true
+end
+return false
+end
+end
+
+function Pixel:visible()
+return self.color == self.expected_color
+end
+
+
+
+Pixels = class('Pixels')
+
+function Pixels:__init(pixels)
+self.pixels = list()
+self.expected_colors = list()
+local pixel_set = set()
+for i, pixel in pairs(pixels or {}) do
+if not isinstance(pixel, Pixel) then
+pixel = Pixel(pixel[1], pixel[2], pixel[3])
+end
+if not pixel_set:contains(pixel) then
+pixel_set:add(pixel)
+self.pixels:append(pixel)
+self.expected_colors:append(pixel.expected_color)
+end
+end
+end
+
+function Pixels:__add(other)
+local pixel_set = set(self.pixels)
+local new_pixels = list()
+for i, pixel in pairs(other.pixels) do
+local pix = Pixel(pixel.x, pixel.y, pixel.expected_color)
+if not pixel_set:contains(pix) then new_pixels:append(pix) end
+end
+return Pixels(self.pixels + new_pixels)
+end
+
+function Pixels:__sub(other)
+local pixel_set = set(other.pixels)
+local new_pixels = list()
+for p in iter(self.pixels) do
+if not pixel_set:contains(p) then new_pixels:append(p)  end
+end
+return Pixels(new_pixels)
+end
+
+function Pixels:__eq(other)
+if len(self.pixels) ~= len(other.pixels) then return false end
+for i, pixel in pairs(other.pixels) do
+if pixel ~= self.pixels[i] then return false end
+end
+return true
+end
+
+function Pixels:__tostring()
+return string.format('<Pixels(n=%d)>', len(self.pixels))
+end
+
+property(Pixels, 'colors', function(self)
+local positions = list()
+for p in iter(self.pixels) do positions:append({p.x, p.y}) end
+return getColors(positions)
+end)
+
+function Pixels:visible()
+return requal(self.colors, self.expected_colors)
+end
+
+function Pixels:count()
+local colors = self.colors
+local count = 0
+for i, v in pairs(colors) do
+if v == self.expected_colors[i] then count = count + 1 end
+end
+return count
+end
+
+local function n_colors_changed(pixels, n)
+local old_colors = pixels.colors
+
+return function()
+local count = 0
+local current_colors = pixels.colors
+for i, color in pairs(current_colors) do
+if old_colors[i] ~= color then
+count = count + 1
+end
+end
+
+local result = count >= (n or len(current_colors))
+
+if result then
+old_colors = current_colors
+end
+
+return result
+end
+end
+
+function Pixels:any_colors_changed()
+return n_colors_changed(self, 1)
+end
+
+function Pixels:all_colors_changed()
+return n_colors_changed(self, len(self.pixels))
+end
+
+function Pixels:n_colors_changed(n)
+return n_colors_changed(self, n)
+end
+
+
+
+Region = class('Region', 'Pixels')
+
+function Region:__init(positions, color)
+self.color = color or colors.white
+local pixels = list()
+local pixel_set = set()
+for p in iter(positions) do
+local pix = Pixel(p.x or p[1], p.y or p[2], self.color)
+if not pixel_set:contains(pix) then
+pixel_set:add(pix)
+pixels:append(pix)
+end
+end
+Pixels.__init(self, pixels)
+end
+
+function Region:__add(other)
+assert(other:isinstance(Region), 'Can only add Region objects to other Region objects')
+assert(other.color == self.color, 'Can only add Regions of the same color')
+return Region(self.pixels + other.pixels, self.color)
+end
+
+function Region:__sub(other)
+assert(other:isinstance(Region), 'Can only subtract Region objects from other Region objects')
+assert(other.color == self.color, 'Can only subtract Regions of the same color')
+return Region(set(self.pixels) - set(other.pixels), self.color)
+end
+
+function Region:__tostring()
+return string.format('<Region(pixels=%d, color=%d)>', len(self.pixels), self.color)
+end
+
+property(Region, 'center', function(self)
+local x, y = 0, 0
+for p in iter(self.pixels) do x, y = x + p.x, y + p.y end
+return Pixel(x / len(self.pixels), y / len(self.pixels), self.color)
+end)
+
+
+
+Ellipse = class('Ellipse', 'Region')
+
+function Ellipse:__init(options)
+self.x = options.x or 0
+self.y = options.y or 0
+self.width = options.width or 1
+self.height =  options.height or 1
+self.spacing = options.spacing or 1
+local positions = list()
+-- TODO: Ellipse creation
+Region.__init(self, positions, options.color)
+end
+
+function Ellipse:__tostring()
+return string.format('<Ellipse(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
+self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
+end
+
+
+
+Rectangle = class('Rectangle', 'Region')
+
+function Rectangle:__init(options)
+self.x = options.x or 0
+self.y = options.y or 0
+self.width = options.width or 1
+self.height =  options.height or 1
+self.spacing = options.spacing or 1
+local positions = list()
+for i=self.x, self.x + self.width, self.spacing do
+for j=self.y, self.y + self.height, self.spacing do
+positions:append({i, j})
+end
+end
+Region.__init(self, positions, options.color)
+end
+
+function Rectangle:__tostring()
+return string.format('<Rectangle(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
+self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
+end
+
+
+
+Triangle = class('Triangle', 'Region')
+
+function Triangle:__init(options)
+-- TODO: Triangle creation
+local positions = list()
+Region.__init(self, positions, options.color)
+end
+
+function Triangle:__tostring()
+return string.format('<Triangle(n=%d, color=%d)>', len(self.pixels), self.color)
+end
+
+
+function str_add(s, other) return s .. other end
+
+function str_call(s,i,j)
+if isType(i, 'number') then
+return string.sub(s, i, j or #s)
+elseif isType(i, 'table') then
+local t = {}
+for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
+return table.concat(t)
+end
+end
+
+function str_index(s, i) end
+
+function str_mul(s, other)
+local t = {}
+for i=1, other do t[i] = s end
+return table.concat(t)
+end
+
+function str_pairs(s)
+local function _iter(s, idx)
+if idx < #s then return idx + 1, s[idx + 1] end
+end
+return _iter, s, 0
+end
+
+_string = {
+endswith = function(s, value) return s(-#value, -1) == value end,
+
+format = function(s, ...)
+if Not.Nil(string.find(s, '{[^}]*}')) then
+local args; local modified = ''; local stringified = '';
+local index = 1; local length = 0; local pad = 0
+if is.table(...) then args = ... else args = {...} end
+
+local function formatter(prev, match)
+-- replace match
+if match == '' then
+stringified = str(args[index])
+elseif match:startswith(':') then
+length = tonumber(match(2))
+stringified = str(args[index])
+else
+for i, v in pairs(args) do if i == match then stringified = v end end
+end
+-- apply padding if any
+pad = math.max(0, math.abs(length) - #stringified)
+if length < 0 then modified = modified + prev + stringified + ' ' * pad
+else modified = modified + prev + ' ' *  pad + stringified end
+index = index + 1
+length = 0
+end
+
+s:gsub('(.-){([^}]*)}', formatter)
+return modified
+else return string.format(s, ...) end
+end,
+
+join = function(s, other) return table.concat(other, s) end,
+
+replace = function(s, sub, rep, limit)
+local _s, n = string.gsub(s, sub, rep, limit) return _s end,
+
+split = function(s, delim)
+local i = 1
+local idx = 1
+local values = {}
+
+while i <= #s do
+if is.Nil(delim) then values[i] = s[i]; i = i + 1
+else
+if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
+else
+if is.Nil(values[idx]) then values[idx] = '' end
+values[idx] = values[idx] .. s[i]
+end
+i = i + 1
+end
+end
+for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
+return list(values)
+end,
+
+startswith = function(s, value) return s(1, #value) == value end,
+
+strip = function(s, remove)
+local start=1
+local _end = #s
+for i=1, #s do if isnotin(s[i], remove) then start = i break end end
+for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
+return s(start, _end)
+end
+}
+
+
+getmetatable('').__add = str_add
+getmetatable('').__call = str_call
+getmetatable('').__ipairs = str_pairs
+getmetatable('').__mul = str_mul
+getmetatable('').__pairs = str_pairs
+getmetatable('').__index = function(s, i)
+if isType(i, 'number') then
+if i < 0 then i = #s + 1 + i end
+return string.sub(s, i, i)
+else
+return _string[i] or string[i]
+end
+end
+
 
 function try(f, _except, finally)
 _except = _except or function() end
@@ -1166,14 +1340,19 @@ function with(context, _do)
 local ctx = context()
 local success, result = coroutine.resume(ctx)
 if success then
-local _type, e
+local error_type, error_message
 try(
 function() _do(result) end,
 except(function(err)
-e = err
-if err.type then _type, e = err.type, err.msg end
+if err.type then
+error_type = err.type
+error_message = err.message
+else
+error_type = 'Exception'
+error_message = err
+end
 end),
-function() context:__exit(_type, e) end
+function() context:__exit(error_type, error_message) end
 )
 end
 coroutine.resume(ctx)
@@ -1276,14 +1455,12 @@ return self
 end
 
 function ContextManager:__exit(_type, value)
-if _type or value then
 if _type then
-value = Exception(_type, value)
+value = Exception(_type, value).message
 else
 value = _type or value
 end
-error(err)
-end
+if value then error(value) end
 end
 
 
@@ -1779,41 +1956,6 @@ assert(string.find(result or '', tostring(exception)), 'Incorrect error raised: 
 end
 
 
-function test(description, tests, setup, teardown)
-local failed = false
-local test_vars, msg
-table.sort(tests)
-for test_name, tst in pairs(tests) do
-test_vars = {}
-if Not.Nil(setup) then setup(test_vars) end
-success, err = pcall(tst, test_vars)
-if Not.Nil(teardown) then teardown(test_vars) end
-if not success then
-if not failed then
-print(description)
-failed = true
-end
-msg = err or Exception.add_traceback("Error", true)
-print(string.gsub(msg, "(.*):([0-9]+): ", function(path, n)
-return string.format('\n    FAILURE in %s -> %s @ %d\n    ==> ', test_name, path, n)
-end) .. '\n')
-end
-end
-return failed
-end
-
-
-function test_all(...)
-local _alert = alert or print
-local failed = false
-for name, result in pairs(...) do
-failed = failed or result
-end
-if not failed then _alert("All tests passed!") end
-return failed
-end
-
-
 function describe(description, ...)
 local test_functions = {...}
 table.insert(_tests, {description=description, func=function()
@@ -2276,6 +2418,18 @@ for a in string.gmatch(result, "[0-9]*") do size = num(a); break end
 return size
 end
 
+function sleep(seconds)
+if seconds <= 0.01 then
+local current = os.clock()
+while os.clock() - current < seconds do end
+return
+end
+local time_ns = os.time()
+while (os.time() - time_ns) < seconds do
+io.popen('sleep 0.001'):close()
+end
+end
+
 function writeLine(line, lineNumber, filename)
 local lines = readLines(filename)
 lines[lineNumber] = line
@@ -2290,14 +2444,21 @@ with(open(filename, mode or 'w'), write)
 end
 
 
+function os.time()
+local f = io.popen('date +%s%N')
+local t = tonumber(f:read()) / 1000000000
+f:close()
+return t
+end
+
+
 local function namedRequality(name)
 return function(me, other)
 local mt = getmetatable(other)
 if mt and mt.__name == name then
 return requal(me, other)
-else
-return false
 end
+return false
 end
 end
 
@@ -2351,9 +2512,15 @@ return sorted(ks)
 end
 
 function dict:pop(key, default)
+if key then
 result = rawget(self, key) or default
 rawset(self, key, nil)
 return result
+else
+local k, v = pairs(self)(self)
+rawset(self, k, nil)
+return v
+end
 end
 
 function dict:set(key, value) rawset(self, key, value) end
@@ -2371,7 +2538,7 @@ list = class('list')
 
 
 function list:__init(lst)
-if is.table(lst) and lst[1] then self:extend(lst) end
+if is.table(lst) then self:extend(lst) end
 end
 
 function list:__add(other) local new = list(self); new:extend(other); return new end
@@ -2405,8 +2572,15 @@ if sign(value) < 0 then value = #self + 1 + value end
 return rawget(self, value) end
 end
 
+function list:__mul(n)
+local result = list()
+for i=1, n do result:extend(self) end
+return result
+end
 
 function list:append(value) rawset(self, #self + 1, value) end
+
+function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
 
 function list:contains(value)
 for i, v in pairs(self) do if requal(v, value) then return true end end
@@ -2481,7 +2655,16 @@ end
 return vs
 end
 
-function set:pop(value) self:remove(value) return value end
+function set:pop(value)
+if value then
+self:remove(value)
+return value
+else
+local k, v = pairs(self)(self)
+rawset(self, k, nil)
+return v
+end
+end
 
 function set:remove(value) rawset(self, str(hash(value)), nil) end
 
@@ -2493,36 +2676,215 @@ for v in self() do result[#result + 1] = v end
 return result
 end
 
+
+local function add_locations(locations, other, relative)
+if (relative and other[1].x == 0 and other[1].y == 0) or (locations[-1].x == other[1].x and locations[-1].y == other[1].y) then
+other = other(2, nil)
+end
+local x, y
+local new_locations = list()
+for loc in iter(other) do
+x, y = loc.x, loc.y
+if relative then
+x, y = x + locations[-1].x, y + locations[-1].y
+end
+new_locations:append({x=x, y=y})
+end
+return locations + new_locations
+end
+
+
+Path = class('Path')
+
+function Path:__init(locations)
+self.locations = list(locations or {})
+self.point_count = len(locations)
+self.duration = self.point_count * 0.016
+self.absolute = true
+end
+
+function Path:__add(other)
+assert(other:isinstance(Path), 'Can only add Path objects to other Path objects')
+if len(self.locations) + len(other.locations) == 0 then return Path() end
+if len(self.locations) == 0 then self.locations:append(other.locations[1]) end
+return Path(add_locations(self.locations, other.locations, not other.absolute))
+end
+
+function Path:__index(key)
+if is.num(key) then return self.locations[key] end
+return class('').__index(self, key)
+end
+
+function Path:__newindex(key, value)
+if is.num(key) then self.locations[key] = value end
+class('').__newindex(self, key, value)
+end
+
+function Path:__pairs()
+return pairs(self.locations)
+end
+
+function Path:__tostring()
+return string.format('<%s(points=%s, duration=%.2fs)>', getmetatable(self).__name, len(self.locations), self.duration)
+end
+
+
+function Path:begin_swipe(fingerID, speed)
+assert(speed and speed >= 1 and speed <= 10, 'speed '..speed..' is not in range 1-10')
+touchDown(fingerID or 2, self.locations[1].x, self.locations[1].y)
+usleep(16000)
+self.cancelled = false
+self.speed = speed or 5
+self.idx = self.speed + 1
+end
+
+function Path:step(fingerID, on_move)
+if is.Nil(on_move) then on_move = function() end end
+if is.Nil(self.idx) then error('Cannot step a path before begin_swipe has been called') end
+if self.idx < len(self.locations) and not self.cancelled then
+touchMove(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
+self.idx = math.min(len(self.locations), self.idx + self.speed)
+usleep(16000)
+if on_move() == true then return true end
+return false
+else
+touchUp(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
+self.idx = nil
+self.cancelled = nil
+self.speed = nil
+return true
+end
+end
+
+function Path:swipe(options)
+with(screen.action_context(function() return true end), function(check)
+self:begin_swipe(options.fingerID, options.speed)
+local done = false
+while not done do
+done = self:step(options.fingerID, options.on_move)
+end
+end)
+return screen
+end
+
+function Path.arc(radius, start_angle, end_angle, center)
+
+-- Angle = 0 -> start_angle if no end_angle specified
+if not end_angle then
+start_angle, end_angle = 0, start_angle
+end
+
+local absolute = true
+-- Relative path if no center specified
+if not center then
+-- TODO: make relative arc center adaptive to radius and angles
+center = {x=0, y=0}
+absolute = false
+end
+
+local function radians(a) return a / 360 * 2 * math.pi end
+-- TODO: Better arc step resolution (for arcs with large radius)
+local steps = abs(end_angle - start_angle)
+local deltaTheta = (radians(end_angle) - radians(start_angle)) / steps
+local theta = radians(start_angle)
+
+local function angle_to_pos(angle)
+return {x=center.x + radius * math.cos(angle), y=center.y + radius * math.sin(angle)}
+end
+
+local path = list{angle_to_pos(theta)}
+for i=1, steps do
+theta = theta + deltaTheta
+path:append(angle_to_pos(theta))
+end
+if absolute then return Path(path) else return RelativePath(path) end
+end
+
+function Path.linear(start_pixel, end_pixel)
+-- Relative path if only one pixel specified
+local absolute = true
+if not end_pixel then
+start_pixel, end_pixel = {x=0, y=0}, start_pixel
+absolute = false
+end
+local distanceX = end_pixel.x - start_pixel.x
+local distanceY = end_pixel.y - start_pixel.y
+local steps = math.min(50, math.max(math.abs(distanceX), math.abs(distanceY)))
+local x, y = start_pixel.x, start_pixel.y
+local deltaX = distanceX / steps
+local deltaY = distanceY / steps
+local path = list{{x=x, y=y}}
+for i=1, steps do
+x = x + deltaX
+y = y + deltaY
+path:append({x=x, y=y})
+end
+if absolute then return Path(path) else return RelativePath(path) end
+end
+
+
+RelativePath = class('RelativePath', 'Path')
+
+function RelativePath:__init(locations)
+Path.__init(self, locations)
+self.absolute = false
+end
+
+
+function RelativePath:__add(other)
+assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to other RelativePath objects')
+return RelativePath(add_locations(self.locations, other.locations, true))
+end
+
+local _stall = {count = 0, last_check=0, last_colors={}}
 screen = {
-
-before_action_funcs = list(),
-after_action_funcs = list(),
-before_check_funcs = list(),
-after_check_funcs = list(),
-before_tap_funcs = list(),
-after_tap_funcs = list(),
-
-check_interval = 150000, --checks every 150ms (0.15s)
-wait_before_action = 0,
-wait_after_action = 0,
-wait_before_tap = 0,
-wait_after_tap = 0
-
+before_action_funcs = set(),
+after_action_funcs = set(),
+before_check_funcs = set(),
+after_check_funcs = set(),
+before_tap_funcs = set(),
+after_tap_funcs = set(),
+on_stall_funcs = set()
 }
-
 if Not.Nil(getScreenResolution) then
 screen.width, screen.height = getScreenResolution()
 else
-screen.width, screen.height = 0, 0
+screen.width, screen.height = 200, 400
 end
 
-screen.mid = {
-left = Pixel(0, screen.height / 2),
-right = Pixel(screen.width, screen.height / 2),
-top = Pixel(screen.width / 2, 0),
-bottom = Pixel(screen.height, screen.width / 2),
-center = Pixel(screen.width / 2, screen.height / 2)
+screen.check_interval = 150000
+screen.stall_after_checks = 5               -- after 5 same screens
+screen.stall_after_checks_interval = 3 * 60
+screen.wait_before_action = 0
+screen.wait_after_action = 0
+screen.wait_before_tap = 0
+screen.wait_after_tap = 0
+
+screen.edge = {
+top_left = Pixel(0, 0),                               -- x = 0, y = 0
+top_right = Pixel(screen.width, 0),                   -- x = screen.width, y = 0
+bottom_left = Pixel(0, screen.height),                -- x = 0, y = screen.height
+bottom_right = Pixel(screen.width, screen.height)     -- x = screen.width, y = screen.height
 }
+screen.mid = {
+left = Pixel(0, screen.height / 2),                   -- x = 0, y = screen.height / 2
+right = Pixel(screen.width, screen.height / 2),       -- x = screen.width, y = screen.height / 2
+top = Pixel(screen.width / 2, 0),                     -- x = screen.width / 2, y = 0
+bottom = Pixel(screen.width / 2, screen.height),      -- x = screen.width / 2, y = screen.height
+center = Pixel(screen.width / 2, screen.height / 2)   -- x = screen.width / 2, y = screen.height / 2
+}
+screen.stall_indicators = Pixels{
+-- TODO: add more pixels for screen recovery check
+screen.mid.center
+}
+
+getColor = getColor or function(...) return 0 end
+getColors = getColors or function(...) return {0} end
+tap = tap or function(...) end
+touchDown = touchDown or function(...) end
+touchMove = touchDown or function(...) end
+touchUp = touchDown or function(...) end
+usleep = usleep or function(...) end
 
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
 
@@ -2542,7 +2904,8 @@ sleep(after_wait)
 
 end)
 
-local action_context = contextmanager(function(condition)
+
+screen.action_context = contextmanager(function(condition)
 
 local ctx = create_context(
 screen.wait_before_action, screen.wait_after_action,
@@ -2565,6 +2928,13 @@ for func in iter(screen.before_check_funcs) do
 func()
 end
 
+-- Run stalling escape procedures if screen is stalled
+if screen.is_stalled() then
+for func in iter(screen.on_stall_funcs) do
+func()
+end
+end
+
 local result = check()
 
 for func in iter(screen.after_check_funcs) do
@@ -2578,7 +2948,7 @@ end)
 
 end)
 
-local tap_context = contextmanager(function()
+screen.tap_context = contextmanager(function()
 
 local ctx = create_context(
 screen.wait_before_tap, screen.wait_after_tap,
@@ -2590,31 +2960,65 @@ with(ctx, function() yield() end)
 end)
 
 function screen.before_action(func)
-screen.before_action_funcs:append(func)
+screen.before_action_funcs:add(func)
 end
 
 function screen.after_action(func)
-screen.after_action_funcs:append(func)
+screen.after_action_funcs:add(func)
 end
 
 function screen.before_check(func)
-screen.before_check_funcs:append(func)
+screen.before_check_funcs:add(func)
 end
 
 function screen.after_check(func)
-screen.after_check_funcs:append(func)
+screen.after_check_funcs:add(func)
 end
 
 function screen.before_tap(func)
-screen.before_tap_funcs:append(func)
+screen.before_tap_funcs:add(func)
 end
 
 function screen.after_tap(func)
-screen.after_tap_funcs:append(func)
+screen.after_tap_funcs:add(func)
+end
+
+function screen.on_stall(func)
+local fs
+if is.func(func) then fs = list{func} else fs = list(func) end
+local cycler = itertools.cycle(iter(fs))
+local t = {}
+screen.on_stall_funcs:add(setmetatable(t, {
+__call=function() return cycler()() end,
+__hash=function() return tostring(t) end
+}))
 end
 
 function screen.contains(pixel)
 return pixel:visible()
+end
+
+function screen.is_stalled()
+local current, previous
+local now = os.time()
+if now - _stall.last_check > screen.stall_after_checks_interval then
+_stall.last_check = now
+current = screen.stall_indicators.colors
+local result = false
+if requal(current, _stall.last_colors) then
+_stall.count = _stall.count + 1
+if _stall.count > screen.stall_after_checks then
+result = true
+end
+else
+_stall.count = 0
+_stall.cyclers = list()
+end
+_stall.last_colors = current
+return result
+end
+
+return false
 end
 
 function screen.tap(x, y, times, interval)
@@ -2625,7 +3029,7 @@ else
 pixel, times, interval = x, y, times
 end
 
-with(tap_context(screen), function()
+with(screen.tap_context(screen), function()
 for i=1, times or 1 do
 tap(pixel.x, pixel.y)
 usleep(10000)
@@ -2636,8 +3040,9 @@ end)
 return screen
 end
 
+
 function screen.tap_if(condition, to_tap)
-with(action_context(condition), function(check)
+with(screen.action_context(condition), function(check)
 
 if check() then
 screen.tap(to_tap or condition)
@@ -2647,8 +3052,22 @@ end)
 return screen
 end
 
+
+function screen.tap_until(condition, to_tap)
+with(screen.action_context(condition), function(check)
+
+repeat
+screen.tap(to_tap or condition)
+usleep(screen.check_interval)
+until check()
+
+end)
+return screen
+end
+
+
 function screen.tap_while(condition, to_tap)
-with(action_context(condition), function(check)
+with(screen.action_context(condition), function(check)
 
 while check() do
 screen.tap(to_tap or condition)
@@ -2659,58 +3078,32 @@ end)
 return screen
 end
 
-function screen.tap_until(condition, to_tap)
-with(action_context(condition), function(check)
 
-repeat
-screen.tap(to_tap or condition)
-usleep(screen.check_interval)
-until check()
-
-end)
-return screen
+function screen.swipe(start_, end_, speed)
+if is.str(start_) then
+assert(screen.mid[start_] or screen.edge[start_],
+'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+start_ = screen.mid[start_] or screen.edge[start_]
 end
+
+if is.str(end_) then
+assert(screen.mid[end_] or screen.edge[end_],
+'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+end_ = screen.mid[end_] or screen.edge[end_]
+end
+
+return Path.linear(start_, end_):swipe{speed=speed}
+end
+
 
 function screen.wait(condition)
-with(action_context(condition), function(check)
+with(screen.action_context(condition), function(check)
 
 repeat
 usleep(screen.check_interval)
 until check()
 
 end)
-return screen
-end
-
-function screen.swipe(start, _end, speed)
-if is.str(start) then
-assert(screen.mid[start],
-'Incorrect identifier: use one of (left, right, top, bottom)')
-start = screen.mid[start]
-end
-
-if is.str(_end) then
-assert(screen.mid[_end],
-'Incorrect identifier: use one of (left, right, top, bottom)')
-_end = screen.mid[_end]
-end
-
-with(action_context(function() return true end), function(check)
-local steps = 50 / speed
-local x, y = start[1], start[2]
-local deltaX = (_end[1] - start[1]) / steps
-local deltaY = (_end[2] - start[2]) / steps
-touchDown(2, x, y)
-usleep(16000)
-for i=1, steps do
-x = x + deltaX
-y = y + deltaY
-touchMove(2, x, y)
-usleep(16000)
-end
-touchUp(2, x, y)
-end)
-
 return screen
 end
 

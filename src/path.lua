@@ -22,6 +22,12 @@ end
 ---- List of absolute positions that define a path on the screen
 -- @type Path
 Path = class('Path')
+
+--- Create a Path object
+-- @param locations iterable of x, y locations that define a path
+-- @see core.class
+-- @usage path = Path{{x=0, y=0}, {x=10, y=10}} 
+--path = Path{Pixel(0, 0), Pixel(10, 10)}
 function Path:__init(locations)
   self.locations = list(locations or {})
   self.point_count = len(locations)
@@ -54,23 +60,10 @@ function Path:__tostring()
   return string.format('<%s(points=%s, duration=%.2fs)>', getmetatable(self).__name, len(self.locations), self.duration)
 end
 
----- List of relative positions that define a path on the screen
--- @type RelativePath
-RelativePath = class('RelativePath', 'Path')
-function RelativePath:__init(locations)
-  Path.__init(self, locations)
-  self.absolute = false
-end
-
-
-function RelativePath:__add(other)
-  assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to other RelativePath objects')
-  return RelativePath(add_locations(self.locations, other.locations, true))
-end
-
 
 ---- Begin swiping the path by placing a finger on the starting position
--- @param fingerID
+-- @param fingerID (optional) ID of finger to use for swipe
+-- @param speed (optional) swipe speed (number of points to skip at each move)
 function Path:begin_swipe(fingerID, speed)
   assert(speed and speed >= 1 and speed <= 10, 'speed '..speed..' is not in range 1-10')
   touchDown(fingerID or 2, self.locations[1].x, self.locations[1].y)
@@ -81,8 +74,8 @@ function Path:begin_swipe(fingerID, speed)
 end
 
 ---- Move to the next position in the swipe
--- @param fingerID
--- @param on move
+-- @param fingerID (optional) ID of finger to use for swipe
+-- @param on_move (optional) function to run at each movement
 -- @treturn boolean whether the path will continue swiping or not
 function Path:step(fingerID, on_move)
   if is.Nil(on_move) then on_move = function() end end
@@ -103,7 +96,9 @@ function Path:step(fingerID, on_move)
 end
 
 ---- Swipe the path from beginning to end
--- @tparam table options
+-- @tparam table options options for swipe (fingerID, speed, on_move)
+-- @see path.Path.begin_swipe
+-- @see path.Path.step
 -- @treturn screen screen for method chaining
 function Path:swipe(options)
   with(screen.action_context(function() return true end), function(check) 
@@ -119,9 +114,9 @@ end
 ---- Arc path with an angle and radius from a center pixel
 -- @tparam number radius distance from center_pixel in pixels to draw arc
 -- @tparam number start_angle angle where the arc begins (in degrees)
--- @tparam number end_angle angle where the arc ends (in degrees)
--- @tparam Pixel center center pixel of arc
--- @treturn Path desired path
+-- @tparam number end_angle (optional) angle where the arc ends (in degrees)
+-- @tparam Pixel center (optional) center pixel of arc
+-- @treturn Path|RelativePath desired path (@{RelativePath} if center argument omitted)
 function Path.arc(radius, start_angle, end_angle, center)
   
   -- Angle = 0 -> start_angle if no end_angle specified
@@ -157,9 +152,8 @@ end
 
 ---- Linear path between two pixels
 -- @tparam Pixel start_pixel beginning of path
--- @tparam Pixel end_pixel end of path
--- @tparam number speed movement speed between pixels
--- @treturn Path desired path
+-- @tparam Pixel end_pixel (optional) end of path
+-- @treturn Path|RelativePath desired path (@{RelativePath} if end_pixel argument omitted)
 function Path.linear(start_pixel, end_pixel)
   -- Relative path if only one pixel specified
   local absolute = true
@@ -180,4 +174,24 @@ function Path.linear(start_pixel, end_pixel)
     path:append({x=x, y=y})
   end
   if absolute then return Path(path) else return RelativePath(path) end
+end
+
+
+---- List of relative positions that define a path on the screen
+-- @type RelativePath
+RelativePath = class('RelativePath', 'Path')
+
+--- Create a RelativePath object
+-- @param locations iterable of x, y locations that define a path
+-- @see core.class
+-- @see path.Path.__init
+function RelativePath:__init(locations)
+  Path.__init(self, locations)
+  self.absolute = false
+end
+
+
+function RelativePath:__add(other)
+  assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to other RelativePath objects')
+  return RelativePath(add_locations(self.locations, other.locations, true))
 end

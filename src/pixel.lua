@@ -1,25 +1,25 @@
 --- Pixel objects for screen watching
 -- @module pixel
 
---Basic colors
+--- Basic colors
 colors = {
-  aqua    = 65535,
-  black   = 0,
-  blue    = 255,
-  fuchsia = 16711935,
-  gray    = 8421504,
-  green   = 32768,
-  lime    = 65280,
-  maroon  = 8388608,
-  navy    = 128,
-  olive   = 8421376,
-  orange  = 16753920,
-  purple  = 8388736,
-  red     = 16711680,
-  silver  = 12632256,
-  teal    = 32896,
-  yellow  = 16776960,
-  white   = 16777215
+  aqua    = 65535,    -- 65535
+  black   = 0,        -- 0
+  blue    = 255,      -- 255
+  fuchsia = 16711935, -- 16711935
+  gray    = 8421504,  -- 8421504
+  green   = 32768,    -- 32768
+  lime    = 65280,    -- 65280
+  maroon  = 8388608,  -- 8388608
+  navy    = 128,      -- 128
+  olive   = 8421376,  -- 8421376
+  orange  = 16753920, -- 16753920
+  purple  = 8388736,  -- 8388736
+  red     = 16711680, -- 16711680
+  silver  = 12632256, -- 12632256
+  teal    = 32896,    -- 32896
+  yellow  = 16776960, -- 16776960
+  white   = 16777215  -- 16777215
 }
 
 
@@ -27,6 +27,12 @@ colors = {
 ---- Pixel object
 -- @type Pixel
 Pixel = class('Pixel')
+
+--- Create a Pixel object
+-- @int x x-position of pixel
+-- @int y y-position of pixel
+-- @int color expected color of pixel (default @{colors}.white)
+-- @see core.class
 function Pixel:__init(x, y, color)
   self.x = x
   self.y = y
@@ -87,6 +93,10 @@ end
 ---- Collection of Pixel objects
 -- @type Pixels
 Pixels = class('Pixels')
+
+--- Create a Pixels object
+-- @param pixels iterable of @{Pixel} objects
+-- @see core.class
 function Pixels:__init(pixels)
   self.pixels = list()
   self.expected_colors = list()
@@ -204,6 +214,11 @@ end
 ---- Group of evenly spaced pixels
 -- @type Region
 Region = class('Region', 'Pixels')
+
+--- Create a Region object
+-- @param positions iterable of positions
+-- @int color color of region
+-- @see core.class
 function Region:__init(positions, color)
   self.color = color or colors.white
   local pixels = list()
@@ -245,6 +260,10 @@ end)
 ---- Ellipse @{Region}
 -- @type Ellipse
 Ellipse = class('Ellipse', 'Region')
+
+--- Create a Ellipse object
+-- @tparam table options (x, y, width, height, spacing)
+-- @see core.class
 function Ellipse:__init(options)
   self.x = options.x or 0
   self.y = options.y or 0
@@ -266,6 +285,10 @@ end
 ---- Rectangle @{Region}
 -- @type Rectangle
 Rectangle = class('Rectangle', 'Region')
+
+--- Create a Rectangle object
+-- @tparam table options (x, y, width, height, spacing)
+-- @see core.class
 function Rectangle:__init(options)
   self.x = options.x or 0
   self.y = options.y or 0
@@ -291,6 +314,10 @@ end
 ---- Triangle @{Region}
 -- @type Triangle
 Triangle = class('Triangle', 'Region')
+
+--- Create a Triangle object
+-- @tparam table options
+-- @see core.class
 function Triangle:__init(options)
   -- TODO: Triangle creation
   local positions = list()

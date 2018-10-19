@@ -21,8 +21,20 @@ local classes = {}
 local private_tables = {}
   
 ---- Create a new class type
--- @param name 
--- @param ...
+-- @tparam string name name of the class
+-- @param ... base classes to inherit from
+-- @usage -- create class A
+-- A = class('A')
+-- function A:__init(value)
+--  self.value = value
+-- end
+-- -- Create class B that inherits from A
+-- B = class('B', 'A')
+-- -- Create and use instances
+-- a = A(5)
+-- assert(a.value == 5)
+-- b = B(5)
+-- assert(b.value == 5)
 function class(name, ...)
   local c --a new class type
   local bases, getters, setters = {}, {}, {}

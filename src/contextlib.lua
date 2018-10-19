@@ -89,7 +89,7 @@ function yield(...) coroutine.yield(...) end
 
 
 ---- Create a ContextManager from a function
--- @param f
+-- @param f any function that yields
 function contextmanager(f)
   return function(...)
     local Context = ContextManager(...)
