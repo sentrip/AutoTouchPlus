@@ -709,7 +709,6 @@ local function parse_data(lines, request, response)
 local err_msg = 'error in '..request.method..' request: '
 assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
 
-if not response.status_code or num(response.status_code) == -1 then
 for i, ln in pairs(lines) do
 local code, reason = ln:match('HTTP request sent, awaiting response[^%d]*(%d+) (.*)')
 local content_length, mime_type = ln:match('Length: (%d+) %[(.*)%]')
@@ -718,7 +717,7 @@ if reason then response.reason = reason end
 if content_length then response.content_length = content_length end
 if mime_type then response.mime_type = mime_type end
 end
-end
+
 response.status_code = num(response.status_code)
 response.ok = response.status_code < 400
 end
