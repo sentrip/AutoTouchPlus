@@ -22,7 +22,7 @@ screen = {
   
 }
 ---
-local _stall = {count = 0, last_check=0, last_colors={}, cyclers=list()}
+local _stall = {count = 0, last_check=0, last_colors={}}
 ---
 
 ---
@@ -112,17 +112,8 @@ screen.action_context = contextmanager(function(condition)
 
           -- Run stalling escape procedures if screen is stalled
           if screen.is_stalled() then
-            -- Create stall function cyclers if not created
-            if len(_stall.cyclers) == 0 then
-              for f in iter(screen.on_stall_funcs) do
-                local fs
-                if is.func(f) then fs = {f} else fs = f end
-                _stall.cyclers:append(itertools.cycle(iter(fs)))
-              end
-            end
-            -- Get and execute next function for each cycler 
-            for func in iter(_stall.cyclers) do
-              func()()
+            for func in iter(screen.on_stall_funcs) do
+              func()
             end
           end
 
@@ -196,9 +187,16 @@ end
 ---
 
 ---- Register a function to be run when the screen is stalled
--- @param func function to run when stalled (no arguments)
+-- @param func function or list of functions to run when stalled (no arguments)
 function screen.on_stall(func)
-  screen.on_stall_funcs:add(func)
+  local fs
+  if is.func(func) then fs = list{func} else fs = list(func) end
+  local cycler = itertools.cycle(iter(fs))
+  local t = {}
+  screen.on_stall_funcs:add(setmetatable(t, {
+    __call=function() return cycler()() end,
+    __hash=function() return tostring(t) end
+  }))
 end
 ---
 

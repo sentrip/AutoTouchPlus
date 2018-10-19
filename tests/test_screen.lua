@@ -5,6 +5,7 @@ require('src/itertools')
 require('src/logic')
 require('src/objects')
 require('src/pixel')
+require('src/path')
 require('src/screen')
 require('src/string')
 require('src/system')
@@ -26,8 +27,10 @@ end)
 
 fixture('pixels', function(monkeypatch) 
   local pixels = list{
-    Pixel(10, 10),
-
+    Pixel(10, 10, 10),
+    Pixel(20, 20, 20),
+    Pixel(30, 30, 30),
+    Pixel(40, 40, 40),
   }
   local function _getColor(x, y) 
     for p in iter(pixels) do if p.x == x and p.y == y then return p.expected_color end end
@@ -73,8 +76,8 @@ describe('screen',
     
   it('can detect and recover from stall', function(monkeypatch, pixels, taps)
     monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
-    -- TODO: fix this hashing craziness
-    screen.on_stall(setmetatable({function() end}, {__hash=function() return 'abc' end}))
+    screen.on_stall({function() end})
+    
     local calls = list()
     screen.on_stall(function() 
       calls:append(true)
