@@ -13,6 +13,8 @@ branches:
     - master
 
 before_install:
+  - sudo apt-get update
+  - sudo apt-get install python3
   - source .travis/setenv_lua.sh
   - pip install --user cpp-coveralls
   - luarocks install Lua-cURL         --server=https://luarocks.org/dev
@@ -20,7 +22,7 @@ before_install:
   - luarocks install lunitx
 
 script:
-  - bash -c "ls tests | xargs -I '{}' lua -lluacov 'tests/{}'"
+  - python3 coverage.py
 
 after_success:
   - coveralls -b .. -r .. -i ./src --dump c.report.json

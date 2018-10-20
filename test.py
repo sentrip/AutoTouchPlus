@@ -1,6 +1,4 @@
-#!/bin/bash
-sh compile.sh
-python3 << EOF
+#!/usr/bin/env python3
 import os, re
 test_boilerplate = u"""-------------------------------AutoTouch mocking ---------------------------
 alert = alert or print
@@ -16,10 +14,9 @@ assert(is(exe('dpkg-query -W wget')),
 ----------------------------------------------------------------------------
 """
 
-# Create test file
-data = ''
 test_files = ['tests/' + i for i in sorted(os.listdir('tests')) if i != 'test_test.lua']
 
+data = ''
 for fn in test_files:
   data += '\n\n\n'
   with open(fn) as f:
@@ -37,6 +34,5 @@ with open('tests.lua', 'w') as f:
   f.write(test_boilerplate)
   f.write(data)
 
-EOF
-
-lua tests.lua
+os.system('python3 compile.py')
+exit(os.system('lua tests.lua'))
