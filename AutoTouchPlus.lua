@@ -2842,13 +2842,6 @@ screen.stall_indicators = Pixels{
 screen.mid.center
 }
 
-getColor = getColor or function(...) return 0 end
-getColors = getColors or function(...) return {0} end
-tap = tap or function(...) end
-touchDown = touchDown or function(...) end
-touchMove = touchDown or function(...) end
-touchUp = touchDown or function(...) end
-usleep = usleep or function(...) end
 
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
 
