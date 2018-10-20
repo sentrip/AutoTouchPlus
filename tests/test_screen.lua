@@ -91,6 +91,44 @@ describe('screen',
     assert(len(calls) == 1, 'Did not call on stall')
   end),
   
+  it('can restart iterable stall procedure on successful stall recovery', function(monkeypatch, pixels, taps) 
+    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
+    local calls = list()
+    
+    screen.on_stall{
+      function() 
+        calls:append(1)
+      end,
+      function() 
+        calls:append(2)
+        pixels:clear()
+      end,
+      function() 
+        calls:append(3)
+        pixels:clear()
+      end
+    }
+    
+    local pix = screen.stall_indicators:copy()
+    pixels:extend(pix.pixels)
+    local old_pix = pixels:copy()
+    screen.tap_while(pix)
+    assert(len(calls) == 2, 'Did not call on stall correct number of times')
+    assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
+    calls:clear()
+    -- Screen is no longer stalled, so color changes
+    old_pix[5].expected_color = 50
+    pixels:extend(old_pix)
+    screen.tap_while(pix)
+    -- Now screen is stalled again, back to stall color
+    old_pix[5].expected_color = colors.white
+    pixels:extend(old_pix)
+    screen.tap_while(pix)
+    local _ = 1  -- For some reason, without this line the test fails
+    assert(len(calls) == 2, 'Did not call on stall correct number of times')
+    assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
+  end),
+
   it('can swipe between pixels', function(touches) 
     local start_pix = Pixel(10, 10)
     local end_pix = Pixel(100, 100)

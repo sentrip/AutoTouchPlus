@@ -2800,7 +2800,7 @@ assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to oth
 return RelativePath(add_locations(self.locations, other.locations, true))
 end
 
-local _stall = {count = 0, last_check=0, last_colors={}}
+local _stall = {count = 0, last_check=0, last_colors={}, cyclers={}}
 screen = {
 before_action_funcs = set(),
 after_action_funcs = set(),
@@ -2941,13 +2941,22 @@ screen.after_tap_funcs:add(func)
 end
 
 function screen.on_stall(func)
+_stall.count = 0
+_stall.last_check = 0
+_stall.last_colors = {}
 local fs
 if is.func(func) then fs = list{func} else fs = list(func) end
-local cycler = itertools.cycle(iter(fs))
-local t = {}
-screen.on_stall_funcs:add(setmetatable(t, {
-__call=function() return cycler()() end,
-__hash=function() return tostring(t) end
+local key = tostring(fs)
+-- if len(fs) == 0 then
+-- _stall.cyclers[key] = function() return function() end end
+-- else
+_stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
+-- end
+screen.on_stall_funcs:add(setmetatable({}, {
+__hash=function() return key end,
+__call=function()
+return _stall.cyclers[key].cycle()()
+end
 }))
 end
 
@@ -2969,7 +2978,9 @@ result = true
 end
 else
 _stall.count = 0
-_stall.cyclers = list()
+for k, v in pairs(_stall.cyclers) do
+_stall.cyclers[k] = {cycle=itertools.cycle(iter(v.fs)), fs=v.fs}
+end
 end
 _stall.last_colors = current
 return result
@@ -2986,7 +2997,7 @@ else
 pixel, times, interval = x, y, times
 end
 
-with(screen.tap_context(screen), function()
+with(screen.tap_context(), function()
 for i=1, times or 1 do
 tap(pixel.x, pixel.y)
 usleep(10000)
