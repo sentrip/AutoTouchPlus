@@ -11,10 +11,10 @@ def show_uncovered(path):
     reset = '\u001b[0m'
     for name, code in processed.items():
         if re.search(path, name):
-            if re.search(r'\*{8}', code):
+            if re.search(r'\*{4,}', code):
                 output = []
                 for i, line in enumerate(code.split('\n')):
-                    if '*' * 8 in line:
+                    if re.search(r'\*{4,}', line):
                         output.append(('%d\t' % (i + 1)) + red + line[10:].strip() + reset)
                 return '\n'.join(output)
             else:

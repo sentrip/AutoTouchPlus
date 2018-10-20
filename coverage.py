@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import io, os, sys, subprocess
 
+for fn in ['luacov.stats.out', 'luacov.report.out']:
+  if os.path.exists(fn):
+    os.remove(fn)
+
 exit_code = 0
 output = ''
 for fn in sorted(os.listdir('tests/')):
