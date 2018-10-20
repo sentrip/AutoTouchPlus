@@ -2947,11 +2947,7 @@ _stall.last_colors = {}
 local fs
 if is.func(func) then fs = list{func} else fs = list(func) end
 local key = tostring(fs)
--- if len(fs) == 0 then
--- _stall.cyclers[key] = function() return function() end end
--- else
 _stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
--- end
 screen.on_stall_funcs:add(setmetatable({}, {
 __hash=function() return key end,
 __call=function()
