@@ -21,7 +21,9 @@ end)
 assert(stdout:match('1 passed in 0%.[0-9][1-9]'), 'Basic tests did not pass')
 assert(stdout:match('%.\n'), 'Incorrect test results')
 
-
+-- No tests
+_reset_stdout_and_run_tests(function() end)
+assert(stdout:match('No tests found'), 'Empty tests did not pass')
 
 -- fixture definition
 _reset_stdout_and_run_tests(function() 
