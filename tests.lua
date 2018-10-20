@@ -1932,6 +1932,7 @@ describe('requests',
 
 
 
+usleep = function(...) end
 
 fixture('do_after', function() 
   return function(n, f, f_before)

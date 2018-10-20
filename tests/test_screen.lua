@@ -10,6 +10,7 @@ require('src/screen')
 require('src/string')
 require('src/system')
 
+usleep = function(...) end
 
 fixture('do_after', function() 
   return function(n, f, f_before)
