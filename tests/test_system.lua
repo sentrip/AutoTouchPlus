@@ -16,7 +16,7 @@ fixture('filesystem', function(request)
   request.addfinalizer(function()
     local _cmd = ''
     if rootDir then _cmd = 'cd '..rootDir()..'; ' end
-    io.popen(_cmd..'rm -r _tmp_tst'):close() 
+    if isDir('_tmp_tst') then io.popen(_cmd..'rm -r _tmp_tst'):close() end
     if isDir('_tmp_tst2') then io.popen(_cmd..'rm -R _tmp_tst2'):close() end
   end)
 end)

@@ -2083,7 +2083,7 @@ end
 function _test_utils.get_arg_names(f)
 local co = coroutine.create(f)
 local params = {}
-
+-- luacov: disable
 debug.sethook(co, function()
 local i, k = 1, debug.getlocal(co, 2, 1)
 while k do
@@ -2093,7 +2093,7 @@ k = debug.getlocal(co, 2, i)
 end
 error("~~end~~")
 end, "c")
-
+-- luacov: enable
 local res, err = coroutine.resume(co)
 if res then
 error("The function provided defies the laws of the universe.", 2)
@@ -2121,14 +2121,6 @@ end
 return arg_table
 end
 
-function _test_utils.get_line_stripped(lineno)
-if #_lines_of_this_file == 0 then
-for l in io.lines(debug.getinfo(1, 'S').short_src) do
-_lines_of_this_file[#_lines_of_this_file + 1] = l
-end
-end
-return _lines_of_this_file[lineno]:gsub('[ \t]*', '')
-end
 
 function _test_utils.get_system_time()
 local _time = os.time()
