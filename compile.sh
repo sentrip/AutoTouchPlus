@@ -1,3 +1,4 @@
+#!/bin/bash
 python3 << EOF
 import os, re
 boilerplate = """---- AutoTouchPlus stuff and things.

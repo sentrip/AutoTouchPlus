@@ -1,3 +1,4 @@
+#!/bin/bash
 sh compile.sh
 python3 << EOF
 import os, re
