@@ -357,7 +357,7 @@ function _test_utils.get_fixture_args(func, scope, fix_name)
   return arg_table
 end
 
----
+--
 -- function _test_utils.get_line_stripped(lineno)  
 --   if #_lines_of_this_file == 0 then 
 --     for l in io.lines(debug.getinfo(1, 'S').short_src) do 
@@ -367,7 +367,7 @@ end
 --   return _lines_of_this_file[lineno]:gsub('[ \t]*', '')
 -- end
 
----
+--
 function _test_utils.get_system_time()
   local _time = os.time()
   pcall(function() 
