@@ -9,20 +9,21 @@ screen = {
   after_check_funcs = set(),
   before_tap_funcs = set(),
   after_tap_funcs = set(),
+  nth_check_funcs = dict(),
   on_stall_funcs = set()
 }
----
+-- luacov: disable
 if Not.Nil(getScreenResolution) then
   screen.width, screen.height = getScreenResolution()
 else
   screen.width, screen.height = 200, 400
 end
----
+-- luacov: enable
 
 ---- Number milliseconds after which the screen is checked for updates
 screen.check_interval = 150000
 ---- Number of successful checks before the screen is considered stalled
-screen.stall_after_checks = 5               -- after 5 same screens
+screen.stall_after_checks = 5
 ---- Number of seconds after which the screen is checked for stall
 screen.stall_after_checks_interval = 3 * 60
 ---- Number of seconds to wait before each action (tap_if, tap_until, ...)
@@ -91,11 +92,12 @@ screen.action_context = contextmanager(function(condition)
   with(ctx, function()
       
       local check
-      
+      local check_count = 0
+
       if is.func(condition) then
-        check = condition
+        check = function() check_count = check_count + 1; return condition() end
       else
-        check = function() return screen.contains(condition) end
+        check = function() check_count = check_count + 1; return screen.contains(condition) end
       end        
       
       yield(function()
@@ -117,6 +119,13 @@ screen.action_context = contextmanager(function(condition)
             func()
           end
           
+          -- Run all functions registered to current check count
+          for n, funcs in screen.nth_check_funcs:items() do
+            if check_count == n then
+              for func in iter(funcs) do func() end
+            end
+          end
+
           return result
         end)
       
@@ -186,6 +195,17 @@ function screen.after_tap(func)
   screen.after_tap_funcs:add(func)
 end
 ---
+
+---- Register a function to be run after a number of consecutive screen checks
+-- @within Registration
+-- @int n number of checks to execute before calling function
+-- @tparam function func function to run after n consecutive checks
+function screen.on_nth_check(n, func)
+  if is.func(func) then func = {func} end
+  if is.Nil(screen.nth_check_funcs[n]) then screen.nth_check_funcs[n] = list() end
+  for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
+end
+
 
 ---- Register a function to be run when the screen is stalled.
 -- This function should attempt stall recovery (e.g. restart current app)

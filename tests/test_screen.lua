@@ -55,6 +55,7 @@ fixture('taps', function(monkeypatch)
   screen.after_check_funcs = set()
   screen.before_tap_funcs = set()
   screen.after_tap_funcs = set() 
+  screen.nth_check_funcs = dict()
   screen.on_stall_funcs = set()
   screen.check_interval = 150
   local taps = list()
@@ -127,6 +128,28 @@ describe('screen',
     local _ = 1  -- For some reason, without this line the test fails
     assert(len(calls) == 2, 'Did not call on stall correct number of times')
     assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
+  end),
+
+  it('can run functions after consecutive checks', function(monkeypatch, pixels, taps)
+    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
+    
+    local calls = list()
+    local c = 0
+    screen.before_check(function() c = c + 1 end)
+    screen.on_nth_check(5, function() 
+      calls:append(c)
+    end)
+
+    screen.on_nth_check(10, function() 
+      calls:append(c)
+      pixels:clear()
+    end)
+
+    local pix = screen.stall_indicators:copy()
+    pixels:extend(pix.pixels)
+    screen.tap_while(pix)
+    assert(len(calls) == 2, 'Did not call on stall')
+    assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
   end),
 
   it('can swipe between pixels', function(touches) 

@@ -2808,6 +2808,7 @@ before_check_funcs = set(),
 after_check_funcs = set(),
 before_tap_funcs = set(),
 after_tap_funcs = set(),
+nth_check_funcs = dict(),
 on_stall_funcs = set()
 }
 if Not.Nil(getScreenResolution) then
@@ -2817,7 +2818,7 @@ screen.width, screen.height = 200, 400
 end
 
 screen.check_interval = 150000
-screen.stall_after_checks = 5               -- after 5 same screens
+screen.stall_after_checks = 5
 screen.stall_after_checks_interval = 3 * 60
 screen.wait_before_action = 0
 screen.wait_after_action = 0
@@ -2872,11 +2873,12 @@ screen.before_action_funcs, screen.after_action_funcs
 with(ctx, function()
 
 local check
+local check_count = 0
 
 if is.func(condition) then
-check = condition
+check = function() check_count = check_count + 1; return condition() end
 else
-check = function() return screen.contains(condition) end
+check = function() check_count = check_count + 1; return screen.contains(condition) end
 end
 
 yield(function()
@@ -2896,6 +2898,13 @@ local result = check()
 
 for func in iter(screen.after_check_funcs) do
 func()
+end
+
+-- Run all functions registered to current check count
+for n, funcs in screen.nth_check_funcs:items() do
+if check_count == n then
+for func in iter(funcs) do func() end
+end
 end
 
 return result
@@ -2939,6 +2948,13 @@ end
 function screen.after_tap(func)
 screen.after_tap_funcs:add(func)
 end
+
+function screen.on_nth_check(n, func)
+if is.func(func) then func = {func} end
+if is.Nil(screen.nth_check_funcs[n]) then screen.nth_check_funcs[n] = list() end
+for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
+end
+
 
 function screen.on_stall(func)
 _stall.count = 0
