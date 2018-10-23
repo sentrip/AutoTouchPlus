@@ -773,8 +773,9 @@ local response = Response(self)
 try(function()
 local lines = exe(cmd)
 
-with(open(self._response_fn), function(f)
-response.text = f:read('*a') end)
+local f = assert(io.open(self._response_fn))
+response.text = f:read('*a')
+f:close()
 
 try(function() parse_data(lines, self, response) end)
 
@@ -2822,6 +2823,13 @@ screen.width, screen.height = getScreenResolution()
 else
 screen.width, screen.height = 200, 400
 end
+local function _log(msg, ...) if screen.debug then print(string.format('[ screen.lua ] '..msg, ...)) end end
+local function _log_action(condition, name, value)
+if screen.debug then
+_log('Creating check for\t\t: %s', condition)
+_log('%-10s - wait for\t\t: %s', name, value)
+end
+end
 
 screen.check_interval = 150000
 screen.stall_after_checks = 5
@@ -2830,6 +2838,7 @@ screen.wait_before_action = 0
 screen.wait_after_action = 0
 screen.wait_before_tap = 0
 screen.wait_after_tap = 0
+screen.debug = false
 
 screen.edge = {
 top_left = Pixel(0, 0),                               -- x = 0, y = 0
@@ -2882,25 +2891,27 @@ local check
 local check_count = 0
 
 if is.func(condition) then
-check = function() check_count = check_count + 1; return condition() end
+check = function() return condition() end
 else
-check = function() check_count = check_count + 1; return screen.contains(condition) end
+check = function() return screen.contains(condition) end
 end
 
 yield(function()
-
-for func in iter(screen.before_check_funcs) do
-func()
-end
-
 -- Run stalling escape procedures if screen is stalled
 if screen.is_stalled() then
+_log('Stall detected, number of same screens: %d', _stall.count)
 for func in iter(screen.on_stall_funcs) do
 func()
 end
 end
 
+for func in iter(screen.before_check_funcs) do
+func()
+end
+
 local result = check()
+check_count = check_count + 1
+_log('Check %d for condition\t\t: %s', check_count, result)
 
 for func in iter(screen.after_check_funcs) do
 func()
@@ -2909,6 +2920,7 @@ end
 -- Run all functions registered to current check count
 for n, funcs in screen.nth_check_funcs:items() do
 if check_count == n then
+_log('Running nth_check functions after check %s', check_count)
 for func in iter(funcs) do func() end
 end
 end
@@ -2962,18 +2974,22 @@ for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
 end
 
 
-function screen.on_stall(func)
+function screen.on_stall(func, name)
 _stall.count = 0
 _stall.last_check = 0
 _stall.last_colors = {}
 local fs
 if is.func(func) then fs = list{func} else fs = list(func) end
-local key = tostring(fs)
+local key = div(hash(tostring(fs)), 1000000000)
+name = ' '..(name or key)
 _stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
 screen.on_stall_funcs:add(setmetatable({}, {
 __hash=function() return key end,
 __call=function()
-return _stall.cyclers[key].cycle()()
+local func_to_run = _stall.cyclers[key].cycle()
+_log('Running stall recovery procedure%s: %d', name, fs:index(func_to_run))
+return func_to_run()
+-- return _stall.cyclers[key].cycle()()
 end
 }))
 end
@@ -3017,6 +3033,7 @@ end
 
 with(screen.tap_context(), function()
 for i=1, times or 1 do
+_log('Tap \t%5s, %5s', pixel.x, pixel.y)
 tap(pixel.x, pixel.y)
 usleep(10000)
 if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
@@ -3028,6 +3045,7 @@ end
 
 
 function screen.tap_if(condition, to_tap)
+_log_action(condition, 'Tap if', 'true')
 with(screen.action_context(condition), function(check)
 
 if check() then
@@ -3040,6 +3058,7 @@ end
 
 
 function screen.tap_until(condition, to_tap)
+_log_action(condition, 'Tap until', 'true')
 with(screen.action_context(condition), function(check)
 
 repeat
@@ -3053,6 +3072,7 @@ end
 
 
 function screen.tap_while(condition, to_tap)
+_log_action(condition, 'Tap while', 'false')
 with(screen.action_context(condition), function(check)
 
 while check() do
@@ -3083,6 +3103,7 @@ end
 
 
 function screen.wait(condition)
+_log_action(condition, 'Wait', 'true')
 with(screen.action_context(condition), function(check)
 
 repeat

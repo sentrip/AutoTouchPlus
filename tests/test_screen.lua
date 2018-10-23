@@ -88,7 +88,7 @@ describe('screen',
 
     local pix = screen.stall_indicators:copy()
     pixels:extend(pix.pixels)
-    screen.tap_while(pix)
+    screen.tap_while(pix, pix.pixels[1])
     assert(len(calls) == 1, 'Did not call on stall')
   end),
   
@@ -113,18 +113,18 @@ describe('screen',
     local pix = screen.stall_indicators:copy()
     pixels:extend(pix.pixels)
     local old_pix = pixels:copy()
-    screen.tap_while(pix)
+    screen.tap_while(pix, pix.pixels[1])
     assert(len(calls) == 2, 'Did not call on stall correct number of times')
     assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
     calls:clear()
     -- Screen is no longer stalled, so color changes
     old_pix[5].expected_color = 50
     pixels:extend(old_pix)
-    screen.tap_while(pix)
+    screen.tap_while(pix, pix.pixels[1])
     -- Now screen is stalled again, back to stall color
     old_pix[5].expected_color = colors.white
     pixels:extend(old_pix)
-    screen.tap_while(pix)
+    screen.tap_while(pix, pix.pixels[1])
     local _ = 1  -- For some reason, without this line the test fails
     assert(len(calls) == 2, 'Did not call on stall correct number of times')
     assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
@@ -147,7 +147,7 @@ describe('screen',
 
     local pix = screen.stall_indicators:copy()
     pixels:extend(pix.pixels)
-    screen.tap_while(pix)
+    screen.tap_while(pix, pix.pixels[1])
     assert(len(calls) == 2, 'Did not call on stall')
     assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
   end),

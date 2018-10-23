@@ -144,9 +144,10 @@ function Request:send(cmd)
   try(function() 
       local lines = exe(cmd) 
       
-      with(open(self._response_fn), function(f) 
-          response.text = f:read('*a') end)
-      
+      local f = assert(io.open(self._response_fn))
+      response.text = f:read('*a')
+      f:close()
+
       try(function() parse_data(lines, self, response) end)
       
       end,
