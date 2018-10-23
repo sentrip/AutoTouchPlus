@@ -8,7 +8,7 @@ boilerplate = """---- AutoTouchPlus stuff and things.
 -- @usage require("AutoTouchPlus")
 """
 
-files = ['src/core.lua', 'src/logic.lua'] + ['src/' + i for i in os.listdir('src') if i != 'core.lua' and i != 'logic.lua']
+files = ['src/core.lua', 'src/logic.lua'] + sorted(['src/' + i for i in os.listdir('src') if i != 'core.lua' and i != 'logic.lua'])
 
 lines = []
 for fn in files:

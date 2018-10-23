@@ -133,11 +133,13 @@ end
 
 ---- Get the size of a file or directory
 -- @param name path name to check size of
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 -- @treturn number size of file/directory at path in bytes
-function sizeof(name) 
-  local result = exe(string.format('du %s', name))
-  local size = 0
-  for a in string.gmatch(result, "[0-9]*") do size = num(a); break end 
+function sizeof(name, prepend_rootDir) 
+  if rootDir and not prepend_rootDir == false then name = pathJoin(rootDir(), name) end
+  local f = assert(io.open(name))
+  local size = tonumber(f:seek('end'))
+  f:close()
   return size
 end
 

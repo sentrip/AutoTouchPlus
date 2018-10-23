@@ -667,606 +667,6 @@ for i, v in pairs(object) do total = total + v end
 return total
 end
 
-requests = {}
-
-function requests.delete(url, args)
-return requests.request("DELETE", url, args)
-end
-
-function requests.get(url, args)
-return requests.request("GET", url, args)
-end
-
-function requests.post(url, args)
-return requests.request("POST", url, args)
-end
-
-function requests.put(url, args)
-return requests.request("PUT", url, args)
-end
-
-function requests.request(method, url, args)
-local _req = args or {}
-
-if is.table(url) then
-_req = url
-else
-_req.url = url
-end
-
-_req.method = method
-local request = Request(_req)
-
-if request:verify() then
-local cmd = request:build()
-return request:send(cmd)
-else
-return "failed"
-end
-end
-
-local function parse_data(lines, request, response)
-local err_msg = 'error in '..request.method..' request: '
-assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
-
-for i, ln in pairs(lines) do
-local code, reason = ln:match('HTTP request sent, awaiting response[^%d]*(%d+) (.*)')
-local content_length, mime_type = ln:match('Length: (%d+) %[(.*)%]')
-if code then response.status_code = code end
-if reason then response.reason = reason end
-if content_length then response.content_length = content_length end
-if mime_type then response.mime_type = mime_type end
-end
-
-response.status_code = num(response.status_code)
-response.ok = response.status_code < 400
-end
-
-local function urlencode(params)
-if is.str(params) then return params end
-local s = ''
-if not params or next(params) == nil then return s end
-for key, value in pairs(params) do
-if is(s) then s = s..'&' end
-if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
-end
-return s
-end
-
-Request = class('Request')
-function Request:__init(request)
-for k, v in pairs(request) do
-setattr(self, k, v)
-end
-self.headers = dict(self.headers or dict())
-self.method = request.method or "GET"
-self.url = request.url or request[1] or ''
--- luacov: disable
-if rootDir then
-self._response_fn = pathJoin(rootDir(), '_response.txt')
-else
-self._response_fn = '_response.txt'
-end
--- luacov: enable
-end
-
-function Request:build()
-local cmd = list{'wget', '--method', self.method:upper()}
-if is(self.params) then
-self.url = self.url .. '?' .. urlencode(self.params)
-end
-cmd:extend(self:_add_auth() or {})
-cmd:extend(self:_add_data() or {})
-cmd:extend(self:_add_headers() or {})
-cmd:extend(self:_add_proxies() or {})
-cmd:extend(self:_add_ssl() or {})
-cmd:extend(self:_add_user_agent() or {})
-cmd:extend{"'"..self.url.."'"}
-cmd:extend{'--output-file', '-'}
-cmd:extend{'--output-document', self._response_fn}
-return cmd
-end
-
-function Request:send(cmd)
-local response = Response(self)
-
-try(function()
-local lines = exe(cmd)
-
-local response_f = assert(io.open(self._response_fn))
-response.text = response_f:read('*a')
-response_f:close()
-
-try(function() parse_data(lines, self, response) end)
-
-end,
-
-except(function(err)
-print('Requesting '..self.url..' failed - ' .. str(err))
-end),
-
-function()
-exe{'rm', self._response_fn}
-end
-)
-
-return response
-end
-
-function Request:verify()
-assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
-assert(self.url:startswith('http'), 'Only http(s) urls are supported')
-return true
-end
-
-function Request:_add_auth()
-if is(self.auth) then
-local usr = self.auth.user or self.auth[1]
-local pwd = self.auth.password or self.auth[2]
-return {'--http-user', usr, '--http-password', pwd}
-end
-end
-
-function Request:_add_data()
-if is(self.data) then
-if Not.string(self.data) then
-self.data = urlencode(self.data)
-end
-return {'--body-data', "'"..self.data.."'"}
-end
-end
-
-function Request:_add_headers()
-local cmd = list()
-if is(self.headers) then
-for k, v in pairs(self.headers) do
-cmd:append("--header='"..k..': '..str(v).."'")
-end
-end
-return cmd
-end
-
-function Request:_add_proxies()
-if is(self.proxies) then
-local usr, pwd
-for k, v in pairs(self.proxies) do
-if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
-end
-end
-end
-
-function Request:_add_ssl()
-if not self.verify_ssl or (self.url:startswith('https') and self.verify_ssl) then
-return {'--no-check-certificate'}
-end
-end
-
-function Request:_add_user_agent()
-if is(self.user_agent) then
-return {'-U', self.user_agent}
-end
-end
-
-Response = class('Response')
-function Response:__init(request)
-assert(request, 'Cannot create response with no request')
-self.request = request or {}
-self.method = self.request.method
-self.url = self.request.url
-self.status_code = -1
-self.reason = ''
-self.text = ''
-self.encoding = 'utf-8'
-self.mime_type = 'text/html'
-self.headers = dict()
-self.ok = false
-end
-
-function Response:__tostring()
-return string.format('<Response [%d]>', self.status_code)
-end
-
-function Response:iter_lines()
-local i, v
-local lines = self.text:split('\n')
-return function() i, v = next(lines, i) return v end
-end
-
-function Response:json()
-return json.decode(self.text)
-end
-
-function Response:raise_for_status()
-if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
-end
-
-colors = {
-aqua    = 65535,    -- 65535
-black   = 0,        -- 0
-blue    = 255,      -- 255
-fuchsia = 16711935, -- 16711935
-gray    = 8421504,  -- 8421504
-green   = 32768,    -- 32768
-lime    = 65280,    -- 65280
-maroon  = 8388608,  -- 8388608
-navy    = 128,      -- 128
-olive   = 8421376,  -- 8421376
-orange  = 16753920, -- 16753920
-purple  = 8388736,  -- 8388736
-red     = 16711680, -- 16711680
-silver  = 12632256, -- 12632256
-teal    = 32896,    -- 32896
-yellow  = 16776960, -- 16776960
-white   = 16777215  -- 16777215
-}
-
-
-
-Pixel = class('Pixel')
-
-function Pixel:__init(x, y, color)
-self.x = x
-self.y = y
-self.expected_color = color or colors.white
-end
-
-function Pixel:__add(position)
-local x = self.x + (position.x or position[1] or 0)
-local y = self.y + (position.y or position[2] or 0)
-return Pixel(x, y, self.expected_color)
-end
-
-function Pixel:__sub(position)
-local x = self.x - (position.x or position[1] or 0)
-local y = self.y - (position.y or position[2] or 0)
-return Pixel(x, y, self.expected_color)
-end
-
-function Pixel:__eq(pixel)
-return self.x == pixel.x and self.y == pixel.y and self.expected_color == pixel.expected_color
-end
-
-function Pixel:__hash()
-return self.x * 1000000000000 + self.y * 100000000 + self.expected_color
-end
-
-function Pixel:__tostring()
-return string.format('<Pixel(%d, %d)>', self.x, self.y)
-end
-
-property(Pixel, 'color', function(self)
-return getColor(self.x, self.y)
-end)
-
-function Pixel:color_changed()
-local old_color = self.color
-return function()
-local current_color = self.color
-if current_color ~= old_color then
-old_color = current_color
-return true
-end
-return false
-end
-end
-
-function Pixel:visible()
-return self.color == self.expected_color
-end
-
-
-
-Pixels = class('Pixels')
-
-function Pixels:__init(pixels)
-self.pixels = list()
-self.expected_colors = list()
-local pixel_set = set()
-for i, pixel in pairs(pixels or {}) do
-if not isinstance(pixel, Pixel) then
-pixel = Pixel(pixel[1], pixel[2], pixel[3])
-end
-if not pixel_set:contains(pixel) then
-pixel_set:add(pixel)
-self.pixels:append(pixel)
-self.expected_colors:append(pixel.expected_color)
-end
-end
-end
-
-function Pixels:__add(other)
-local pixel_set = set(self.pixels)
-local new_pixels = list()
-for i, pixel in pairs(other.pixels) do
-local pix = Pixel(pixel.x, pixel.y, pixel.expected_color)
-if not pixel_set:contains(pix) then new_pixels:append(pix) end
-end
-return Pixels(self.pixels + new_pixels)
-end
-
-function Pixels:__sub(other)
-local pixel_set = set(other.pixels)
-local new_pixels = list()
-for p in iter(self.pixels) do
-if not pixel_set:contains(p) then new_pixels:append(p)  end
-end
-return Pixels(new_pixels)
-end
-
-function Pixels:__eq(other)
-if len(self.pixels) ~= len(other.pixels) then return false end
-for i, pixel in pairs(other.pixels) do
-if pixel ~= self.pixels[i] then return false end
-end
-return true
-end
-
-function Pixels:__tostring()
-return string.format('<Pixels(n=%d)>', len(self.pixels))
-end
-
-property(Pixels, 'colors', function(self)
-local positions = list()
-for p in iter(self.pixels) do positions:append({p.x, p.y}) end
-return getColors(positions)
-end)
-
-function Pixels:visible()
-return requal(self.colors, self.expected_colors)
-end
-
-function Pixels:count()
-local colors = self.colors
-local count = 0
-for i, v in pairs(colors) do
-if v == self.expected_colors[i] then count = count + 1 end
-end
-return count
-end
-
-local function n_colors_changed(pixels, n)
-local old_colors = pixels.colors
-
-return function()
-local count = 0
-local current_colors = pixels.colors
-for i, color in pairs(current_colors) do
-if old_colors[i] ~= color then
-count = count + 1
-end
-end
-
-local result = count >= (n or len(current_colors))
-
-if result then
-old_colors = current_colors
-end
-
-return result
-end
-end
-
-function Pixels:any_colors_changed()
-return n_colors_changed(self, 1)
-end
-
-function Pixels:all_colors_changed()
-return n_colors_changed(self, len(self.pixels))
-end
-
-function Pixels:n_colors_changed(n)
-return n_colors_changed(self, n)
-end
-
-
-
-Region = class('Region', 'Pixels')
-
-function Region:__init(positions, color)
-self.color = color or colors.white
-local pixels = list()
-local pixel_set = set()
-for p in iter(positions) do
-local pix = Pixel(p.x or p[1], p.y or p[2], self.color)
-if not pixel_set:contains(pix) then
-pixel_set:add(pix)
-pixels:append(pix)
-end
-end
-Pixels.__init(self, pixels)
-end
-
-function Region:__add(other)
-assert(other:isinstance(Region), 'Can only add Region objects to other Region objects')
-assert(other.color == self.color, 'Can only add Regions of the same color')
-return Region(self.pixels + other.pixels, self.color)
-end
-
-function Region:__sub(other)
-assert(other:isinstance(Region), 'Can only subtract Region objects from other Region objects')
-assert(other.color == self.color, 'Can only subtract Regions of the same color')
-return Region(set(self.pixels) - set(other.pixels), self.color)
-end
-
-function Region:__tostring()
-return string.format('<Region(pixels=%d, color=%d)>', len(self.pixels), self.color)
-end
-
-property(Region, 'center', function(self)
-local x, y = 0, 0
-for p in iter(self.pixels) do x, y = x + p.x, y + p.y end
-return Pixel(x / len(self.pixels), y / len(self.pixels), self.color)
-end)
-
-
-
-Ellipse = class('Ellipse', 'Region')
-
-function Ellipse:__init(options)
-self.x = options.x or 0
-self.y = options.y or 0
-self.width = options.width or 1
-self.height =  options.height or 1
-self.spacing = options.spacing or 1
-local positions = list()
--- TODO: Ellipse creation
-Region.__init(self, positions, options.color)
-end
-
-function Ellipse:__tostring()
-return string.format('<Ellipse(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
-self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
-end
-
-
-
-Rectangle = class('Rectangle', 'Region')
-
-function Rectangle:__init(options)
-self.x = options.x or 0
-self.y = options.y or 0
-self.width = options.width or 1
-self.height =  options.height or 1
-self.spacing = options.spacing or 1
-local positions = list()
-for i=self.x, self.x + self.width, self.spacing do
-for j=self.y, self.y + self.height, self.spacing do
-positions:append({i, j})
-end
-end
-Region.__init(self, positions, options.color)
-end
-
-function Rectangle:__tostring()
-return string.format('<Rectangle(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
-self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
-end
-
-
-
-Triangle = class('Triangle', 'Region')
-
-function Triangle:__init(options)
--- TODO: Triangle creation
-local positions = list()
-Region.__init(self, positions, options.color)
-end
-
-function Triangle:__tostring()
-return string.format('<Triangle(n=%d, color=%d)>', len(self.pixels), self.color)
-end
-
-
-function str_add(s, other) return s .. other end
-
-function str_call(s,i,j)
-if isType(i, 'number') then
-return string.sub(s, i, j or #s)
-elseif isType(i, 'table') then
-local t = {}
-for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
-return table.concat(t)
-end
-end
-
-function str_index(s, i) end
-
-function str_mul(s, other)
-local t = {}
-for i=1, other do t[i] = s end
-return table.concat(t)
-end
-
-function str_pairs(s)
-local function _iter(s, idx)
-if idx < #s then return idx + 1, s[idx + 1] end
-end
-return _iter, s, 0
-end
-
-_string = {
-endswith = function(s, value) return s(-#value, -1) == value end,
-
-format = function(s, ...)
-if Not.Nil(string.find(s, '{[^}]*}')) then
-local args; local modified = ''; local stringified = '';
-local index = 1; local length = 0; local pad = 0
-if is.table(...) then args = ... else args = {...} end
-
-local function formatter(prev, match)
--- replace match
-if match == '' then
-stringified = str(args[index])
-elseif match:startswith(':') then
-length = tonumber(match(2))
-stringified = str(args[index])
-else
-for i, v in pairs(args) do if i == match then stringified = v end end
-end
--- apply padding if any
-pad = math.max(0, math.abs(length) - #stringified)
-if length < 0 then modified = modified + prev + stringified + ' ' * pad
-else modified = modified + prev + ' ' *  pad + stringified end
-index = index + 1
-length = 0
-end
-
-s:gsub('(.-){([^}]*)}', formatter)
-return modified
-else return string.format(s, ...) end
-end,
-
-join = function(s, other) return table.concat(other, s) end,
-
-replace = function(s, sub, rep, limit)
-local _s, n = string.gsub(s, sub, rep, limit) return _s end,
-
-split = function(s, delim)
-local i = 1
-local idx = 1
-local values = {}
-
-while i <= #s do
-if is.Nil(delim) then values[i] = s[i]; i = i + 1
-else
-if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
-else
-if is.Nil(values[idx]) then values[idx] = '' end
-values[idx] = values[idx] .. s[i]
-end
-i = i + 1
-end
-end
-for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
-return list(values)
-end,
-
-startswith = function(s, value) return s(1, #value) == value end,
-
-strip = function(s, remove)
-local start=1
-local _end = #s
-for i=1, #s do if isnotin(s[i], remove) then start = i break end end
-for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
-return s(start, _end)
-end
-}
-
-
-getmetatable('').__add = str_add
-getmetatable('').__call = str_call
-getmetatable('').__ipairs = str_pairs
-getmetatable('').__mul = str_mul
-getmetatable('').__pairs = str_pairs
-getmetatable('').__index = function(s, i)
-if isType(i, 'number') then
-if i < 0 then i = #s + 1 + i end
-return string.sub(s, i, i)
-else
-return _string[i] or string[i]
-end
-end
-
 
 function try(f, _except, finally)
 _except = _except or function() end
@@ -1495,6 +895,159 @@ run_and_close = contextmanager(run_and_close)
 run_if_closed = contextmanager(run_if_closed)
 time_ensured = contextmanager(time_ensured)
 time_padded = contextmanager(time_padded)
+
+local pairs, ipairs, t_sort = pairs, ipairs, table.sort
+local co_yield, co_wrap = coroutine.yield, coroutine.wrap
+local co_resume = coroutine.resume
+itertools = {}
+
+function itertools.values (table)
+return co_wrap(function ()
+for _, v in pairs(table) do
+co_yield(v)
+end
+end)
+end
+
+function itertools.each (table)
+return co_wrap(function ()
+for _, v in ipairs(table) do
+co_yield(v)
+end
+end)
+end
+
+function itertools.collect (iterable)
+local t, n = {}, 0
+for element in iterable do
+n = n + 1
+t[n] = element
+end
+return t, n
+end
+
+function itertools.count (n, step)
+if n == nil then n = 1 end
+if step == nil then step = 1 end
+return co_wrap(function ()
+while true do
+co_yield(n)
+n = n + step
+end
+end)
+end
+
+function itertools.cycle (iterable)
+local saved = {}
+local nitems = 0
+return co_wrap(function ()
+for element in iterable do
+co_yield(element)
+nitems = nitems + 1
+saved[nitems] = element
+end
+while nitems > 0 do
+for i = 1, nitems do
+co_yield(saved[i])
+end
+end
+end)
+end
+
+function itertools.value (value, times)
+if times then
+return co_wrap(function ()
+while times > 0 do
+times = times - 1
+co_yield(value)
+end
+end)
+else
+return co_wrap(function ()
+while true do co_yield(value) end
+end)
+end
+end
+
+function itertools.islice (iterable, start, stop)
+if start == nil then
+start = 1
+end
+return co_wrap(function ()
+if stop ~= nil and stop - start < 1 then
+return
+end
+
+local current = 0
+for element in iterable do
+current = current + 1
+if stop ~= nil and current > stop then
+return
+end
+if current >= start then
+co_yield(element)
+end
+end
+end)
+end
+
+function itertools.takewhile (predicate, iterable)
+return co_wrap(function ()
+for element in iterable do
+if predicate(element) then
+co_yield(element)
+else
+break
+end
+end
+end)
+end
+
+function itertools.map (func, iterable)
+return co_wrap(function ()
+for element in iterable do
+co_yield(func(element))
+end
+end)
+end
+
+function itertools.filter (predicate, iterable)
+return co_wrap(function ()
+for element in iterable do
+if predicate(element) then
+co_yield(element)
+end
+end
+end)
+end
+
+local function make_comp_func(key)
+if key == nil then
+return nil
+end
+return function (a, b)
+return key(a) < key(b)
+end
+end
+
+local _collect = itertools.collect
+
+function itertools.sorted (iterable, key, reverse)
+local t, n = _collect(iterable)
+t_sort(t, make_comp_func(key))
+if reverse then
+return co_wrap(function ()
+for i = n, 1, -1 do co_yield(t[i]) end
+end)
+else
+return co_wrap(function ()
+for i = 1, n do co_yield(t[i]) end
+end)
+end
+end
+
+iter = itertools.values
+
 json = {}
 
 local encode
@@ -1854,6 +1407,1505 @@ if type(str) ~= "string" then
 error("expected argument of type string, got " .. type(str))
 end
 return ( parse(str, next_char(str, 1, space_chars, true)) )
+end
+
+
+TransitionTree = class('TransitionTree')
+
+function TransitionTree:__init(name, parent, forward, backward)
+self.name = name or 'root'
+self.parent = parent
+if is.Nil(backward) then self.backward = forward
+else
+self.forward = forward
+self.backward = backward
+end
+self.nodes = {}
+end
+
+function TransitionTree:__index(value)
+return rawget(TransitionTree, value) or rawget(self, value) or self.nodes[value]
+end
+
+function TransitionTree:add(name, forward, backward)
+self.nodes[name] = TransitionTree(name, self, forward, backward)
+end
+
+function TransitionTree:path_to_root()
+local path = list{self}
+local parent = self.parent
+while Not.Nil(parent) do
+path:append(parent)
+parent = parent.parent
+end
+return path
+end
+
+function TransitionTree:path_to(name)
+local q = list()
+for i, v in pairs(self.nodes) do q:append({i, v}) end
+local item
+while len(q) > 0 do
+item = q:pop(1)
+for i, v in pairs(item[2].nodes) do q:append({i, v}) end
+if item[1] == name then return reversed(item[2]:path_to_root()) end
+end
+end
+
+function TransitionTree:lca(name1, name2)
+local lca = 'root'
+local v1, v2
+local path1, path2 = self:path_to(name1), self:path_to(name2)
+for i=2, math.min(len(path1), len(path2)) do
+v1, v2 = path1[i], path2[i]
+if v1.name == v2.name then lca = v1.name; break end
+if v1.parent ~= v2.parent then break else lca = v1.parent.name end
+end
+return lca
+end
+
+function TransitionTree:navigate(start, _end)
+local counting = false
+local lca = self:lca(start, _end)
+local path1, path2 = reversed(self:path_to(start)), self:path_to(_end)
+for i, v in pairs(path1) do
+if v.name == lca then break end
+v.backward()
+end
+
+for i, v in pairs(path2) do
+if counting then v.forward() end
+if v.name == lca then counting = true end
+end
+end
+
+
+
+Navigator = class('Navigator')
+
+
+local function namedRequality(name)
+return function(me, other)
+local mt = getmetatable(other)
+if mt and mt.__name == name then
+return requal(me, other)
+end
+return false
+end
+end
+
+dict = class('dict')
+
+function dict:__init(dct) self:update(dct or {}) end
+
+function dict:__add(other)
+local result = dict(self)
+result:update(other)
+return result
+end
+
+function dict:__call(...)
+assert(is.Nil(...), 'Dict can only be called in a for-loop')
+local key, value
+return function()
+key, value =  next(self, key, value)
+return key
+end
+end
+
+function dict:__eq(other) return namedRequality('dict')(self, other) end
+
+function dict:__setitem(key, value) self:set(key, value) end
+
+function dict:__ipairs() return self:__pairs() end
+
+function dict:__len() return 0 end
+
+function dict:__pairs()
+local function iter(value, key)
+key, value =  next(self, key, value)
+return key, value
+end
+return iter, self, nil
+end
+
+function dict:clear() for k, v in pairs(self) do self:set(k, nil) end end
+
+function dict:contains(key) return Not.Nil(rawget(self, key)) end
+
+function dict:get(key, default) return rawget(self, key) or default end
+
+function dict:items() return pairs(self) end
+
+function dict:keys()
+local ks = list()
+for k in self() do ks:append(k) end
+return sorted(ks)
+end
+
+function dict:pop(key, default)
+if key then
+result = rawget(self, key) or default
+rawset(self, key, nil)
+return result
+else
+local k, v = pairs(self)(self)
+rawset(self, k, nil)
+return v
+end
+end
+
+function dict:set(key, value) rawset(self, key, value) end
+
+function dict:update(other) for k, v in pairs(other) do self:set(k, v) end end
+
+function dict:values()
+local vs = list()
+for k, v in pairs(self) do vs:append(v) end
+return vs
+end
+
+
+list = class('list')
+
+
+function list:__init(lst)
+if is.table(lst) then self:extend(lst) end
+end
+
+function list:__add(other) local new = list(self); new:extend(other); return new end
+
+function list:__call(start, _end, step)
+local key, value
+local slice = list()
+
+if is.Nil(start or _end or step) then  -- no arguements -> for loop
+return function()
+key, value =  next(self, key, value)
+return value
+end
+else -- arguments -> slice
+_end = _end or #self
+if _end < 0 and not step then _end = #self + 1 + _end end
+if is.table(start) then for i, v in pairs(start) do slice:append(self[v]) end
+else for i=start, _end, step or 1 do slice:append(self[i]) end end
+return slice
+end
+end
+
+function list:__eq(other) return namedRequality('list')(self, other) end
+
+function list:__len() return len(self) end
+
+function list:__getitem(value)
+if is.str(value) then return rawget(list, value)
+else
+if sign(value) < 0 then value = #self + 1 + value end
+return rawget(self, value) end
+end
+
+function list:__mul(n)
+local result = list()
+for i=1, n do result:extend(self) end
+return result
+end
+
+function list:append(value) rawset(self, #self + 1, value) end
+
+function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
+
+function list:contains(value)
+for i, v in pairs(self) do if requal(v, value) then return true end end
+return false
+end
+
+function list:extend(values) for i, v in pairs(values) do self:append(v) end end
+
+function list:index(value) for i, v in pairs(self) do if requal(v, value) then return i end end end
+
+function list:insert(index, value)
+for i=#self, index, -1 do rawset(self, i + 1, rawget(self, i)) end
+rawset(self, index, value)
+end
+
+function list:pop(index)
+local value = rawget(self, index or 1)
+for i=index or 1, #self do rawset(self, i, rawget(self, i + 1)) end
+return value
+end
+
+function list:remove(value) local _ = self:pop(self:index(value)) end
+
+
+set = class('set')
+
+function set:__init(s)
+self:update(s or {})
+end
+
+function set:__add(other)
+local new = set(self)
+new:update(other)
+return new
+end
+
+function set:__call(...)
+assert(is.Nil(...), 'Set can only be called in a for-loop')
+local key, value
+return function()
+key, value =  next(self, key, value)
+return value
+end
+end
+
+function set:__eq(other) return namedRequality('set')(self, other) end
+
+function set:__len() return 0 end
+
+function set:__pairs()
+local function iter(value, key)
+return next(self, key, value)
+end
+return iter, self, nil
+end
+
+function set:__sub(other) return self:difference(other) end
+
+
+function set:add(value)
+if Not.Nil(value) then rawset(self, str(hash(value)), value) end end
+
+function set:clear() for v in self() do self:remove(v) end end
+
+function set:contains(value) return Not.Nil(rawget(self, str(hash(value)))) end
+
+function set:difference(other)
+local vs = set()
+for v in self() do
+if is.Nil(rawget(other, str(hash(v)))) then vs:add(v) end
+end
+return vs
+end
+
+function set:pop(value)
+if value then
+self:remove(value)
+return value
+else
+local k, v = pairs(self)(self)
+rawset(self, k, nil)
+return v
+end
+end
+
+function set:remove(value) rawset(self, str(hash(value)), nil) end
+
+function set:update(other) for _, v in pairs(other) do self:add(v) end end
+
+function set:values()
+local result = {}
+for v in self() do result[#result + 1] = v end
+return result
+end
+
+
+local function add_locations(locations, other, relative)
+if (relative and other[1].x == 0 and other[1].y == 0) or (locations[-1].x == other[1].x and locations[-1].y == other[1].y) then
+other = other(2, nil)
+end
+local x, y
+local new_locations = list()
+for loc in iter(other) do
+x, y = loc.x, loc.y
+if relative then
+x, y = x + locations[-1].x, y + locations[-1].y
+end
+new_locations:append({x=x, y=y})
+end
+return locations + new_locations
+end
+
+
+Path = class('Path')
+
+function Path:__init(locations)
+self.locations = list(locations or {})
+self.point_count = len(locations)
+self.duration = self.point_count * 0.016
+self.absolute = true
+end
+
+function Path:__add(other)
+assert(other:isinstance(Path), 'Can only add Path objects to other Path objects')
+if len(self.locations) + len(other.locations) == 0 then return Path() end
+if len(self.locations) == 0 then self.locations:append(other.locations[1]) end
+return Path(add_locations(self.locations, other.locations, not other.absolute))
+end
+
+function Path:__index(key)
+if is.num(key) then return self.locations[key] end
+return class('').__index(self, key)
+end
+
+function Path:__newindex(key, value)
+if is.num(key) then self.locations[key] = value end
+class('').__newindex(self, key, value)
+end
+
+function Path:__pairs()
+return pairs(self.locations)
+end
+
+function Path:__tostring()
+return string.format('<%s(points=%s, duration=%.2fs)>', getmetatable(self).__name, len(self.locations), self.duration)
+end
+
+
+function Path:begin_swipe(fingerID, speed)
+assert(speed and speed >= 1 and speed <= 10, 'speed '..speed..' is not in range 1-10')
+touchDown(fingerID or 2, self.locations[1].x, self.locations[1].y)
+usleep(16000)
+self.cancelled = false
+self.speed = speed or 5
+self.idx = self.speed + 1
+end
+
+function Path:step(fingerID, on_move)
+if is.Nil(on_move) then on_move = function() end end
+if is.Nil(self.idx) then error('Cannot step a path before begin_swipe has been called') end
+if self.idx < len(self.locations) and not self.cancelled then
+touchMove(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
+self.idx = math.min(len(self.locations), self.idx + self.speed)
+usleep(16000)
+if on_move() == true then return true end
+return false
+else
+touchUp(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
+self.idx = nil
+self.cancelled = nil
+self.speed = nil
+return true
+end
+end
+
+function Path:swipe(options)
+with(screen.action_context(function() return true end), function(check)
+self:begin_swipe(options.fingerID, options.speed)
+local done = false
+while not done do
+done = self:step(options.fingerID, options.on_move)
+end
+end)
+return screen
+end
+
+function Path.arc(radius, start_angle, end_angle, center)
+
+-- Angle = 0 -> start_angle if no end_angle specified
+if not end_angle then
+start_angle, end_angle = 0, start_angle
+end
+
+local absolute = true
+-- Relative path if no center specified
+if not center then
+-- TODO: make relative arc center adaptive to radius and angles
+center = {x=0, y=0}
+absolute = false
+end
+
+local function radians(a) return a / 360 * 2 * math.pi end
+-- TODO: Better arc step resolution (for arcs with large radius)
+local steps = abs(end_angle - start_angle)
+local deltaTheta = (radians(end_angle) - radians(start_angle)) / steps
+local theta = radians(start_angle)
+
+local function angle_to_pos(angle)
+return {x=center.x + radius * math.cos(angle), y=center.y + radius * math.sin(angle)}
+end
+
+local path = list{angle_to_pos(theta)}
+for i=1, steps do
+theta = theta + deltaTheta
+path:append(angle_to_pos(theta))
+end
+if absolute then return Path(path) else return RelativePath(path) end
+end
+
+function Path.linear(start_pixel, end_pixel)
+-- Relative path if only one pixel specified
+local absolute = true
+if not end_pixel then
+start_pixel, end_pixel = {x=0, y=0}, start_pixel
+absolute = false
+end
+local distanceX = end_pixel.x - start_pixel.x
+local distanceY = end_pixel.y - start_pixel.y
+local steps = math.min(50, math.max(math.abs(distanceX), math.abs(distanceY)))
+local x, y = start_pixel.x, start_pixel.y
+local deltaX = distanceX / steps
+local deltaY = distanceY / steps
+local path = list{{x=x, y=y}}
+for i=1, steps do
+x = x + deltaX
+y = y + deltaY
+path:append({x=x, y=y})
+end
+if absolute then return Path(path) else return RelativePath(path) end
+end
+
+
+RelativePath = class('RelativePath', 'Path')
+
+function RelativePath:__init(locations)
+Path.__init(self, locations)
+self.absolute = false
+end
+
+
+function RelativePath:__add(other)
+assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to other RelativePath objects')
+return RelativePath(add_locations(self.locations, other.locations, true))
+end
+
+colors = {
+aqua    = 65535,    -- 65535
+black   = 0,        -- 0
+blue    = 255,      -- 255
+fuchsia = 16711935, -- 16711935
+gray    = 8421504,  -- 8421504
+green   = 32768,    -- 32768
+lime    = 65280,    -- 65280
+maroon  = 8388608,  -- 8388608
+navy    = 128,      -- 128
+olive   = 8421376,  -- 8421376
+orange  = 16753920, -- 16753920
+purple  = 8388736,  -- 8388736
+red     = 16711680, -- 16711680
+silver  = 12632256, -- 12632256
+teal    = 32896,    -- 32896
+yellow  = 16776960, -- 16776960
+white   = 16777215  -- 16777215
+}
+
+
+
+Pixel = class('Pixel')
+
+function Pixel:__init(x, y, color)
+self.x = x
+self.y = y
+self.expected_color = color or colors.white
+end
+
+function Pixel:__add(position)
+local x = self.x + (position.x or position[1] or 0)
+local y = self.y + (position.y or position[2] or 0)
+return Pixel(x, y, self.expected_color)
+end
+
+function Pixel:__sub(position)
+local x = self.x - (position.x or position[1] or 0)
+local y = self.y - (position.y or position[2] or 0)
+return Pixel(x, y, self.expected_color)
+end
+
+function Pixel:__eq(pixel)
+return self.x == pixel.x and self.y == pixel.y and self.expected_color == pixel.expected_color
+end
+
+function Pixel:__hash()
+return self.x * 1000000000000 + self.y * 100000000 + self.expected_color
+end
+
+function Pixel:__tostring()
+return string.format('<Pixel(%d, %d)>', self.x, self.y)
+end
+
+property(Pixel, 'color', function(self)
+return getColor(self.x, self.y)
+end)
+
+function Pixel:color_changed()
+local old_color = self.color
+return function()
+local current_color = self.color
+if current_color ~= old_color then
+old_color = current_color
+return true
+end
+return false
+end
+end
+
+function Pixel:visible()
+return self.color == self.expected_color
+end
+
+
+
+Pixels = class('Pixels')
+
+function Pixels:__init(pixels)
+self.pixels = list()
+self.expected_colors = list()
+local pixel_set = set()
+for i, pixel in pairs(pixels or {}) do
+if not isinstance(pixel, Pixel) then
+pixel = Pixel(pixel[1], pixel[2], pixel[3])
+end
+if not pixel_set:contains(pixel) then
+pixel_set:add(pixel)
+self.pixels:append(pixel)
+self.expected_colors:append(pixel.expected_color)
+end
+end
+end
+
+function Pixels:__add(other)
+local pixel_set = set(self.pixels)
+local new_pixels = list()
+for i, pixel in pairs(other.pixels) do
+local pix = Pixel(pixel.x, pixel.y, pixel.expected_color)
+if not pixel_set:contains(pix) then new_pixels:append(pix) end
+end
+return Pixels(self.pixels + new_pixels)
+end
+
+function Pixels:__sub(other)
+local pixel_set = set(other.pixels)
+local new_pixels = list()
+for p in iter(self.pixels) do
+if not pixel_set:contains(p) then new_pixels:append(p)  end
+end
+return Pixels(new_pixels)
+end
+
+function Pixels:__eq(other)
+if len(self.pixels) ~= len(other.pixels) then return false end
+for i, pixel in pairs(other.pixels) do
+if pixel ~= self.pixels[i] then return false end
+end
+return true
+end
+
+function Pixels:__tostring()
+return string.format('<Pixels(n=%d)>', len(self.pixels))
+end
+
+property(Pixels, 'colors', function(self)
+local positions = list()
+for p in iter(self.pixels) do positions:append({p.x, p.y}) end
+return getColors(positions)
+end)
+
+function Pixels:visible()
+return requal(self.colors, self.expected_colors)
+end
+
+function Pixels:count()
+local colors = self.colors
+local count = 0
+for i, v in pairs(colors) do
+if v == self.expected_colors[i] then count = count + 1 end
+end
+return count
+end
+
+local function n_colors_changed(pixels, n)
+local old_colors = pixels.colors
+
+return function()
+local count = 0
+local current_colors = pixels.colors
+for i, color in pairs(current_colors) do
+if old_colors[i] ~= color then
+count = count + 1
+end
+end
+
+local result = count >= (n or len(current_colors))
+
+if result then
+old_colors = current_colors
+end
+
+return result
+end
+end
+
+function Pixels:any_colors_changed()
+return n_colors_changed(self, 1)
+end
+
+function Pixels:all_colors_changed()
+return n_colors_changed(self, len(self.pixels))
+end
+
+function Pixels:n_colors_changed(n)
+return n_colors_changed(self, n)
+end
+
+
+
+Region = class('Region', 'Pixels')
+
+function Region:__init(positions, color)
+self.color = color or colors.white
+local pixels = list()
+local pixel_set = set()
+for p in iter(positions) do
+local pix = Pixel(p.x or p[1], p.y or p[2], self.color)
+if not pixel_set:contains(pix) then
+pixel_set:add(pix)
+pixels:append(pix)
+end
+end
+Pixels.__init(self, pixels)
+end
+
+function Region:__add(other)
+assert(other:isinstance(Region), 'Can only add Region objects to other Region objects')
+assert(other.color == self.color, 'Can only add Regions of the same color')
+return Region(self.pixels + other.pixels, self.color)
+end
+
+function Region:__sub(other)
+assert(other:isinstance(Region), 'Can only subtract Region objects from other Region objects')
+assert(other.color == self.color, 'Can only subtract Regions of the same color')
+return Region(set(self.pixels) - set(other.pixels), self.color)
+end
+
+function Region:__tostring()
+return string.format('<Region(pixels=%d, color=%d)>', len(self.pixels), self.color)
+end
+
+property(Region, 'center', function(self)
+local x, y = 0, 0
+for p in iter(self.pixels) do x, y = x + p.x, y + p.y end
+return Pixel(x / len(self.pixels), y / len(self.pixels), self.color)
+end)
+
+
+
+Ellipse = class('Ellipse', 'Region')
+
+function Ellipse:__init(options)
+self.x = options.x or 0
+self.y = options.y or 0
+self.width = options.width or 1
+self.height =  options.height or 1
+self.spacing = options.spacing or 1
+local positions = list()
+-- TODO: Ellipse creation
+Region.__init(self, positions, options.color)
+end
+
+function Ellipse:__tostring()
+return string.format('<Ellipse(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
+self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
+end
+
+
+
+Rectangle = class('Rectangle', 'Region')
+
+function Rectangle:__init(options)
+self.x = options.x or 0
+self.y = options.y or 0
+self.width = options.width or 1
+self.height =  options.height or 1
+self.spacing = options.spacing or 1
+local positions = list()
+for i=self.x, self.x + self.width, self.spacing do
+for j=self.y, self.y + self.height, self.spacing do
+positions:append({i, j})
+end
+end
+Region.__init(self, positions, options.color)
+end
+
+function Rectangle:__tostring()
+return string.format('<Rectangle(%d, %d, width=%d, height=%d, spacing=%d, color=%d, pixels=%d)>',
+self.x, self.y, self.width, self.height, self.spacing, self.color, len(self.pixels))
+end
+
+
+
+Triangle = class('Triangle', 'Region')
+
+function Triangle:__init(options)
+-- TODO: Triangle creation
+local positions = list()
+Region.__init(self, positions, options.color)
+end
+
+function Triangle:__tostring()
+return string.format('<Triangle(n=%d, color=%d)>', len(self.pixels), self.color)
+end
+
+requests = {}
+
+function requests.delete(url, args)
+return requests.request("DELETE", url, args)
+end
+
+function requests.get(url, args)
+return requests.request("GET", url, args)
+end
+
+function requests.post(url, args)
+return requests.request("POST", url, args)
+end
+
+function requests.put(url, args)
+return requests.request("PUT", url, args)
+end
+
+function requests.request(method, url, args)
+local _req = args or {}
+
+if is.table(url) then
+_req = url
+else
+_req.url = url
+end
+
+_req.method = method
+local request = Request(_req)
+
+if request:verify() then
+local cmd = request:build()
+return request:send(cmd)
+else
+return "failed"
+end
+end
+
+local function parse_data(lines, request, response)
+local err_msg = 'error in '..request.method..' request: '
+assert(isnotin('failed', lines[6]), err_msg..'Url does not exist')
+
+for i, ln in pairs(lines) do
+local code, reason = ln:match('HTTP request sent, awaiting response[^%d]*(%d+) (.*)')
+local content_length, mime_type = ln:match('Length: (%d+) %[(.*)%]')
+if code then response.status_code = code end
+if reason then response.reason = reason end
+if content_length then response.content_length = content_length end
+if mime_type then response.mime_type = mime_type end
+end
+
+response.status_code = num(response.status_code)
+response.ok = response.status_code < 400
+end
+
+local function urlencode(params)
+if is.str(params) then return params end
+local s = ''
+if not params or next(params) == nil then return s end
+for key, value in pairs(params) do
+if is(s) then s = s..'&' end
+if tostring(value) then s = s..tostring(key)..'='..tostring(value) end
+end
+return s
+end
+
+Request = class('Request')
+function Request:__init(request)
+for k, v in pairs(request) do
+setattr(self, k, v)
+end
+self.headers = dict(self.headers or dict())
+self.method = request.method or "GET"
+self.url = request.url or request[1] or ''
+-- luacov: disable
+if rootDir then
+self._response_fn = pathJoin(rootDir(), '_response.txt')
+else
+self._response_fn = '_response.txt'
+end
+-- luacov: enable
+end
+
+function Request:build()
+local cmd = list{'wget', '--method', self.method:upper()}
+if is(self.params) then
+self.url = self.url .. '?' .. urlencode(self.params)
+end
+cmd:extend(self:_add_auth() or {})
+cmd:extend(self:_add_data() or {})
+cmd:extend(self:_add_headers() or {})
+cmd:extend(self:_add_proxies() or {})
+cmd:extend(self:_add_ssl() or {})
+cmd:extend(self:_add_user_agent() or {})
+cmd:extend{"'"..self.url.."'"}
+cmd:extend{'--output-file', '-'}
+cmd:extend{'--output-document', self._response_fn}
+return cmd
+end
+
+function Request:send(cmd)
+local response = Response(self)
+
+try(function()
+local lines = exe(cmd)
+
+local response_f = assert(io.open(self._response_fn))
+response.text = response_f:read('*a')
+response_f:close()
+
+try(function() parse_data(lines, self, response) end)
+
+end,
+
+except(function(err)
+print('Requesting '..self.url..' failed - ' .. str(err))
+end),
+
+function()
+exe{'rm', self._response_fn}
+end
+)
+
+return response
+end
+
+function Request:verify()
+assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
+assert(self.url:startswith('http'), 'Only http(s) urls are supported')
+return true
+end
+
+function Request:_add_auth()
+if is(self.auth) then
+local usr = self.auth.user or self.auth[1]
+local pwd = self.auth.password or self.auth[2]
+return {'--http-user', usr, '--http-password', pwd}
+end
+end
+
+function Request:_add_data()
+if is(self.data) then
+if Not.string(self.data) then
+self.data = urlencode(self.data)
+end
+return {'--body-data', "'"..self.data.."'"}
+end
+end
+
+function Request:_add_headers()
+local cmd = list()
+if is(self.headers) then
+for k, v in pairs(self.headers) do
+cmd:append("--header='"..k..': '..str(v).."'")
+end
+end
+return cmd
+end
+
+function Request:_add_proxies()
+if is(self.proxies) then
+local usr, pwd
+for k, v in pairs(self.proxies) do
+if isin('@', v) then usr, pwd = unpack(v:split('//')[2]:split('@')[1]:split(':')) end
+end
+end
+end
+
+function Request:_add_ssl()
+if not self.verify_ssl or (self.url:startswith('https') and self.verify_ssl) then
+return {'--no-check-certificate'}
+end
+end
+
+function Request:_add_user_agent()
+if is(self.user_agent) then
+return {'-U', self.user_agent}
+end
+end
+
+Response = class('Response')
+function Response:__init(request)
+assert(request, 'Cannot create response with no request')
+self.request = request or {}
+self.method = self.request.method
+self.url = self.request.url
+self.status_code = -1
+self.reason = ''
+self.text = ''
+self.encoding = 'utf-8'
+self.mime_type = 'text/html'
+self.headers = dict()
+self.ok = false
+end
+
+function Response:__tostring()
+return string.format('<Response [%d]>', self.status_code)
+end
+
+function Response:iter_lines()
+local i, v
+local lines = self.text:split('\n')
+return function() i, v = next(lines, i) return v end
+end
+
+function Response:json()
+return json.decode(self.text)
+end
+
+function Response:raise_for_status()
+if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
+end
+
+local _stall = {count = 0, last_check=0, last_colors={}, cyclers={}}
+screen = {
+before_action_funcs = set(),
+after_action_funcs = set(),
+before_check_funcs = set(),
+after_check_funcs = set(),
+before_tap_funcs = set(),
+after_tap_funcs = set(),
+nth_check_funcs = dict(),
+on_stall_funcs = set()
+}
+if Not.Nil(getScreenResolution) then
+screen.width, screen.height = getScreenResolution()
+else
+screen.width, screen.height = 200, 400
+end
+local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
+local function _log_action(condition, name, value)
+if screen.debug then
+_log('Creating check for\t\t: %s', condition)
+_log('%-10s - wait for\t\t: %s', name, value)
+end
+end
+
+screen.check_interval = 150000
+screen.stall_after_checks = 5
+screen.stall_after_checks_interval = 3 * 60
+screen.wait_before_action = 0
+screen.wait_after_action = 0
+screen.wait_before_tap = 0
+screen.wait_after_tap = 0
+screen.debug = false
+
+screen.edge = {
+top_left = Pixel(0, 0),                               -- x = 0, y = 0
+top_right = Pixel(screen.width, 0),                   -- x = screen.width, y = 0
+bottom_left = Pixel(0, screen.height),                -- x = 0, y = screen.height
+bottom_right = Pixel(screen.width, screen.height)     -- x = screen.width, y = screen.height
+}
+screen.mid = {
+left = Pixel(0, screen.height / 2),                   -- x = 0, y = screen.height / 2
+right = Pixel(screen.width, screen.height / 2),       -- x = screen.width, y = screen.height / 2
+top = Pixel(screen.width / 2, 0),                     -- x = screen.width / 2, y = 0
+bottom = Pixel(screen.width / 2, screen.height),      -- x = screen.width / 2, y = screen.height
+center = Pixel(screen.width / 2, screen.height / 2)   -- x = screen.width / 2, y = screen.height / 2
+}
+screen.stall_indicators = Pixels{
+-- TODO: add more pixels for screen recovery check
+screen.mid.center
+}
+
+
+local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
+
+sleep(before_wait)
+
+for func in iter(before_funcs) do
+func()
+end
+
+yield()
+
+for func in iter(after_funcs) do
+func()
+end
+
+sleep(after_wait)
+
+end)
+
+
+screen.action_context = contextmanager(function(condition)
+
+local ctx = create_context(
+screen.wait_before_action, screen.wait_after_action,
+screen.before_action_funcs, screen.after_action_funcs
+)
+
+with(ctx, function()
+
+local check
+local check_count = 0
+
+if is.func(condition) then
+check = function() return condition() end
+else
+check = function() return screen.contains(condition) end
+end
+
+yield(function()
+-- Run stalling escape procedures if screen is stalled
+if screen.is_stalled() then
+_log('Stall detected, number of same screens: %d', _stall.count)
+for func in iter(screen.on_stall_funcs) do
+func()
+end
+end
+
+for func in iter(screen.before_check_funcs) do
+func()
+end
+
+local result = check()
+check_count = check_count + 1
+_log('Check %d for condition\t\t: %s', check_count, result)
+
+for func in iter(screen.after_check_funcs) do
+func()
+end
+
+-- Run all functions registered to current check count
+for n, funcs in screen.nth_check_funcs:items() do
+if check_count == n then
+_log('Running nth_check functions after check %s', check_count)
+for func in iter(funcs) do func() end
+end
+end
+
+return result
+end)
+
+end)
+
+end)
+
+screen.tap_context = contextmanager(function()
+
+local ctx = create_context(
+screen.wait_before_tap, screen.wait_after_tap,
+screen.before_tap_funcs, screen.after_tap_funcs
+)
+
+with(ctx, function() yield() end)
+
+end)
+
+function screen.before_action(func)
+screen.before_action_funcs:add(func)
+end
+
+function screen.after_action(func)
+screen.after_action_funcs:add(func)
+end
+
+function screen.before_check(func)
+screen.before_check_funcs:add(func)
+end
+
+function screen.after_check(func)
+screen.after_check_funcs:add(func)
+end
+
+function screen.before_tap(func)
+screen.before_tap_funcs:add(func)
+end
+
+function screen.after_tap(func)
+screen.after_tap_funcs:add(func)
+end
+
+function screen.on_nth_check(n, func)
+if is.func(func) then func = {func} end
+if is.Nil(screen.nth_check_funcs[n]) then screen.nth_check_funcs[n] = list() end
+for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
+end
+
+
+function screen.on_stall(func, name)
+_stall.count = 0
+_stall.last_check = 0
+_stall.last_colors = {}
+local fs
+if is.func(func) then fs = list{func} else fs = list(func) end
+local key = div(hash(tostring(fs)), 1000000000)
+name = ' '..(name or key)
+_stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
+screen.on_stall_funcs:add(setmetatable({}, {
+__hash=function() return key end,
+__call=function()
+local func_to_run = _stall.cyclers[key].cycle()
+_log('Running stall recovery procedure%s: %d', name, fs:index(func_to_run))
+return func_to_run()
+-- return _stall.cyclers[key].cycle()()
+end
+}))
+end
+
+function screen.contains(pixel)
+return pixel:visible()
+end
+
+function screen.is_stalled()
+local current, previous
+local now = os.time()
+if now - _stall.last_check > screen.stall_after_checks_interval then
+_stall.last_check = now
+current = screen.stall_indicators.colors
+local result = false
+if requal(current, _stall.last_colors) then
+_stall.count = _stall.count + 1
+if _stall.count > screen.stall_after_checks then
+result = true
+end
+else
+_stall.count = 0
+for k, v in pairs(_stall.cyclers) do
+_stall.cyclers[k] = {cycle=itertools.cycle(iter(v.fs)), fs=v.fs}
+end
+end
+_stall.last_colors = current
+return result
+end
+
+return false
+end
+
+function screen.tap(x, y, times, interval)
+local pixel
+if isType(x, 'number') then
+pixel = Pixel(x, y)
+else
+pixel, times, interval = x, y, times
+end
+
+with(screen.tap_context(), function()
+for i=1, times or 1 do
+_log('Tap \t%5s, %5s', pixel.x, pixel.y)
+tap(pixel.x, pixel.y)
+usleep(10000)
+if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
+end
+end)
+
+return screen
+end
+
+
+function screen.tap_if(condition, to_tap)
+_log_action(condition, 'Tap if', 'true')
+with(screen.action_context(condition), function(check)
+
+if check() then
+screen.tap(to_tap or condition)
+end
+
+end)
+return screen
+end
+
+
+function screen.tap_until(condition, to_tap)
+_log_action(condition, 'Tap until', 'true')
+with(screen.action_context(condition), function(check)
+
+repeat
+screen.tap(to_tap or condition)
+usleep(screen.check_interval)
+until check()
+
+end)
+return screen
+end
+
+
+function screen.tap_while(condition, to_tap)
+_log_action(condition, 'Tap while', 'false')
+with(screen.action_context(condition), function(check)
+
+while check() do
+screen.tap(to_tap or condition)
+usleep(screen.check_interval)
+end
+
+end)
+return screen
+end
+
+
+function screen.swipe(start_, end_, speed)
+if is.str(start_) then
+assert(screen.mid[start_] or screen.edge[start_],
+'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+start_ = screen.mid[start_] or screen.edge[start_]
+end
+
+if is.str(end_) then
+assert(screen.mid[end_] or screen.edge[end_],
+'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
+end_ = screen.mid[end_] or screen.edge[end_]
+end
+
+return Path.linear(start_, end_):swipe{speed=speed}
+end
+
+
+function screen.wait(condition)
+_log_action(condition, 'Wait', 'true')
+with(screen.action_context(condition), function(check)
+
+repeat
+usleep(screen.check_interval)
+until check()
+
+end)
+return screen
+end
+
+
+function str_add(s, other) return s .. other end
+
+function str_call(s,i,j)
+if isType(i, 'number') then
+return string.sub(s, i, j or #s)
+elseif isType(i, 'table') then
+local t = {}
+for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
+return table.concat(t)
+end
+end
+
+function str_index(s, i) end
+
+function str_mul(s, other)
+local t = {}
+for i=1, other do t[i] = s end
+return table.concat(t)
+end
+
+function str_pairs(s)
+local function _iter(s, idx)
+if idx < #s then return idx + 1, s[idx + 1] end
+end
+return _iter, s, 0
+end
+
+_string = {
+endswith = function(s, value) return s(-#value, -1) == value end,
+
+format = function(s, ...)
+if Not.Nil(string.find(s, '{[^}]*}')) then
+local args; local modified = ''; local stringified = '';
+local index = 1; local length = 0; local pad = 0
+if is.table(...) then args = ... else args = {...} end
+
+local function formatter(prev, match)
+-- replace match
+if match == '' then
+stringified = str(args[index])
+elseif match:startswith(':') then
+length = tonumber(match(2))
+stringified = str(args[index])
+else
+for i, v in pairs(args) do if i == match then stringified = v end end
+end
+-- apply padding if any
+pad = math.max(0, math.abs(length) - #stringified)
+if length < 0 then modified = modified + prev + stringified + ' ' * pad
+else modified = modified + prev + ' ' *  pad + stringified end
+index = index + 1
+length = 0
+end
+
+s:gsub('(.-){([^}]*)}', formatter)
+return modified
+else return string.format(s, ...) end
+end,
+
+join = function(s, other) return table.concat(other, s) end,
+
+replace = function(s, sub, rep, limit)
+local _s, n = string.gsub(s, sub, rep, limit) return _s end,
+
+split = function(s, delim)
+local i = 1
+local idx = 1
+local values = {}
+
+while i <= #s do
+if is.Nil(delim) then values[i] = s[i]; i = i + 1
+else
+if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
+else
+if is.Nil(values[idx]) then values[idx] = '' end
+values[idx] = values[idx] .. s[i]
+end
+i = i + 1
+end
+end
+for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
+return list(values)
+end,
+
+startswith = function(s, value) return s(1, #value) == value end,
+
+strip = function(s, remove)
+local start=1
+local _end = #s
+for i=1, #s do if isnotin(s[i], remove) then start = i break end end
+for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
+return s(start, _end)
+end
+}
+
+
+getmetatable('').__add = str_add
+getmetatable('').__call = str_call
+getmetatable('').__ipairs = str_pairs
+getmetatable('').__mul = str_mul
+getmetatable('').__pairs = str_pairs
+getmetatable('').__index = function(s, i)
+if isType(i, 'number') then
+if i < 0 then i = #s + 1 + i end
+return string.sub(s, i, i)
+else
+return _string[i] or string[i]
+end
+end
+
+
+local function _getType(name)
+return exe(string.format(
+'if test -f "%s"; then echo "FILE"; elif test -d "%s"; then echo "DIR"; else echo "INVALID"; fi',
+name, name))
+end
+
+function get_cwd(file)
+return exe('pwd')
+end
+
+function exe(cmd, split_output)
+if is.Nil(split_output) then split_output = true end
+if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
+
+if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
+
+local f = assert(io.popen(cmd, 'r'))
+local data = readLines(f)
+local success, status, code = f:close()
+if split_output then
+if #data == 1 then data = data[1] end
+else
+data = table.concat(data, '\n')
+end
+
+if code ~= 0 then
+return data, status, code
+else
+return data or ''
+end
+end
+
+function fcopy(src, dest, overwrite)
+if is.Nil(overwrite) then overwrite = true end
+local cmd = list{'cp'}
+if isDir(src) then cmd:append('-R') end
+if not overwrite then cmd:append('-n') end
+cmd:extend{src, dest}
+exe(cmd)
+end
+
+function find(name, starting_directory)
+local _type = 'f'
+if is.table(name) then
+starting_directory = name.start
+if name.file or name.f then
+name = name.file or name.f
+_type = 'f'
+elseif name.dir or name.d then
+name = name.dir or name.d
+_type = 'd'
+else
+error('Incorrect table arguments ("file"/"f" or "dir"/"d" or "start")')
+end
+end
+return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
+end
+
+function isDir(name) return _getType(name) == 'DIR' end
+
+function isFile(name) return _getType(name) == 'FILE' end
+
+function listdir(dirname) return sorted(exe{'ls', dirname}) end
+
+function pathExists(path) return _getType(path) ~= 'INVALID' end
+
+function pathJoin(...)
+local values
+if is.table(...) then values = ... else values = {...} end
+local s = string.gsub(table.concat(values, '/'), '/+', '/')
+return s
+end
+
+function readLine(f, lineNumber)
+local lines = readLines(f)
+return lines[lineNumber]
+end
+
+function readLines(f)
+local lines = list()
+local function read(fle) for line in fle:lines() do lines:append(line) end end
+if is.str(f) then with(open(f, 'r'), read) else read(f) end
+if lines[#lines] == '' then lines[#lines] = nil end
+return lines
+end
+
+function sizeof(name, prepend_rootDir)
+if rootDir and not prepend_rootDir == false then
+name = pathJoin(rootDir(), name)
+end
+local f = assert(io.open(name))
+local size = tonumber(f:seek('end'))
+f:close()
+-- local result = exe(string.format('du %s', name))
+-- local size = 0
+-- for a in string.gmatch(result, "[0-9]*") do size = num(a); break end
+return size
+end
+
+function sleep(seconds)
+if seconds <= 0.01 then
+local current = os.clock()
+while os.clock() - current < seconds do end
+return
+end
+local time_ns = os.time()
+while (os.time() - time_ns) < seconds do
+io.popen('sleep 0.001'):close()
+end
+end
+
+function writeLine(line, lineNumber, filename)
+local lines = readLines(filename)
+lines[lineNumber] = line
+writeLines(lines, filename, 'w')
+end
+
+function writeLines(lines, filename, mode)
+local function write(f)
+for i, v in pairs(lines) do f:write(v .. '\n') end
+end
+with(open(filename, mode or 'w'), write)
+end
+
+
+function os.time()
+local f = io.popen('date +%s%N')
+local t = tonumber(f:read()) / 1000000000
+f:close()
+return t
 end
 
 local popen = io.popen
@@ -2294,1049 +3346,3 @@ _count.failed = _count.failed + 1
 _test_utils.insert_error(err, test_desc, group_desc)
 end
 end
-
-
-local function _getType(name)
-return exe(string.format(
-'if test -f "%s"; then echo "FILE"; elif test -d "%s"; then echo "DIR"; else echo "INVALID"; fi',
-name, name))
-end
-
-function get_cwd(file)
-return exe('pwd')
-end
-
-function exe(cmd, split_output)
-if is.Nil(split_output) then split_output = true end
-if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
-
-if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
-
-local f = assert(io.popen(cmd, 'r'))
-local data = readLines(f)
-local success, status, code = f:close()
-if split_output then
-if #data == 1 then data = data[1] end
-else
-data = table.concat(data, '\n')
-end
-
-if code ~= 0 then
-return data, status, code
-else
-return data or ''
-end
-end
-
-function fcopy(src, dest, overwrite)
-if is.Nil(overwrite) then overwrite = true end
-local cmd = list{'cp'}
-if isDir(src) then cmd:append('-R') end
-if not overwrite then cmd:append('-n') end
-cmd:extend{src, dest}
-exe(cmd)
-end
-
-function find(name, starting_directory)
-local _type = 'f'
-if is.table(name) then
-starting_directory = name.start
-if name.file or name.f then
-name = name.file or name.f
-_type = 'f'
-elseif name.dir or name.d then
-name = name.dir or name.d
-_type = 'd'
-else
-error('Incorrect table arguments ("file"/"f" or "dir"/"d" or "start")')
-end
-end
-return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
-end
-
-function isDir(name) return _getType(name) == 'DIR' end
-
-function isFile(name) return _getType(name) == 'FILE' end
-
-function listdir(dirname) return sorted(exe{'ls', dirname}) end
-
-function pathExists(path) return _getType(path) ~= 'INVALID' end
-
-function pathJoin(...)
-local values
-if is.table(...) then values = ... else values = {...} end
-local s = string.gsub(table.concat(values, '/'), '/+', '/')
-return s
-end
-
-function readLine(f, lineNumber)
-local lines = readLines(f)
-return lines[lineNumber]
-end
-
-function readLines(f)
-local lines = list()
-local function read(fle) for line in fle:lines() do lines:append(line) end end
-if is.str(f) then with(open(f, 'r'), read) else read(f) end
-if lines[#lines] == '' then lines[#lines] = nil end
-return lines
-end
-
-function sizeof(name)
-local result = exe(string.format('du %s', name))
-local size = 0
-for a in string.gmatch(result, "[0-9]*") do size = num(a); break end
-return size
-end
-
-function sleep(seconds)
-if seconds <= 0.01 then
-local current = os.clock()
-while os.clock() - current < seconds do end
-return
-end
-local time_ns = os.time()
-while (os.time() - time_ns) < seconds do
-io.popen('sleep 0.001'):close()
-end
-end
-
-function writeLine(line, lineNumber, filename)
-local lines = readLines(filename)
-lines[lineNumber] = line
-writeLines(lines, filename, 'w')
-end
-
-function writeLines(lines, filename, mode)
-local function write(f)
-for i, v in pairs(lines) do f:write(v .. '\n') end
-end
-with(open(filename, mode or 'w'), write)
-end
-
-
-function os.time()
-local f = io.popen('date +%s%N')
-local t = tonumber(f:read()) / 1000000000
-f:close()
-return t
-end
-
-
-local function namedRequality(name)
-return function(me, other)
-local mt = getmetatable(other)
-if mt and mt.__name == name then
-return requal(me, other)
-end
-return false
-end
-end
-
-dict = class('dict')
-
-function dict:__init(dct) self:update(dct or {}) end
-
-function dict:__add(other)
-local result = dict(self)
-result:update(other)
-return result
-end
-
-function dict:__call(...)
-assert(is.Nil(...), 'Dict can only be called in a for-loop')
-local key, value
-return function()
-key, value =  next(self, key, value)
-return key
-end
-end
-
-function dict:__eq(other) return namedRequality('dict')(self, other) end
-
-function dict:__setitem(key, value) self:set(key, value) end
-
-function dict:__ipairs() return self:__pairs() end
-
-function dict:__len() return 0 end
-
-function dict:__pairs()
-local function iter(value, key)
-key, value =  next(self, key, value)
-return key, value
-end
-return iter, self, nil
-end
-
-function dict:clear() for k, v in pairs(self) do self:set(k, nil) end end
-
-function dict:contains(key) return Not.Nil(rawget(self, key)) end
-
-function dict:get(key, default) return rawget(self, key) or default end
-
-function dict:items() return pairs(self) end
-
-function dict:keys()
-local ks = list()
-for k in self() do ks:append(k) end
-return sorted(ks)
-end
-
-function dict:pop(key, default)
-if key then
-result = rawget(self, key) or default
-rawset(self, key, nil)
-return result
-else
-local k, v = pairs(self)(self)
-rawset(self, k, nil)
-return v
-end
-end
-
-function dict:set(key, value) rawset(self, key, value) end
-
-function dict:update(other) for k, v in pairs(other) do self:set(k, v) end end
-
-function dict:values()
-local vs = list()
-for k, v in pairs(self) do vs:append(v) end
-return vs
-end
-
-
-list = class('list')
-
-
-function list:__init(lst)
-if is.table(lst) then self:extend(lst) end
-end
-
-function list:__add(other) local new = list(self); new:extend(other); return new end
-
-function list:__call(start, _end, step)
-local key, value
-local slice = list()
-
-if is.Nil(start or _end or step) then  -- no arguements -> for loop
-return function()
-key, value =  next(self, key, value)
-return value
-end
-else -- arguments -> slice
-_end = _end or #self
-if _end < 0 and not step then _end = #self + 1 + _end end
-if is.table(start) then for i, v in pairs(start) do slice:append(self[v]) end
-else for i=start, _end, step or 1 do slice:append(self[i]) end end
-return slice
-end
-end
-
-function list:__eq(other) return namedRequality('list')(self, other) end
-
-function list:__len() return len(self) end
-
-function list:__getitem(value)
-if is.str(value) then return rawget(list, value)
-else
-if sign(value) < 0 then value = #self + 1 + value end
-return rawget(self, value) end
-end
-
-function list:__mul(n)
-local result = list()
-for i=1, n do result:extend(self) end
-return result
-end
-
-function list:append(value) rawset(self, #self + 1, value) end
-
-function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
-
-function list:contains(value)
-for i, v in pairs(self) do if requal(v, value) then return true end end
-return false
-end
-
-function list:extend(values) for i, v in pairs(values) do self:append(v) end end
-
-function list:index(value) for i, v in pairs(self) do if requal(v, value) then return i end end end
-
-function list:insert(index, value)
-for i=#self, index, -1 do rawset(self, i + 1, rawget(self, i)) end
-rawset(self, index, value)
-end
-
-function list:pop(index)
-local value = rawget(self, index or 1)
-for i=index or 1, #self do rawset(self, i, rawget(self, i + 1)) end
-return value
-end
-
-function list:remove(value) local _ = self:pop(self:index(value)) end
-
-
-set = class('set')
-
-function set:__init(s)
-self:update(s or {})
-end
-
-function set:__add(other)
-local new = set(self)
-new:update(other)
-return new
-end
-
-function set:__call(...)
-assert(is.Nil(...), 'Set can only be called in a for-loop')
-local key, value
-return function()
-key, value =  next(self, key, value)
-return value
-end
-end
-
-function set:__eq(other) return namedRequality('set')(self, other) end
-
-function set:__len() return 0 end
-
-function set:__pairs()
-local function iter(value, key)
-return next(self, key, value)
-end
-return iter, self, nil
-end
-
-function set:__sub(other) return self:difference(other) end
-
-
-function set:add(value)
-if Not.Nil(value) then rawset(self, str(hash(value)), value) end end
-
-function set:clear() for v in self() do self:remove(v) end end
-
-function set:contains(value) return Not.Nil(rawget(self, str(hash(value)))) end
-
-function set:difference(other)
-local vs = set()
-for v in self() do
-if is.Nil(rawget(other, str(hash(v)))) then vs:add(v) end
-end
-return vs
-end
-
-function set:pop(value)
-if value then
-self:remove(value)
-return value
-else
-local k, v = pairs(self)(self)
-rawset(self, k, nil)
-return v
-end
-end
-
-function set:remove(value) rawset(self, str(hash(value)), nil) end
-
-function set:update(other) for _, v in pairs(other) do self:add(v) end end
-
-function set:values()
-local result = {}
-for v in self() do result[#result + 1] = v end
-return result
-end
-
-
-local function add_locations(locations, other, relative)
-if (relative and other[1].x == 0 and other[1].y == 0) or (locations[-1].x == other[1].x and locations[-1].y == other[1].y) then
-other = other(2, nil)
-end
-local x, y
-local new_locations = list()
-for loc in iter(other) do
-x, y = loc.x, loc.y
-if relative then
-x, y = x + locations[-1].x, y + locations[-1].y
-end
-new_locations:append({x=x, y=y})
-end
-return locations + new_locations
-end
-
-
-Path = class('Path')
-
-function Path:__init(locations)
-self.locations = list(locations or {})
-self.point_count = len(locations)
-self.duration = self.point_count * 0.016
-self.absolute = true
-end
-
-function Path:__add(other)
-assert(other:isinstance(Path), 'Can only add Path objects to other Path objects')
-if len(self.locations) + len(other.locations) == 0 then return Path() end
-if len(self.locations) == 0 then self.locations:append(other.locations[1]) end
-return Path(add_locations(self.locations, other.locations, not other.absolute))
-end
-
-function Path:__index(key)
-if is.num(key) then return self.locations[key] end
-return class('').__index(self, key)
-end
-
-function Path:__newindex(key, value)
-if is.num(key) then self.locations[key] = value end
-class('').__newindex(self, key, value)
-end
-
-function Path:__pairs()
-return pairs(self.locations)
-end
-
-function Path:__tostring()
-return string.format('<%s(points=%s, duration=%.2fs)>', getmetatable(self).__name, len(self.locations), self.duration)
-end
-
-
-function Path:begin_swipe(fingerID, speed)
-assert(speed and speed >= 1 and speed <= 10, 'speed '..speed..' is not in range 1-10')
-touchDown(fingerID or 2, self.locations[1].x, self.locations[1].y)
-usleep(16000)
-self.cancelled = false
-self.speed = speed or 5
-self.idx = self.speed + 1
-end
-
-function Path:step(fingerID, on_move)
-if is.Nil(on_move) then on_move = function() end end
-if is.Nil(self.idx) then error('Cannot step a path before begin_swipe has been called') end
-if self.idx < len(self.locations) and not self.cancelled then
-touchMove(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
-self.idx = math.min(len(self.locations), self.idx + self.speed)
-usleep(16000)
-if on_move() == true then return true end
-return false
-else
-touchUp(fingerID or 2, self.locations[self.idx].x, self.locations[self.idx].y)
-self.idx = nil
-self.cancelled = nil
-self.speed = nil
-return true
-end
-end
-
-function Path:swipe(options)
-with(screen.action_context(function() return true end), function(check)
-self:begin_swipe(options.fingerID, options.speed)
-local done = false
-while not done do
-done = self:step(options.fingerID, options.on_move)
-end
-end)
-return screen
-end
-
-function Path.arc(radius, start_angle, end_angle, center)
-
--- Angle = 0 -> start_angle if no end_angle specified
-if not end_angle then
-start_angle, end_angle = 0, start_angle
-end
-
-local absolute = true
--- Relative path if no center specified
-if not center then
--- TODO: make relative arc center adaptive to radius and angles
-center = {x=0, y=0}
-absolute = false
-end
-
-local function radians(a) return a / 360 * 2 * math.pi end
--- TODO: Better arc step resolution (for arcs with large radius)
-local steps = abs(end_angle - start_angle)
-local deltaTheta = (radians(end_angle) - radians(start_angle)) / steps
-local theta = radians(start_angle)
-
-local function angle_to_pos(angle)
-return {x=center.x + radius * math.cos(angle), y=center.y + radius * math.sin(angle)}
-end
-
-local path = list{angle_to_pos(theta)}
-for i=1, steps do
-theta = theta + deltaTheta
-path:append(angle_to_pos(theta))
-end
-if absolute then return Path(path) else return RelativePath(path) end
-end
-
-function Path.linear(start_pixel, end_pixel)
--- Relative path if only one pixel specified
-local absolute = true
-if not end_pixel then
-start_pixel, end_pixel = {x=0, y=0}, start_pixel
-absolute = false
-end
-local distanceX = end_pixel.x - start_pixel.x
-local distanceY = end_pixel.y - start_pixel.y
-local steps = math.min(50, math.max(math.abs(distanceX), math.abs(distanceY)))
-local x, y = start_pixel.x, start_pixel.y
-local deltaX = distanceX / steps
-local deltaY = distanceY / steps
-local path = list{{x=x, y=y}}
-for i=1, steps do
-x = x + deltaX
-y = y + deltaY
-path:append({x=x, y=y})
-end
-if absolute then return Path(path) else return RelativePath(path) end
-end
-
-
-RelativePath = class('RelativePath', 'Path')
-
-function RelativePath:__init(locations)
-Path.__init(self, locations)
-self.absolute = false
-end
-
-
-function RelativePath:__add(other)
-assert(other:isinstance(RelativePath), 'Can only add RelativePath objects to other RelativePath objects')
-return RelativePath(add_locations(self.locations, other.locations, true))
-end
-
-local _stall = {count = 0, last_check=0, last_colors={}, cyclers={}}
-screen = {
-before_action_funcs = set(),
-after_action_funcs = set(),
-before_check_funcs = set(),
-after_check_funcs = set(),
-before_tap_funcs = set(),
-after_tap_funcs = set(),
-nth_check_funcs = dict(),
-on_stall_funcs = set()
-}
-if Not.Nil(getScreenResolution) then
-screen.width, screen.height = getScreenResolution()
-else
-screen.width, screen.height = 200, 400
-end
-local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
-local function _log_action(condition, name, value)
-if screen.debug then
-_log('Creating check for\t\t: %s', condition)
-_log('%-10s - wait for\t\t: %s', name, value)
-end
-end
-
-screen.check_interval = 150000
-screen.stall_after_checks = 5
-screen.stall_after_checks_interval = 3 * 60
-screen.wait_before_action = 0
-screen.wait_after_action = 0
-screen.wait_before_tap = 0
-screen.wait_after_tap = 0
-screen.debug = false
-
-screen.edge = {
-top_left = Pixel(0, 0),                               -- x = 0, y = 0
-top_right = Pixel(screen.width, 0),                   -- x = screen.width, y = 0
-bottom_left = Pixel(0, screen.height),                -- x = 0, y = screen.height
-bottom_right = Pixel(screen.width, screen.height)     -- x = screen.width, y = screen.height
-}
-screen.mid = {
-left = Pixel(0, screen.height / 2),                   -- x = 0, y = screen.height / 2
-right = Pixel(screen.width, screen.height / 2),       -- x = screen.width, y = screen.height / 2
-top = Pixel(screen.width / 2, 0),                     -- x = screen.width / 2, y = 0
-bottom = Pixel(screen.width / 2, screen.height),      -- x = screen.width / 2, y = screen.height
-center = Pixel(screen.width / 2, screen.height / 2)   -- x = screen.width / 2, y = screen.height / 2
-}
-screen.stall_indicators = Pixels{
--- TODO: add more pixels for screen recovery check
-screen.mid.center
-}
-
-
-local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
-
-sleep(before_wait)
-
-for func in iter(before_funcs) do
-func()
-end
-
-yield()
-
-for func in iter(after_funcs) do
-func()
-end
-
-sleep(after_wait)
-
-end)
-
-
-screen.action_context = contextmanager(function(condition)
-
-local ctx = create_context(
-screen.wait_before_action, screen.wait_after_action,
-screen.before_action_funcs, screen.after_action_funcs
-)
-
-with(ctx, function()
-
-local check
-local check_count = 0
-
-if is.func(condition) then
-check = function() return condition() end
-else
-check = function() return screen.contains(condition) end
-end
-
-yield(function()
--- Run stalling escape procedures if screen is stalled
-if screen.is_stalled() then
-_log('Stall detected, number of same screens: %d', _stall.count)
-for func in iter(screen.on_stall_funcs) do
-func()
-end
-end
-
-for func in iter(screen.before_check_funcs) do
-func()
-end
-
-local result = check()
-check_count = check_count + 1
-_log('Check %d for condition\t\t: %s', check_count, result)
-
-for func in iter(screen.after_check_funcs) do
-func()
-end
-
--- Run all functions registered to current check count
-for n, funcs in screen.nth_check_funcs:items() do
-if check_count == n then
-_log('Running nth_check functions after check %s', check_count)
-for func in iter(funcs) do func() end
-end
-end
-
-return result
-end)
-
-end)
-
-end)
-
-screen.tap_context = contextmanager(function()
-
-local ctx = create_context(
-screen.wait_before_tap, screen.wait_after_tap,
-screen.before_tap_funcs, screen.after_tap_funcs
-)
-
-with(ctx, function() yield() end)
-
-end)
-
-function screen.before_action(func)
-screen.before_action_funcs:add(func)
-end
-
-function screen.after_action(func)
-screen.after_action_funcs:add(func)
-end
-
-function screen.before_check(func)
-screen.before_check_funcs:add(func)
-end
-
-function screen.after_check(func)
-screen.after_check_funcs:add(func)
-end
-
-function screen.before_tap(func)
-screen.before_tap_funcs:add(func)
-end
-
-function screen.after_tap(func)
-screen.after_tap_funcs:add(func)
-end
-
-function screen.on_nth_check(n, func)
-if is.func(func) then func = {func} end
-if is.Nil(screen.nth_check_funcs[n]) then screen.nth_check_funcs[n] = list() end
-for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
-end
-
-
-function screen.on_stall(func, name)
-_stall.count = 0
-_stall.last_check = 0
-_stall.last_colors = {}
-local fs
-if is.func(func) then fs = list{func} else fs = list(func) end
-local key = div(hash(tostring(fs)), 1000000000)
-name = ' '..(name or key)
-_stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
-screen.on_stall_funcs:add(setmetatable({}, {
-__hash=function() return key end,
-__call=function()
-local func_to_run = _stall.cyclers[key].cycle()
-_log('Running stall recovery procedure%s: %d', name, fs:index(func_to_run))
-return func_to_run()
--- return _stall.cyclers[key].cycle()()
-end
-}))
-end
-
-function screen.contains(pixel)
-return pixel:visible()
-end
-
-function screen.is_stalled()
-local current, previous
-local now = os.time()
-if now - _stall.last_check > screen.stall_after_checks_interval then
-_stall.last_check = now
-current = screen.stall_indicators.colors
-local result = false
-if requal(current, _stall.last_colors) then
-_stall.count = _stall.count + 1
-if _stall.count > screen.stall_after_checks then
-result = true
-end
-else
-_stall.count = 0
-for k, v in pairs(_stall.cyclers) do
-_stall.cyclers[k] = {cycle=itertools.cycle(iter(v.fs)), fs=v.fs}
-end
-end
-_stall.last_colors = current
-return result
-end
-
-return false
-end
-
-function screen.tap(x, y, times, interval)
-local pixel
-if isType(x, 'number') then
-pixel = Pixel(x, y)
-else
-pixel, times, interval = x, y, times
-end
-
-with(screen.tap_context(), function()
-for i=1, times or 1 do
-_log('Tap \t%5s, %5s', pixel.x, pixel.y)
-tap(pixel.x, pixel.y)
-usleep(10000)
-if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
-end
-end)
-
-return screen
-end
-
-
-function screen.tap_if(condition, to_tap)
-_log_action(condition, 'Tap if', 'true')
-with(screen.action_context(condition), function(check)
-
-if check() then
-screen.tap(to_tap or condition)
-end
-
-end)
-return screen
-end
-
-
-function screen.tap_until(condition, to_tap)
-_log_action(condition, 'Tap until', 'true')
-with(screen.action_context(condition), function(check)
-
-repeat
-screen.tap(to_tap or condition)
-usleep(screen.check_interval)
-until check()
-
-end)
-return screen
-end
-
-
-function screen.tap_while(condition, to_tap)
-_log_action(condition, 'Tap while', 'false')
-with(screen.action_context(condition), function(check)
-
-while check() do
-screen.tap(to_tap or condition)
-usleep(screen.check_interval)
-end
-
-end)
-return screen
-end
-
-
-function screen.swipe(start_, end_, speed)
-if is.str(start_) then
-assert(screen.mid[start_] or screen.edge[start_],
-'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
-start_ = screen.mid[start_] or screen.edge[start_]
-end
-
-if is.str(end_) then
-assert(screen.mid[end_] or screen.edge[end_],
-'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
-end_ = screen.mid[end_] or screen.edge[end_]
-end
-
-return Path.linear(start_, end_):swipe{speed=speed}
-end
-
-
-function screen.wait(condition)
-_log_action(condition, 'Wait', 'true')
-with(screen.action_context(condition), function(check)
-
-repeat
-usleep(screen.check_interval)
-until check()
-
-end)
-return screen
-end
-
-local pairs, ipairs, t_sort = pairs, ipairs, table.sort
-local co_yield, co_wrap = coroutine.yield, coroutine.wrap
-local co_resume = coroutine.resume
-itertools = {}
-
-function itertools.values (table)
-return co_wrap(function ()
-for _, v in pairs(table) do
-co_yield(v)
-end
-end)
-end
-
-function itertools.each (table)
-return co_wrap(function ()
-for _, v in ipairs(table) do
-co_yield(v)
-end
-end)
-end
-
-function itertools.collect (iterable)
-local t, n = {}, 0
-for element in iterable do
-n = n + 1
-t[n] = element
-end
-return t, n
-end
-
-function itertools.count (n, step)
-if n == nil then n = 1 end
-if step == nil then step = 1 end
-return co_wrap(function ()
-while true do
-co_yield(n)
-n = n + step
-end
-end)
-end
-
-function itertools.cycle (iterable)
-local saved = {}
-local nitems = 0
-return co_wrap(function ()
-for element in iterable do
-co_yield(element)
-nitems = nitems + 1
-saved[nitems] = element
-end
-while nitems > 0 do
-for i = 1, nitems do
-co_yield(saved[i])
-end
-end
-end)
-end
-
-function itertools.value (value, times)
-if times then
-return co_wrap(function ()
-while times > 0 do
-times = times - 1
-co_yield(value)
-end
-end)
-else
-return co_wrap(function ()
-while true do co_yield(value) end
-end)
-end
-end
-
-function itertools.islice (iterable, start, stop)
-if start == nil then
-start = 1
-end
-return co_wrap(function ()
-if stop ~= nil and stop - start < 1 then
-return
-end
-
-local current = 0
-for element in iterable do
-current = current + 1
-if stop ~= nil and current > stop then
-return
-end
-if current >= start then
-co_yield(element)
-end
-end
-end)
-end
-
-function itertools.takewhile (predicate, iterable)
-return co_wrap(function ()
-for element in iterable do
-if predicate(element) then
-co_yield(element)
-else
-break
-end
-end
-end)
-end
-
-function itertools.map (func, iterable)
-return co_wrap(function ()
-for element in iterable do
-co_yield(func(element))
-end
-end)
-end
-
-function itertools.filter (predicate, iterable)
-return co_wrap(function ()
-for element in iterable do
-if predicate(element) then
-co_yield(element)
-end
-end
-end)
-end
-
-local function make_comp_func(key)
-if key == nil then
-return nil
-end
-return function (a, b)
-return key(a) < key(b)
-end
-end
-
-local _collect = itertools.collect
-
-function itertools.sorted (iterable, key, reverse)
-local t, n = _collect(iterable)
-t_sort(t, make_comp_func(key))
-if reverse then
-return co_wrap(function ()
-for i = n, 1, -1 do co_yield(t[i]) end
-end)
-else
-return co_wrap(function ()
-for i = 1, n do co_yield(t[i]) end
-end)
-end
-end
-
-iter = itertools.values
-
-
-
-TransitionTree = class('TransitionTree')
-
-function TransitionTree:__init(name, parent, forward, backward)
-self.name = name or 'root'
-self.parent = parent
-if is.Nil(backward) then self.backward = forward
-else
-self.forward = forward
-self.backward = backward
-end
-self.nodes = {}
-end
-
-function TransitionTree:__index(value)
-return rawget(TransitionTree, value) or rawget(self, value) or self.nodes[value]
-end
-
-function TransitionTree:add(name, forward, backward)
-self.nodes[name] = TransitionTree(name, self, forward, backward)
-end
-
-function TransitionTree:path_to_root()
-local path = list{self}
-local parent = self.parent
-while Not.Nil(parent) do
-path:append(parent)
-parent = parent.parent
-end
-return path
-end
-
-function TransitionTree:path_to(name)
-local q = list()
-for i, v in pairs(self.nodes) do q:append({i, v}) end
-local item
-while len(q) > 0 do
-item = q:pop(1)
-for i, v in pairs(item[2].nodes) do q:append({i, v}) end
-if item[1] == name then return reversed(item[2]:path_to_root()) end
-end
-end
-
-function TransitionTree:lca(name1, name2)
-local lca = 'root'
-local v1, v2
-local path1, path2 = self:path_to(name1), self:path_to(name2)
-for i=2, math.min(len(path1), len(path2)) do
-v1, v2 = path1[i], path2[i]
-if v1.name == v2.name then lca = v1.name; break end
-if v1.parent ~= v2.parent then break else lca = v1.parent.name end
-end
-return lca
-end
-
-function TransitionTree:navigate(start, _end)
-local counting = false
-local lca = self:lca(start, _end)
-local path1, path2 = reversed(self:path_to(start)), self:path_to(_end)
-for i, v in pairs(path1) do
-if v.name == lca then break end
-v.backward()
-end
-
-for i, v in pairs(path2) do
-if counting then v.forward() end
-if v.name == lca then counting = true end
-end
-end
-
-
-
-Navigator = class('Navigator')
