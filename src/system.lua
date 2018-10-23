@@ -136,7 +136,7 @@ end
 -- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 -- @treturn number size of file/directory at path in bytes
 function sizeof(name, prepend_rootDir) 
-  if rootDir and not prepend_rootDir == false then name = pathJoin(rootDir(), name) end
+  if rootDir and not (prepend_rootDir == false) then name = pathJoin(rootDir(), name) end
   local f = assert(io.open(name))
   local size = tonumber(f:seek('end'))
   f:close()

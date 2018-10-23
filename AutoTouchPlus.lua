@@ -366,7 +366,7 @@ if count ~= #input then all_int = false end
 custom = custom or all_int
 
 local pre, suf = '{', '}'
-if input == list(input) then  pre, suf = '[', ']' end
+if custom and m and m.__name == 'list' then  pre, suf = '[', ']' end
 local s = pre
 for i, v in pairs(input) do
 if s ~= pre then s = s .. ', ' end
@@ -2863,15 +2863,10 @@ return lines
 end
 
 function sizeof(name, prepend_rootDir)
-if rootDir and not prepend_rootDir == false then
-name = pathJoin(rootDir(), name)
-end
+if rootDir and not (prepend_rootDir == false) then name = pathJoin(rootDir(), name) end
 local f = assert(io.open(name))
 local size = tonumber(f:seek('end'))
 f:close()
--- local result = exe(string.format('du %s', name))
--- local size = 0
--- for a in string.gmatch(result, "[0-9]*") do size = num(a); break end
 return size
 end
 

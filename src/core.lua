@@ -464,7 +464,7 @@ function _string_converters.table2string(input)
   custom = custom or all_int   
   
   local pre, suf = '{', '}'
-  if input == list(input) then  pre, suf = '[', ']' end
+  if custom and m and m.__name == 'list' then  pre, suf = '[', ']' end
   local s = pre
   for i, v in pairs(input) do
     if s ~= pre then s = s .. ', ' end
