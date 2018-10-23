@@ -4,7 +4,7 @@ local BASE_URL = "https://raw.githubusercontent.com/sentrip/AutoTouchPlus/master
 
 
 function get(name)
-  local pth = rootDir()..name
+  local pth = string.format('%s/%s', rootDir(), name):gsub('/+', '/')
   local _check = "if test -f "..pth.." ; then rm "..pth.."; fi;"
   local _get = table.concat({"wget", "--no-check-certificate", BASE_URL..name, "-O", pth}, " ")
   io.popen(_check):close()

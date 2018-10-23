@@ -105,7 +105,13 @@ function Request:__init(request)
   self.headers = dict(self.headers or dict())
   self.method = request.method or "GET"
   self.url = request.url or request[1] or ''
-  self._response_fn = '_response.txt'
+  -- luacov: disable
+  if rootDir then
+    self._response_fn = pathJoin(rootDir(), '_response.txt')
+  else
+    self._response_fn = '_response.txt'
+  end
+  -- luacov: enable
 end
 ---
 
