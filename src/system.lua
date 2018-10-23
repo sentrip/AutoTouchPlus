@@ -26,7 +26,7 @@ function exe(cmd, split_output)
   if is.Nil(split_output) then split_output = true end
   if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
   
-  if rootDir then cmd = 'cd '..rootDir()..'; '..cmd end
+  if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
   
   local f = assert(io.popen(cmd, 'r'))
   local data = readLines(f)

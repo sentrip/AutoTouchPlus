@@ -36,9 +36,8 @@ fixture('patched_wget', function(monkeypatch, request)
         stdout = '--2018-10-20 04:29:38--  https://httpbin.org/basic-auth/name/password\nResolving httpbin.org (httpbin.org)... 52.44.92.122, 52.4.75.11, 52.45.111.123, ...\nConnecting to httpbin.org (httpbin.org)|52.44.92.122|:443... connected.\nHTTP request sent, awaiting response... 401 UNAUTHORIZED\nAuthentication selected: Basic realm=\"Fake Realm\"\nReusing existing connection to httpbin.org:443.\nHTTP request sent, awaiting response... 200 OK\nLength: 47 [application/json]\nSaving to: ‘_response.txt’\n     0K                                                       100% 8,17M=0s\n2018-10-20 04:29:39 (8,17 MB/s) - ‘_response.txt’ saved [47/47]'
         response_data = '{\n          "authenticated": true,\n          "user": "name"\n        }'
       end
-      local root_dir = ''
-      if rootDir then root_dir = rootDir() end
-      local f = io.open(root_dir..output, 'w')
+      if rootDir then output = pathJoin(rootDir(), output) end
+      local f = io.open(output, 'w')
       f:write(response_data)
       f:close()
       return stdout:split('\n')
