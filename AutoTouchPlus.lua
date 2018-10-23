@@ -773,9 +773,9 @@ local response = Response(self)
 try(function()
 local lines = exe(cmd)
 
-local f = assert(io.open(self._response_fn))
-response.text = f:read('*a')
-f:close()
+local response_f = assert(io.open(self._response_fn))
+response.text = response_f:read('*a')
+response_f:close()
 
 try(function() parse_data(lines, self, response) end)
 
@@ -2310,7 +2310,7 @@ function exe(cmd, split_output)
 if is.Nil(split_output) then split_output = true end
 if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
 
-if rootDir then cmd = 'cd '..rootDir()..'; '..cmd end
+if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
 
 local f = assert(io.popen(cmd, 'r'))
 local data = readLines(f)
@@ -2823,7 +2823,7 @@ screen.width, screen.height = getScreenResolution()
 else
 screen.width, screen.height = 200, 400
 end
-local function _log(msg, ...) if screen.debug then print(string.format('[ screen.lua ] '..msg, ...)) end end
+local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
 local function _log_action(condition, name, value)
 if screen.debug then
 _log('Creating check for\t\t: %s', condition)

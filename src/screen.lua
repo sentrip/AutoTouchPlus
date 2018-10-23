@@ -18,7 +18,7 @@ if Not.Nil(getScreenResolution) then
 else
   screen.width, screen.height = 200, 400
 end
-local function _log(msg, ...) if screen.debug then print(string.format('[ screen.lua ] '..msg, ...)) end end
+local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
 local function _log_action(condition, name, value)
   if screen.debug then
     _log('Creating check for\t\t: %s', condition)
