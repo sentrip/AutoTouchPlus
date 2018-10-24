@@ -125,9 +125,10 @@ end
 -- @treturn table strings of each line with the newline character removed
 function readLines(f) 
   local lines = list()
-  local function read(fle) for line in fle:lines() do lines:append(line) end return fle end
-  if is.file(f) then read(f) else read(assert(io.open(f, 'r'))):close() end
-  if lines[#lines] == '' then lines[#lines] = nil end
+  local is_file = is.file(f)
+  if not is_file then f = assert(io.open(f, 'r')) end
+  for line in f:lines() do lines:append(line) end 
+  if not is_file then assert(f:close()) end
   return lines
 end
 
@@ -172,10 +173,9 @@ end
 -- @tparam string filename name of file to write to
 -- @tparam string mode write mode (uses same argument as io.open)
 function writeLines(lines, filename, mode) 
-  local function write(f) 
-    for i, v in pairs(lines) do f:write(v .. '\n') end 
-  end
-  with(open(filename, mode or 'w'), write) 
+  local f = assert(io.open(filename, mode or 'w'))
+  for i, v in pairs(lines) do f:write(v .. '\n') end 
+  assert(f:close())
 end
 
 

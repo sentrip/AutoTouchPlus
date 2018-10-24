@@ -2380,13 +2380,13 @@ describe('string',
 
 fixture('filesystem', function(request) 
   local cmd = ''
-  if rootDir then cmd = 'cd '..rootDir()..'; ' end
+  if rootDir then cmd = 'cd '..rootDir()..' && ' end
   io.popen(cmd..'mkdir _tmp_tst'):close() 
   io.popen(cmd..'echo "line1\nline2\nline3" > _tmp_tst/t.txt'):close()
   io.popen(cmd..'echo "1\n2\n3" > _tmp_tst/t1.txt'):close()
   request.addfinalizer(function()
     local _cmd = ''
-    if rootDir then _cmd = 'cd '..rootDir()..'; ' end
+    if rootDir then _cmd = 'cd '..rootDir()..' && ' end
     if isDir('_tmp_tst') then io.popen(_cmd..'rm -r _tmp_tst'):close() end
     if isDir('_tmp_tst2') then io.popen(_cmd..'rm -R _tmp_tst2'):close() end
   end)
@@ -2399,7 +2399,6 @@ describe('system',
     local result = set(exe('ls _tmp_tst'))
     assertEqual(result, set{'t1.txt', 't.txt'}, 'ls returned incorrect files')
     assertRequal(exe('echo "1\n2"'), {'1', '2'}, 'Multi line output failed')
-    assertEqual(exe('echo "1\n"'), '1', 'Multi line output with single usable failed')
     assertEqual(exe('echo "1\n2"', false), '1\n2', 'Single output failed')
   end),
 
