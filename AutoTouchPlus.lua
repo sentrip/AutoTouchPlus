@@ -734,7 +734,15 @@ end),
 function() context:__exit(error_type, error_message) end
 )
 end
-coroutine.resume(ctx)
+-- TODO: find out why this is not deterministic
+local exit_success, exit_err
+while coroutine.status(ctx) ~= 'dead' do
+exit_success, exit_err = coroutine.resume(ctx)
+if not exit_success then
+exit_err = exit_err or 'Exiting with block failed with unknown error'
+error(exit_err)
+end
+end
 end
 
 
@@ -760,7 +768,6 @@ f:close()
 end
 
 
-
 function run_and_close(name, close_after)
 if close_after ~= false then close_after = true end
 if appState(name) ~= "NOT RUNNING" then appKill(name) end
@@ -768,6 +775,8 @@ appRun(name)
 yield()
 if close_after then appKill(name) end
 end
+
+
 function run_if_closed(name)
 local run_kill = false
 if appState(name) ~= "ACTIVE" then
@@ -779,7 +788,6 @@ yield()
 if run_kill then appKill(name) end
 
 end
-
 
 
 function suppress(...)
@@ -835,11 +843,11 @@ end
 
 function ContextManager:__exit(_type, value)
 if _type then
-value = Exception(_type, value).message
+value = Exception(_type, value)
 else
 value = _type or value
 end
-if value then error(value) end
+if value then error(tostring(value)) end
 end
 
 
@@ -857,7 +865,6 @@ end
 function Exception:__repr()
 return tostring(self)
 end
-
 
 function Exception:__call(message)
 return Exception(self.type, message)
@@ -2856,8 +2863,8 @@ end
 
 function readLines(f)
 local lines = list()
-local function read(fle) for line in fle:lines() do lines:append(line) end end
-if is.str(f) then with(open(f, 'r'), read) else read(f) end
+local function read(fle) for line in fle:lines() do lines:append(line) end return fle end
+if is.file(f) then read(f) else read(assert(io.open(f, 'r'))):close() end
 if lines[#lines] == '' then lines[#lines] = nil end
 return lines
 end

@@ -79,7 +79,15 @@ function with(context, _do)
       function() context:__exit(error_type, error_message) end
     )
   end
-  coroutine.resume(ctx)
+  -- TODO: find out why this is not deterministic
+  local exit_success, exit_err
+  while coroutine.status(ctx) ~= 'dead' do
+    exit_success, exit_err = coroutine.resume(ctx)
+    if not exit_success then 
+      exit_err = exit_err or 'Exiting with block failed with unknown error'
+      error(exit_err) 
+    end
+  end
 end
 
 
@@ -112,7 +120,6 @@ function open(name, mode)
 end
 
 
-
 ---- Run a clean copy of an app and close it after
 -- @param name 
 -- @param close_after
@@ -123,6 +130,8 @@ function run_and_close(name, close_after)
   yield()
   if close_after then appKill(name) end
 end
+
+
 ---- Run an app and close it after if it is not already running
 -- @param name 
 function run_if_closed(name)
@@ -136,7 +145,6 @@ function run_if_closed(name)
   if run_kill then appKill(name) end
 
 end
-
 
 
 ---- Suppress exceptions of a given type
@@ -206,11 +214,11 @@ end
 -- @param value
 function ContextManager:__exit(_type, value) 
   if _type then 
-    value = Exception(_type, value).message 
+    value = Exception(_type, value)
   else
     value = _type or value
   end
-  if value then error(value) end
+  if value then error(tostring(value)) end
 end
   
 
@@ -233,7 +241,6 @@ end
 function Exception:__repr()
   return tostring(self)
 end
-
 
 function Exception:__call(message)
   return Exception(self.type, message)

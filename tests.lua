@@ -230,22 +230,78 @@ describe('contextlib',
     assertEqual(l, list{1,2,3}, 'with contextmanager: incorrect execution order')
   end),
 
+  it('contextmanager error', function() 
+    local l = list()
+    local fails = contextmanager(function(b) 
+      l:append(1)
+      yield(b)
+      error('Damn')
+      l:append(3)
+      end)
+    assertRaises('Damn', function() 
+      with(fails('v'), function(v) 
+        l:append(2)
+      end)
+    end, 'Contextmanager did not error')
+    assertEqual(l, list{1, 2}, 'Did not run erroring contextmanager correctly')
+  end),
+
+  it('nested contextmanager', function() 
+    local l = list()
+    local inner = contextmanager(function(b) 
+      l:append('inner enter')
+      yield(b)
+      l:append('inner exit')
+      end)
+    local outer = contextmanager(function(a) 
+      l:append('outer enter')
+      with(inner(a), function() 
+        yield(a * 2)
+      end)
+      l:append('outer exit')
+      end)
+
+    with(outer(1), function(v)  
+        l:append(v * 10)
+      end)
+    assertEqual(l, list{'outer enter', 'inner enter', 20, 'inner exit', 'outer exit'},
+    'Did not execute nested contextmanagers in correct order')
+  end),
+  
   it('nested with', function() 
+    local l = list()
+    local outer = contextmanager(function(a) 
+      l:append('outer enter')
+      yield(a)
+      l:append('outer exit')
+      end)
+    local inner = contextmanager(function(b) 
+      l:append('inner enter')
+      yield(b * 2)
+      l:append('inner exit')
+      end)
+
+    with(outer(1), function(v) 
+      with(inner(v), function(q) 
+        l:append(q * 10)
+      end)
+    end)
+    assertEqual(l, list{'outer enter', 'inner enter', 20, 'inner exit', 'outer exit'},
+    'Did not execute nested with in correct order')
   end),
 
   it('open', function(temp_dir)
-    -- TODO: fix this for mobile
-    -- local fle
-    -- with(open(temp_dir..'t.txt', 'w'), function(f) fle = f; f:write('hello') end)
-    -- assert(type(fle == 'userdata'), 'with open did not open a file')
-    -- assertRaises(
-    --   'attempt to use a closed file',  
-    --   function() fle:read() end, 
-    --   'with open did not close file after operation'
-    -- )
-    -- assert(isFile(temp_dir..'t.txt'), 'open did not create file')
-    -- assertEqual(readLines(temp_dir..'t.txt'), list{'hello'}, 
-    --   'with open did not write to file')
+    local fle
+    with(open(temp_dir..'t.txt', 'w'), function(f) fle = f; f:write('hello') end)
+    assert(type(fle == 'userdata'), 'with open did not open a file')
+    assertRaises(
+      'attempt to use a closed file',  
+      function() fle:read() end, 
+      'with open did not close file after operation'
+    )
+    assert(isFile(temp_dir..'t.txt'), 'open did not create file')
+    assertEqual(readLines(temp_dir..'t.txt'), list{'hello'}, 
+      'with open did not write to file')
   end),
 
   it('suppress', function()
@@ -2365,7 +2421,6 @@ describe('system',
     fcopy('_tmp_tst', '_tmp_tst2')
     assertEqual(listdir('_tmp_tst2'), listdir('_tmp_tst'), 
       'fcopy did not correctly copy directory contents')
-    check_lines('_tmp_tst/tmp/t1.txt')
   end),
 
   it('find', function(filesystem)

@@ -50,7 +50,6 @@ describe('system',
     fcopy('_tmp_tst', '_tmp_tst2')
     assertEqual(listdir('_tmp_tst2'), listdir('_tmp_tst'), 
       'fcopy did not correctly copy directory contents')
-    check_lines('_tmp_tst/tmp/t1.txt')
   end),
 
   it('find', function(filesystem)

@@ -125,8 +125,8 @@ end
 -- @treturn table strings of each line with the newline character removed
 function readLines(f) 
   local lines = list()
-  local function read(fle) for line in fle:lines() do lines:append(line) end end
-  if is.str(f) then with(open(f, 'r'), read) else read(f) end
+  local function read(fle) for line in fle:lines() do lines:append(line) end return fle end
+  if is.file(f) then read(f) else read(assert(io.open(f, 'r'))):close() end
   if lines[#lines] == '' then lines[#lines] = nil end
   return lines
 end
