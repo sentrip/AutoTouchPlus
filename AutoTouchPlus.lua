@@ -2815,11 +2815,15 @@ return data or ''
 end
 end
 
-function fcopy(src, dest, overwrite)
+function fcopy(src, dest, overwrite, prepend_rootDir)
 if is.Nil(overwrite) then overwrite = true end
 local cmd = list{'cp'}
 if isDir(src) then cmd:append('-R') end
 if not overwrite then cmd:append('-n') end
+if prepend_rootDir ~= false and rootDir then
+src = pathJoin(rootDir(), src)
+dest = pathJoin(rootDir(), dest)
+end
 cmd:extend{src, dest}
 exe(cmd)
 end
@@ -2856,22 +2860,25 @@ local s = string.gsub(table.concat(values, '/'), '/+', '/')
 return s
 end
 
-function readLine(f, lineNumber)
-local lines = readLines(f)
+function readLine(f, lineNumber, prepend_rootDir)
+local lines = readLines(f, prepend_rootDir)
 return lines[lineNumber]
 end
 
-function readLines(f)
+function readLines(f, prepend_rootDir)
 local lines = list()
 local is_file = is.file(f)
-if not is_file then f = assert(io.open(f, 'r')) end
+if not is_file then
+if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
+f = assert(io.open(f, 'r'))
+end
 for line in f:lines() do lines:append(line) end
 if not is_file then assert(f:close()) end
 return lines
 end
 
 function sizeof(name, prepend_rootDir)
-if rootDir and not (prepend_rootDir == false) then name = pathJoin(rootDir(), name) end
+if rootDir and prepend_rootDir ~= false then name = pathJoin(rootDir(), name) end
 local f = assert(io.open(name))
 local size = tonumber(f:seek('end'))
 f:close()
@@ -2890,13 +2897,14 @@ io.popen('sleep 0.001'):close()
 end
 end
 
-function writeLine(line, lineNumber, filename)
-local lines = readLines(filename)
+function writeLine(line, lineNumber, filename, prepend_rootDir)
+local lines = readLines(filename, prepend_rootDir)
 lines[lineNumber] = line
-writeLines(lines, filename, 'w')
+writeLines(lines, filename, 'w', prepend_rootDir)
 end
 
-function writeLines(lines, filename, mode)
+function writeLines(lines, filename, mode, prepend_rootDir)
+if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
 local f = assert(io.open(filename, mode or 'w'))
 for i, v in pairs(lines) do f:write(v .. '\n') end
 assert(f:close())

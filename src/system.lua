@@ -48,11 +48,16 @@ end
 -- @tparam string src source to copy from (file or directory)
 -- @tparam string dest desination to copy to (file or directory, but has to be a directory if src is a directory)
 -- @tparam boolean overwrite whether to overwrite any existing files/directories 
-function fcopy(src, dest, overwrite) 
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+function fcopy(src, dest, overwrite, prepend_rootDir) 
   if is.Nil(overwrite) then overwrite = true end
   local cmd = list{'cp'}
   if isDir(src) then cmd:append('-R') end
   if not overwrite then cmd:append('-n') end
+  if prepend_rootDir ~= false and rootDir then 
+    src = pathJoin(rootDir(), src) 
+    dest = pathJoin(rootDir(), dest) 
+  end
   cmd:extend{src, dest}
   exe(cmd)
 end
@@ -114,19 +119,24 @@ end
 ---- Read a single line from a file
 -- @tparam file|string f file or filename (see @{readLines})
 -- @tparam number lineNumber line number to read (starts at 1)
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 -- @treturn string contents of line at lineNumber
-function readLine(f, lineNumber) 
-  local lines = readLines(f)
+function readLine(f, lineNumber, prepend_rootDir) 
+  local lines = readLines(f, prepend_rootDir)
   return lines[lineNumber] 
 end 
 
 ---- Read all the lines in a file
 -- @tparam file|string f file object or file name. If a file object is passed, then it is not closed.
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 -- @treturn table strings of each line with the newline character removed
-function readLines(f) 
+function readLines(f, prepend_rootDir) 
   local lines = list()
   local is_file = is.file(f)
-  if not is_file then f = assert(io.open(f, 'r')) end
+  if not is_file then 
+    if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
+    f = assert(io.open(f, 'r')) 
+  end
   for line in f:lines() do lines:append(line) end 
   if not is_file then assert(f:close()) end
   return lines
@@ -137,7 +147,7 @@ end
 -- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 -- @treturn number size of file/directory at path in bytes
 function sizeof(name, prepend_rootDir) 
-  if rootDir and not (prepend_rootDir == false) then name = pathJoin(rootDir(), name) end
+  if rootDir and prepend_rootDir ~= false then name = pathJoin(rootDir(), name) end
   local f = assert(io.open(name))
   local size = tonumber(f:seek('end'))
   f:close()
@@ -162,17 +172,20 @@ end
 -- @tparam string line data to write to the file
 -- @tparam number lineNumber line number at which to write the line
 -- @tparam string filename name of file to write to 
-function writeLine(line, lineNumber, filename) 
-  local lines = readLines(filename)
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+function writeLine(line, lineNumber, filename, prepend_rootDir) 
+  local lines = readLines(filename, prepend_rootDir)
   lines[lineNumber] = line
-  writeLines(lines, filename, 'w')
+  writeLines(lines, filename, 'w', prepend_rootDir)
 end 
 
 ---- Write multiple lines to a file
 -- @tparam table lines strings of each line
 -- @tparam string filename name of file to write to
 -- @tparam string mode write mode (uses same argument as io.open)
-function writeLines(lines, filename, mode) 
+-- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+function writeLines(lines, filename, mode, prepend_rootDir) 
+  if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
   local f = assert(io.open(filename, mode or 'w'))
   for i, v in pairs(lines) do f:write(v .. '\n') end 
   assert(f:close())
