@@ -24,6 +24,7 @@ end)
 
 fixture('temp_dir', function(monkeypatch, request) 
   local dir_name = '_tmp_tst'
+  if rootDir then dir_name = pathJoin(rootDir(), dir_name) end
   io.popen('mkdir '..dir_name):close()
   request.addfinalizer(function() io.popen('rm -R '..dir_name):close() end)
   return dir_name .. '/'
