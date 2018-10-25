@@ -2,7 +2,7 @@
 --Modified version of <a href="https://github.com/aperezdc/lua-itertools">itertools.lua</a>.
 --Documentation can be found
 --<a href="https://aperezdc.github.io/lua-itertools/">here</a>.
--- @module itertools
+-- @module itertools.lua
 -- @author aperezdc
 -- @license MIT
 -- @copyright aperezdc 2016
