@@ -2364,7 +2364,6 @@ function Response:raise_for_status()
 if self.status_code ~= 200 then error('error in '..self.method..' request: '..self.status_code) end
 end
 
-local _stall = {count = 0, last_check=0, last_colors={}, cyclers={}}
 screen = {
 before_action_funcs = set(),
 after_action_funcs = set(),
@@ -2372,8 +2371,7 @@ before_check_funcs = set(),
 after_check_funcs = set(),
 before_tap_funcs = set(),
 after_tap_funcs = set(),
-nth_check_funcs = dict(),
-on_stall_funcs = set()
+nth_check_funcs = dict()
 }
 if Not.Nil(getScreenResolution) then
 screen.width, screen.height = getScreenResolution()
@@ -2382,15 +2380,11 @@ screen.width, screen.height = 200, 400
 end
 local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
 local function _log_action(condition, name, value)
-if screen.debug then
-_log('Creating check for\t\t: %s', condition)
-_log('%-10s - wait for\t\t: %s', name, value)
-end
+_log('%-32s: %s', 'Creating check for', condition)
+_log('%-10s - %-19s: %s', name, 'wait for', value)
 end
 
 screen.check_interval = 150000
-screen.stall_after_checks = 5
-screen.stall_after_checks_interval = 3 * 60
 screen.wait_before_action = 0
 screen.wait_after_action = 0
 screen.wait_before_tap = 0
@@ -2409,10 +2403,6 @@ right = Pixel(screen.width, screen.height / 2),       -- x = screen.width, y = s
 top = Pixel(screen.width / 2, 0),                     -- x = screen.width / 2, y = 0
 bottom = Pixel(screen.width / 2, screen.height),      -- x = screen.width / 2, y = screen.height
 center = Pixel(screen.width / 2, screen.height / 2)   -- x = screen.width / 2, y = screen.height / 2
-}
-screen.stall_indicators = Pixels{
--- TODO: add more pixels for screen recovery check
-screen.mid.center
 }
 
 
@@ -2435,7 +2425,13 @@ sleep(after_wait)
 end)
 
 
-screen.action_context = contextmanager(function(condition)
+screen.action_context = contextmanager(function(check)
+local _pixel
+local check_count = 0
+
+if not is.func(check) then
+_pixel, check = check, function() return screen.contains(_pixel) end
+end
 
 local ctx = create_context(
 screen.wait_before_action, screen.wait_after_action,
@@ -2443,50 +2439,23 @@ screen.before_action_funcs, screen.after_action_funcs
 )
 
 with(ctx, function()
-
-local check
-local check_count = 0
-
-if is.func(condition) then
-check = function() return condition() end
-else
-check = function() return screen.contains(condition) end
-end
-
 yield(function()
--- Run stalling escape procedures if screen is stalled
-if screen.is_stalled() then
-_log('Stall detected, number of same screens: %d', _stall.count)
-for func in iter(screen.on_stall_funcs) do
-func()
-end
-end
-
-for func in iter(screen.before_check_funcs) do
-func()
-end
-
+-- Before check
+for func in iter(screen.before_check_funcs) do func() end
+-- Check
 local result = check()
 check_count = check_count + 1
-_log('Check %d for condition\t\t: %s', check_count, result)
-
-for func in iter(screen.after_check_funcs) do
-func()
-end
-
--- Run all functions registered to current check count
-for n, funcs in screen.nth_check_funcs:items() do
-if check_count == n then
-_log('Running nth_check functions after check %s', check_count)
-for func in iter(funcs) do func() end
-end
-end
-
+_log('%-32s: %s', 'Check '..check_count..' for condition', result)
+-- After check
+for func in iter(screen.after_check_funcs) do func() end
+-- Functions registered to current check count
+local nth_check_funcs = screen.nth_check_funcs[check_count] or list()
+if is(nth_check_funcs) then _log('Running nth_check functions after check %s', check_count) end
+for func in iter(nth_check_funcs) do func() end
+-- Return check result
 return result
 end)
-
 end)
-
 end)
 
 screen.tap_context = contextmanager(function()
@@ -2504,81 +2473,48 @@ function screen.before_action(func)
 screen.before_action_funcs:add(func)
 end
 
+
 function screen.after_action(func)
 screen.after_action_funcs:add(func)
 end
+
 
 function screen.before_check(func)
 screen.before_check_funcs:add(func)
 end
 
+
 function screen.after_check(func)
 screen.after_check_funcs:add(func)
 end
+
 
 function screen.before_tap(func)
 screen.before_tap_funcs:add(func)
 end
 
+
 function screen.after_tap(func)
 screen.after_tap_funcs:add(func)
 end
 
+
 function screen.on_nth_check(n, func)
+if type(n) == 'number' then n = {n} end
 if is.func(func) then func = {func} end
-if is.Nil(screen.nth_check_funcs[n]) then screen.nth_check_funcs[n] = list() end
-for f in iter(func) do screen.nth_check_funcs[n]:append(f) end
+for _, v in pairs(n) do
+screen.nth_check_funcs[v] = screen.nth_check_funcs[v] or list()
+for f in iter(func) do
+screen.nth_check_funcs[v]:append(f)
+end
+end
 end
 
-
-function screen.on_stall(func, name)
-_stall.count = 0
-_stall.last_check = 0
-_stall.last_colors = {}
-local fs
-if is.func(func) then fs = list{func} else fs = list(func) end
-local key = div(hash(tostring(fs)), 1000000000)
-name = ' '..(name or key)
-_stall.cyclers[key] = {cycle=itertools.cycle(iter(fs)), fs=fs}
-screen.on_stall_funcs:add(setmetatable({}, {
-__hash=function() return key end,
-__call=function()
-local func_to_run = _stall.cyclers[key].cycle()
-_log('Running stall recovery procedure%s: %d', name, fs:index(func_to_run))
-return func_to_run()
--- return _stall.cyclers[key].cycle()()
-end
-}))
-end
 
 function screen.contains(pixel)
 return pixel:visible()
 end
 
-function screen.is_stalled()
-local current, previous
-local now = os.time()
-if now - _stall.last_check > screen.stall_after_checks_interval then
-_stall.last_check = now
-current = screen.stall_indicators.colors
-local result = false
-if requal(current, _stall.last_colors) then
-_stall.count = _stall.count + 1
-if _stall.count > screen.stall_after_checks then
-result = true
-end
-else
-_stall.count = 0
-for k, v in pairs(_stall.cyclers) do
-_stall.cyclers[k] = {cycle=itertools.cycle(iter(v.fs)), fs=v.fs}
-end
-end
-_stall.last_colors = current
-return result
-end
-
-return false
-end
 
 function screen.tap(x, y, times, interval)
 local pixel
@@ -2643,6 +2579,7 @@ end
 
 
 function screen.swipe(start_, end_, speed)
+_log('Swipe with speed %s from %s to %s', speed, start_, end_)
 if is.str(start_) then
 assert(screen.mid[start_] or screen.edge[start_],
 'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
@@ -2654,7 +2591,6 @@ assert(screen.mid[end_] or screen.edge[end_],
 'Incorrect identifier: use one of (left, right, top, bottom, center, top_left, top_right, bottom_left, bottom_right)')
 end_ = screen.mid[end_] or screen.edge[end_]
 end
-
 return Path.linear(start_, end_):swipe{speed=speed}
 end
 

@@ -56,7 +56,6 @@ fixture('taps', function(monkeypatch)
   screen.before_tap_funcs = set()
   screen.after_tap_funcs = set() 
   screen.nth_check_funcs = dict()
-  screen.on_stall_funcs = set()
   screen.check_interval = 150
   local taps = list()
   monkeypatch.setattr('tap', function(x, y) taps:append(list{x, y}) end)
@@ -75,68 +74,13 @@ end)
 
 
 describe('screen',
-    
-  it('can detect and recover from stall', function(monkeypatch, pixels, taps)
-    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
-    screen.on_stall({function() end})
-    
-    local calls = list()
-    screen.on_stall(function() 
-      calls:append(true)
-      pixels:clear()
-    end)
-
-    local pix = screen.stall_indicators:copy()
-    pixels:extend(pix.pixels)
-    screen.tap_while(pix, pix.pixels[1])
-    assert(len(calls) == 1, 'Did not call on stall')
-  end),
-  
-  it('can restart iterable stall procedure on successful stall recovery', function(monkeypatch, pixels, taps) 
-    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
-    local calls = list()
-    
-    screen.on_stall{
-      function() 
-        calls:append(1)
-      end,
-      function() 
-        calls:append(2)
-        pixels:clear()
-      end,
-      function() 
-        calls:append(3)
-        pixels:clear()
-      end
-    }
-    
-    local pix = screen.stall_indicators:copy()
-    pixels:extend(pix.pixels)
-    local old_pix = pixels:copy()
-    screen.tap_while(pix, pix.pixels[1])
-    assert(len(calls) == 2, 'Did not call on stall correct number of times')
-    assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
-    calls:clear()
-    -- Screen is no longer stalled, so color changes
-    old_pix[5].expected_color = 50
-    pixels:extend(old_pix)
-    screen.tap_while(pix, pix.pixels[1])
-    -- Now screen is stalled again, back to stall color
-    old_pix[5].expected_color = colors.white
-    pixels:extend(old_pix)
-    screen.tap_while(pix, pix.pixels[1])
-    local _ = 1  -- For some reason, without this line the test fails
-    assert(len(calls) == 2, 'Did not call on stall correct number of times')
-    assert(requal(calls, {1, 2}), 'Did not execute on stall procedure in correct order')
-  end),
 
   it('can run functions after consecutive checks', function(monkeypatch, pixels, taps)
-    monkeypatch.setattr(screen, 'stall_after_checks_interval', 0.001)
     
     local calls = list()
     local c = 0
     screen.before_check(function() c = c + 1 end)
-    screen.on_nth_check(5, function() 
+    screen.on_nth_check({4, 6}, function() 
       calls:append(c)
     end)
 
@@ -145,11 +89,9 @@ describe('screen',
       pixels:clear()
     end)
 
-    local pix = screen.stall_indicators:copy()
-    pixels:extend(pix.pixels)
-    screen.tap_while(pix, pix.pixels[1])
-    assert(len(calls) == 2, 'Did not call on stall')
-    assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
+    screen.tap_while(pixels[1])
+    assert(len(calls) == 3, 'Did not call on stall')
+    assert(requal(calls, {4, 6, 10}), 'Did not execute nth check funcs in correct order')
   end),
 
   it('can swipe between pixels', function(touches) 
