@@ -1416,6 +1416,96 @@ end
 return ( parse(str, next_char(str, 1, space_chars, true)) )
 end
 
+local _level_str_to_int = {DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50}
+
+log = {}
+log._default_log_func = log or print
+log.default_format = '[%(level)-8s] %(message)s'
+log.default_level = 'INFO'
+log.handlers = {}
+log.file_handler = FileHandler
+log.stream_handler = StreamHandler
+
+
+function log.add_handler(handler) table.insert(log.handlers, handler) end
+
+function log.basic_config(level, fmt) log.add_handler(log.stream_handler{level=level, fmt=fmt}) end
+
+function log.debug(s, ...) log('DEBUG', s, ...) end
+
+function log.info(s, ...) log('INFO', s, ...) end
+
+function log.warning(s, ...) log('WARNING', s, ...) end
+
+function log.error(s, ...) log('ERROR', s, ...) end
+
+function log.critical(s, ...) log('CRITICAL', s, ...) end
+
+
+LogHandler = class('LogHandler')
+function LogHandler:__init(options)
+assert(type(options) == 'table', string.format('Required syntax: %s{...}', getmetatable(self).__name))
+self.fmt = options.fmt or log.default_format
+self.level = options.level or log.default_level
+end
+
+function LogHandler:filter(level)
+return _level_str_to_int[level] >= _level_str_to_int[self.level]
+end
+
+function LogHandler:format(level, s, ...)
+local formatted = self.fmt
+local _args = {...}
+if not ... then _args = {} end
+local msg = string.format(s or '', unpack(_args))
+for _, v in pairs({'level', 'message'}) do
+local reg = '%%%('..v..'%)([^s]*s)'
+local match = formatted:match(reg)
+if match then
+local inner = ''
+if v == 'level' then inner = level else inner = msg or inner end
+formatted = formatted:gsub(reg, string.format('%'..match, inner))
+end
+end
+return string.format(formatted, unpack({...}) or '')
+end
+
+function LogHandler:record(s) end
+
+
+StreamHandler = class('StreamHandler', 'LogHandler')
+function StreamHandler:record(s) log._default_log_func(s) end
+
+
+FileHandler = class('FileHandler', 'LogHandler')
+function FileHandler:__init(options)
+LogHandler.__init(self, options)
+self.filename = options[1] or options.file
+assert(self.filename, 'Must provide filename for FileHandler')
+if rootDir then self.filename = pathJoin(rootDir(), self.filename) end
+end
+
+function FileHandler:record(s)
+local _file = io.open(self.filename, 'a')
+_file:write(s..'\n')
+_file:close()
+end
+
+
+log = setmetatable(log, {
+__call = function(_, level, s, ...)
+local _args = {...}
+if (not s and #_args == 0) or level:match('%%') then
+level, s, _args = log.default_level, level, {s}
+end
+for _, h in pairs(log.handlers) do
+if h:filter(level) then h:record(h:format(level, s, unpack(_args))) end
+end
+end
+})
+log.stream_handler = StreamHandler
+log.file_handler = FileHandler
+
 
 TransitionTree = class('TransitionTree')
 
@@ -2153,40 +2243,22 @@ end
 
 requests = {}
 
-function requests.delete(url, args)
-return requests.request("DELETE", url, args)
-end
+function requests.delete(url, args) return requests.request("DELETE", url, args) end
 
-function requests.get(url, args)
-return requests.request("GET", url, args)
-end
+function requests.get(url, args) return requests.request("GET", url, args) end
 
-function requests.post(url, args)
-return requests.request("POST", url, args)
-end
+function requests.post(url, args) return requests.request("POST", url, args) end
 
-function requests.put(url, args)
-return requests.request("PUT", url, args)
-end
+function requests.put(url, args) return requests.request("PUT", url, args) end
 
 function requests.request(method, url, args)
 local _req = args or {}
-
-if is.table(url) then
-_req = url
-else
-_req.url = url
-end
-
+if is.table(url) then _req = url else _req.url = url end
 _req.method = method
 local request = Request(_req)
-
-if request:verify() then
-local cmd = request:build()
-return request:send(cmd)
-else
-return "failed"
-end
+request:verify()
+log.debug('Sending %s request: %s with data: %s', _req.method, _req.url or _req[1], _req.data or 'none')
+return request:send(request:build())
 end
 
 local function parse_data(lines, request, response)
@@ -2255,7 +2327,7 @@ function Request:send(cmd)
 local response = Response(self)
 
 try(function()
-local lines = exe(cmd)
+local lines = exe(cmd, true, true)
 
 local response_f = assert(io.open(self._response_fn))
 response.text = response_f:read('*a')
@@ -2266,7 +2338,7 @@ try(function() parse_data(lines, self, response) end)
 end,
 
 except(function(err)
-print('Requesting '..self.url..' failed - ' .. str(err))
+log.error('Failed to fetch url: ' .. str(err))
 end),
 
 function()
@@ -2280,7 +2352,6 @@ end
 function Request:verify()
 assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
 assert(self.url:startswith('http'), 'Only http(s) urls are supported')
-return true
 end
 
 function Request:_add_auth()
@@ -2373,15 +2444,11 @@ before_tap_funcs = set(),
 after_tap_funcs = set(),
 nth_check_funcs = dict()
 }
+local _width, _height
 if Not.Nil(getScreenResolution) then
-screen.width, screen.height = getScreenResolution()
+_width, _height = getScreenResolution()
 else
-screen.width, screen.height = 200, 400
-end
-local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
-local function _log_action(condition, name, value)
-_log('%-32s: %s', 'Creating check for', condition)
-_log('%-10s - %-19s: %s', name, 'wait for', value)
+_width, _height = 200, 400
 end
 
 screen.check_interval = 150000
@@ -2390,6 +2457,9 @@ screen.wait_after_action = 0
 screen.wait_before_tap = 0
 screen.wait_after_tap = 0
 screen.debug = false
+screen.width = _width
+screen.height = _height
+
 
 screen.edge = {
 top_left = Pixel(0, 0),                               -- x = 0, y = 0
@@ -2404,6 +2474,16 @@ top = Pixel(screen.width / 2, 0),                     -- x = screen.width / 2, y
 bottom = Pixel(screen.width / 2, screen.height),      -- x = screen.width / 2, y = screen.height
 center = Pixel(screen.width / 2, screen.height / 2)   -- x = screen.width / 2, y = screen.height / 2
 }
+
+
+local function _log(msg, ...)
+if screen.debug then print(string.format(msg, ...)) end
+end
+
+local function _log_action(condition, name, value)
+_log('%-32s: %s', 'Creating check for', condition)
+_log('%-10s - %-19s: %s', name, 'wait for', value)
+end
 
 
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
@@ -2722,17 +2802,17 @@ end
 local function _getType(name)
 return exe(string.format(
 'if test -f "%s"; then echo "FILE"; elif test -d "%s"; then echo "DIR"; else echo "INVALID"; fi',
-name, name))
+name, name), true, true)
 end
 
 function get_cwd(file)
 return exe('pwd')
 end
 
-function exe(cmd, split_output)
+function exe(cmd, split_output, suppress_log)
 if is.Nil(split_output) then split_output = true end
 if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
-
+if not suppress_log then log.debug('Executing command: '..cmd:gsub('%%', '\\')) end
 if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
 
 local f = assert(io.popen(cmd, 'r'))
@@ -2753,6 +2833,7 @@ end
 
 function fcopy(src, dest, overwrite, prepend_rootDir)
 if is.Nil(overwrite) then overwrite = true end
+log.debug('Copying files from %s to %s', src, dest)
 local cmd = list{'cp'}
 if isDir(src) then cmd:append('-R') end
 if not overwrite then cmd:append('-n') end
@@ -2761,7 +2842,7 @@ src = pathJoin(rootDir(), src)
 dest = pathJoin(rootDir(), dest)
 end
 cmd:extend{src, dest}
-exe(cmd)
+exe(cmd, true, true)
 end
 
 function find(name, starting_directory)
@@ -2805,9 +2886,11 @@ function readLines(f, prepend_rootDir)
 local lines = list()
 local is_file = is.file(f)
 if not is_file then
+log.debug('Opening file: %s', f)
 if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
 f = assert(io.open(f, 'r'))
 end
+log.debug('Reading lines: %s', f)
 for line in f:lines() do lines:append(line) end
 if not is_file then assert(f:close()) end
 return lines
@@ -2822,6 +2905,7 @@ return size
 end
 
 function sleep(seconds)
+log.debug('Sleeping for %.1fs', seconds)
 if seconds <= 0.01 then
 local current = os.clock()
 while os.clock() - current < seconds do end
@@ -2840,6 +2924,7 @@ writeLines(lines, filename, 'w', prepend_rootDir)
 end
 
 function writeLines(lines, filename, mode, prepend_rootDir)
+log.debug('Writing lines: %s', filename)
 if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
 local f = assert(io.open(filename, mode or 'w'))
 for i, v in pairs(lines) do f:write(v .. '\n') end

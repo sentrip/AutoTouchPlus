@@ -3,11 +3,13 @@ require('src/core')
 require('src/contextlib')
 require('src/objects')
 require('src/logic')
+require('src/logging')
 require('src/string')
 require('src/system')
 
 
 fixture('filesystem', function(request) 
+  
   local cmd = ''
   if rootDir then cmd = 'cd '..rootDir()..' && ' end
   io.popen(cmd..'mkdir _tmp_tst'):close() 

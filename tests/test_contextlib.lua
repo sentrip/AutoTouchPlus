@@ -2,6 +2,7 @@ require('src/test')
 require('src/core')
 require('src/contextlib')
 require('src/objects')
+require('src/logging')
 require('src/string')
 require('src/system')
 

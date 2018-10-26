@@ -5,7 +5,7 @@
 local function _getType(name) 
   return exe(string.format(
     'if test -f "%s"; then echo "FILE"; elif test -d "%s"; then echo "DIR"; else echo "INVALID"; fi', 
-    name, name))
+    name, name), true, true)
 end
 
 --- Get the current working directory
@@ -20,12 +20,13 @@ end
 -- String commands are passed directly to the shell.
 -- Table commands are concatenated with the space character.
 -- So exe({'ls', 'mydir'}), exe{'ls', 'mydir'} and exe('ls mydir') are all equivalent.
--- @tparam boolean split_output if false then returns the entire stdout as a string, otherwise a table of lines
+-- @tparam boolean split_output if false then returns the entire stdout as a string, otherwise a table of lines  
+-- @tparam boolean suppress_log supress logging of executed command
 -- @treturn table|string result of command in stdout
-function exe(cmd, split_output)
+function exe(cmd, split_output, suppress_log)
   if is.Nil(split_output) then split_output = true end
   if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
-  
+  if not suppress_log then log.debug('Executing command: '..cmd:gsub('%%', '\\')) end
   if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
   
   local f = assert(io.popen(cmd, 'r'))
@@ -51,6 +52,7 @@ end
 -- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 function fcopy(src, dest, overwrite, prepend_rootDir) 
   if is.Nil(overwrite) then overwrite = true end
+  log.debug('Copying files from %s to %s', src, dest)
   local cmd = list{'cp'}
   if isDir(src) then cmd:append('-R') end
   if not overwrite then cmd:append('-n') end
@@ -59,7 +61,7 @@ function fcopy(src, dest, overwrite, prepend_rootDir)
     dest = pathJoin(rootDir(), dest) 
   end
   cmd:extend{src, dest}
-  exe(cmd)
+  exe(cmd, true, true)
 end
 
 ---- Find a file or directory
@@ -134,9 +136,11 @@ function readLines(f, prepend_rootDir)
   local lines = list()
   local is_file = is.file(f)
   if not is_file then 
+    log.debug('Opening file: %s', f)
     if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
     f = assert(io.open(f, 'r')) 
   end
+  log.debug('Reading lines: %s', f)
   for line in f:lines() do lines:append(line) end 
   if not is_file then assert(f:close()) end
   return lines
@@ -157,6 +161,7 @@ end
 ---- Sleep for a certain amount of seconds (millisecond precision)
 -- @tparam number seconds number of seconds to sleep for
 function sleep(seconds)
+  log.debug('Sleeping for %.1fs', seconds)
   if seconds <= 0.01 then
     local current = os.clock()
     while os.clock() - current < seconds do end
@@ -185,6 +190,7 @@ end
 -- @tparam string mode write mode (uses same argument as io.open)
 -- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
 function writeLines(lines, filename, mode, prepend_rootDir) 
+  log.debug('Writing lines: %s', filename)
   if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
   local f = assert(io.open(filename, mode or 'w'))
   for i, v in pairs(lines) do f:write(v .. '\n') end 

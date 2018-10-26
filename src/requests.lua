@@ -9,33 +9,25 @@ requests = {}
 -- @tparam string url url to request (see @{requests.request})
 -- @tparam table args request arguments (see @{requests.request})
 -- @treturn Response
-function requests.delete(url, args)
-  return requests.request("DELETE", url, args)
-end
+function requests.delete(url, args) return requests.request("DELETE", url, args) end
 
 ---- Make a GET request
 -- @tparam string url url to request (see @{requests.request})
 -- @tparam table args request arguments (see @{requests.request})
 -- @treturn Response
-function requests.get(url, args)
-  return requests.request("GET", url, args)
-end
+function requests.get(url, args) return requests.request("GET", url, args) end
 
 ---- Make a POST request
 -- @tparam string url url to request (see @{requests.request})
 -- @tparam table args request arguments (see @{requests.request})
 -- @treturn Response
-function requests.post(url, args)
-  return requests.request("POST", url, args)
-end
+function requests.post(url, args) return requests.request("POST", url, args) end
 
 ---- Make a PUT request
 -- @tparam string url url to request (see @{requests.request})
 -- @tparam table args request arguments (see @{requests.request})
 -- @treturn Response
-function requests.put(url, args)
-  return requests.request("PUT", url, args)
-end
+function requests.put(url, args) return requests.request("PUT", url, args) end
 
 ---- Make an HTTP request
 -- @tparam string method one of GET, POST, PUT, DELETE
@@ -44,22 +36,12 @@ end
 -- @treturn Response
 function requests.request(method, url, args)
   local _req = args or {}
-  
-  if is.table(url) then 
-    _req = url
-  else
-    _req.url = url
-  end
-
+  if is.table(url) then _req = url else _req.url = url end
   _req.method = method
   local request = Request(_req)
-  
-  if request:verify() then
-    local cmd = request:build()
-    return request:send(cmd)
-  else
-    return "failed"
-  end
+  request:verify()
+  log.debug('Sending %s request: %s with data: %s', _req.method, _req.url or _req[1], _req.data or 'none')
+  return request:send(request:build())
 end
 ---
 
@@ -142,7 +124,7 @@ function Request:send(cmd)
   local response = Response(self)
   
   try(function() 
-      local lines = exe(cmd) 
+      local lines = exe(cmd, true, true) 
       
       local response_f = assert(io.open(self._response_fn))
       response.text = response_f:read('*a')
@@ -153,7 +135,7 @@ function Request:send(cmd)
       end,
     
     except(function(err) 
-       print('Requesting '..self.url..' failed - ' .. str(err)) 
+       log.error('Failed to fetch url: ' .. str(err)) 
      end),
    
     function()
@@ -165,12 +147,10 @@ function Request:send(cmd)
 end
 ---
 
---- Verify request parameters
--- @return boolean is request valid
+--- Verify request parameters (errors if parameters are invalid)
 function Request:verify()
   assert(requal(self.data, json.decode(json.encode(self.data))),'Incorrect json formatting')
   assert(self.url:startswith('http'), 'Only http(s) urls are supported')
-  return true
 end
 ---
 

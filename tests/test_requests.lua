@@ -3,6 +3,7 @@ require('src/core')
 require('src/contextlib')
 require('src/objects')
 require('src/logic')
+require('src/logging')
 require('src/string')
 require('src/system')
 require('src/requests')
@@ -127,6 +128,8 @@ describe('requests',
     end, 'Did not raise error for response')
   end)
 )
+
+-- TODO: Failed request tests
 
 
 run_tests()
