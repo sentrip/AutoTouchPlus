@@ -3,6 +3,7 @@ require('src/contextlib')
 require('src/core')
 require('src/itertools')
 require('src/logic')
+require('src/logging')
 require('src/objects')
 require('src/pixel')
 require('src/path')
@@ -90,8 +91,30 @@ describe('screen',
     end)
 
     screen.tap_while(pixels[1])
-    assert(len(calls) == 3, 'Did not call on stall')
+    assert(len(calls) == 3, 'Did not call on_nth_check correct number of times')
     assert(requal(calls, {4, 6, 10}), 'Did not execute nth check funcs in correct order')
+  end),
+
+  it('can run screen functions inside check after consecutive checks', function(monkeypatch, pixels, taps)
+
+    local calls = list()
+    local c = 0
+    local remove_second = false
+
+    screen.before_check(function() 
+      c = c + 1 
+      if remove_second and c >= 10 and pixels[2] then pixels:remove(pixels[2]) end
+    end)
+    screen.on_nth_check(5, function() 
+      calls:append(c)
+      remove_second = true
+      screen.tap_while(pixels[2])
+      pixels:clear()
+    end)
+
+    screen.tap_while(pixels[1])
+    assert(len(calls) == 2, 'Did not call on_nth_check correct number of times')
+    assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
   end),
 
   it('can swipe between pixels', function(touches) 

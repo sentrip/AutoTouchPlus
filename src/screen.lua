@@ -1,7 +1,6 @@
 --- Screen interaction and observation helpers
 -- @module screen.lua
 
--- local _stall = {count = 0, last_check=0, last_colors={}, cyclers={}}
 screen = {
   before_action_funcs = set(),
   after_action_funcs = set(),
@@ -12,15 +11,11 @@ screen = {
   nth_check_funcs = dict()
 }
 -- luacov: disable
+local _width, _height
 if Not.Nil(getScreenResolution) then
-  screen.width, screen.height = getScreenResolution()
+  _width, _height = getScreenResolution()
 else
-  screen.width, screen.height = 200, 400
-end
-local function _log(msg, ...) if screen.debug then print(string.format(msg, ...)) end end
-local function _log_action(condition, name, value)
-  _log('%-32s: %s', 'Creating check for', condition)
-  _log('%-10s - %-19s: %s', name, 'wait for', value)
+  _width, _height = 200, 400
 end
 -- luacov: enable
 
@@ -36,6 +31,11 @@ screen.wait_before_tap = 0
 screen.wait_after_tap = 0
 ---- Print detailed information about taps, swipes and checks
 screen.debug = false
+---- Width of screen from getScreenResolution() (not writable)
+screen.width = _width
+---- Height of screen from getScreenResolution() (not writable)
+screen.height = _height
+
 
 ---- Pixels on the corners of the screen
 screen.edge = {
@@ -54,7 +54,16 @@ screen.mid = {
 }
 
 
--- @local
+local function _log(msg, ...) 
+  if screen.debug then print(string.format(msg, ...)) end 
+end
+
+local function _log_action(condition, name, value)
+  _log('%-32s: %s', 'Creating check for', condition)
+  _log('%-10s - %-19s: %s', name, 'wait for', value)
+end
+
+
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
   
   sleep(before_wait)
