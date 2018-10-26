@@ -8,7 +8,7 @@ AutoTouchPlus
 .. image:: https://coveralls.io/repos/github/sentrip/AutoTouchPlus/badge.svg
     :target: https://coveralls.io/github/sentrip/AutoTouchPlus
 
-.. image:: https://img.shields.io/github/release/sentrip/AutoTouchPlus.svg
+.. image:: https://img.shields.io/github/release/sentrip/AutoTouchPlus/all.svg
     :alt: GitHub release 
     :target: https://github.com/sentrip/AutoTouchPlus/releases/latest
 
@@ -73,4 +73,4 @@ To use AutoTouchPlus, simply import it at the beginning of your script:
   print(str(list{1, 2, (','):join{'a', 'b'}, sorted(list{5, 4, 3})}))
 
 
-.. include:: HISTORY.rst
+.. include:: ./HISTORY.rst
