@@ -49,7 +49,7 @@ if __name__ == '__main__':
   release_id = data['id']
 
   # Upload AutoTouchPlus.lua and tests.lua to latest release
-  for fname in ['tests.lua']:#['AutoTouchPlus.lua', 'tests.lua']:
+  for fname in ['AutoTouchPlus.lua', 'tests.lua']:
     data = json.loads(subprocess.check_output(github + ['-X', 'POST', '-F', "file=@%s" % fname, '-H', "Content-Type: application/octet-stream", 'https://uploads.github.com/repos/sentrip/AutoTouchPlus/releases/%s/assets?name=%s' % (release_id, fname)]).decode())
     if not data.get('name', None):
       print(red + 'Error uploading %s: %s - %s' % (fname, data['message'], data['errors']))    
