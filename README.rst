@@ -10,7 +10,7 @@ AutoTouchPlus
 
 .. image:: https://img.shields.io/github/release/sentrip/AutoTouchPlus.svg
     :alt: GitHub release 
-    :target: https://github.com/sentrip/AutoTouchPlus.git
+    :target: https://github.com/sentrip/AutoTouchPlus/releases/latest
 
 
 A framework for creating better, faster and shorter AutoTouch scripts
