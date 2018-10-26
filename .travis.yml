@@ -22,7 +22,7 @@ before_install:
   - luarocks install lunitx
 
 script:
-  - python3 coverage.py
+  - make coverage
 
 after_success:
   - coveralls -b .. -r .. -i ./src --dump c.report.json
