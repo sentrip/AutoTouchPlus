@@ -34,5 +34,5 @@ with open('tests.lua', 'w') as f:
   f.write(test_boilerplate)
   f.write(data)
 
-os.system('python3 compile.py')
+os.system('python3 .scripts/compile.py')
 exit(os.system('lua tests.lua'))
