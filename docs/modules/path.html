@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_Path">Class Path </a></li>
+<li><a href="#Class_RelativePath">Class RelativePath </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><strong>path</strong></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>path</code></h1>
+<p>Path objects for complex swiping</p>
+<p></p>
+
+
+<h2><a href="#Class_Path">Class Path </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Path:__init">Path:__init (locations)</a></td>
+	<td class="summary">Create a Path object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Path:begin_swipe">Path:begin_swipe (fingerID, speed)</a></td>
+	<td class="summary">Begin swiping the path by placing a finger on the starting position</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Path:step">Path:step (fingerID, on_move)</a></td>
+	<td class="summary">Move to the next position in the swipe</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Path:swipe">Path:swipe (options)</a></td>
+	<td class="summary">Swipe the path from beginning to end</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Path.arc">Path.arc (radius, start_angle, end_angle, center)</a></td>
+	<td class="summary">Arc path with an angle and radius from a center pixel</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Path.linear">Path.linear (start_pixel, end_pixel)</a></td>
+	<td class="summary">Linear path between two pixels</td>
+	</tr>
+</table>
+<h2><a href="#Class_RelativePath">Class RelativePath </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#RelativePath:__init">RelativePath:__init (locations)</a></td>
+	<td class="summary">Create a RelativePath object</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_Path"></a>Class Path </h2>
+
+          <div class="section-description">
+          List of absolute positions that define a path on the screen
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Path:__init"></a>
+    <strong>Path:__init (locations)</strong>
+    </dt>
+    <dd>
+    Create a Path object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">locations</span>
+         iterable of x, y locations that define a path
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">path = Path{{x=<span class="number">0</span>, y=<span class="number">0</span>}, {x=<span class="number">10</span>, y=<span class="number">10</span>}}
+path = Path{Pixel(<span class="number">0</span>, <span class="number">0</span>), Pixel(<span class="number">10</span>, <span class="number">10</span>)}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Path:begin_swipe"></a>
+    <strong>Path:begin_swipe (fingerID, speed)</strong>
+    </dt>
+    <dd>
+    Begin swiping the path by placing a finger on the starting position
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fingerID</span>
+         (optional) ID of finger to use for swipe
+        </li>
+        <li><span class="parameter">speed</span>
+         (optional) swipe speed (number of points to skip at each move)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Path:step"></a>
+    <strong>Path:step (fingerID, on_move)</strong>
+    </dt>
+    <dd>
+    Move to the next position in the swipe
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fingerID</span>
+         (optional) ID of finger to use for swipe
+        </li>
+        <li><span class="parameter">on_move</span>
+         (optional) function to run at each movement
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        whether the path will continue swiping or not
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Path:swipe"></a>
+    <strong>Path:swipe (options)</strong>
+    </dt>
+    <dd>
+    Swipe the path from beginning to end
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         options for swipe (fingerID, speed, on_move)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/path.html#Path:begin_swipe">begin_swipe</a></li>
+         <li><a href="../modules/path.html#Path:step">step</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Path.arc"></a>
+    <strong>Path.arc (radius, start_angle, end_angle, center)</strong>
+    </dt>
+    <dd>
+    Arc path with an angle and radius from a center pixel
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">radius</span>
+            <span class="types"><span class="type">number</span></span>
+         distance from center_pixel in pixels to draw arc
+        </li>
+        <li><span class="parameter">start_angle</span>
+            <span class="types"><span class="type">number</span></span>
+         angle where the arc begins (in degrees)
+        </li>
+        <li><span class="parameter">end_angle</span>
+            <span class="types"><span class="type">number</span></span>
+         (optional) angle where the arc ends (in degrees)
+        </li>
+        <li><span class="parameter">center</span>
+            <span class="types"><span class="type">Pixel</span></span>
+         (optional) center pixel of arc
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/path.html#Path">Path</a> or <a class="type" href="../modules/path.html#RelativePath">RelativePath</a></span>
+        desired path (<a href="../modules/path.html#RelativePath">RelativePath</a> if center argument omitted)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Path.linear"></a>
+    <strong>Path.linear (start_pixel, end_pixel)</strong>
+    </dt>
+    <dd>
+    Linear path between two pixels
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start_pixel</span>
+            <span class="types"><span class="type">Pixel</span></span>
+         beginning of path
+        </li>
+        <li><span class="parameter">end_pixel</span>
+            <span class="types"><span class="type">Pixel</span></span>
+         (optional) end of path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/path.html#Path">Path</a> or <a class="type" href="../modules/path.html#RelativePath">RelativePath</a></span>
+        desired path (<a href="../modules/path.html#RelativePath">RelativePath</a> if end_pixel argument omitted)
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_RelativePath"></a>Class RelativePath </h2>
+
+          <div class="section-description">
+          List of relative positions that define a path on the screen
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "RelativePath:__init"></a>
+    <strong>RelativePath:__init (locations)</strong>
+    </dt>
+    <dd>
+    Create a RelativePath object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">locations</span>
+         iterable of x, y locations that define a path
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/core.html#class">core.class</a></li>
+         <li><a href="../modules/path.html#Path:__init">__init</a></li>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

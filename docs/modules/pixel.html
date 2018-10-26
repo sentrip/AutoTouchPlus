@@ -1,0 +1,589 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Class_Pixel">Class Pixel </a></li>
+<li><a href="#Class_Pixels">Class Pixels </a></li>
+<li><a href="#Class_Region">Class Region </a></li>
+<li><a href="#Class_Ellipse">Class Ellipse </a></li>
+<li><a href="#Class_Rectangle">Class Rectangle </a></li>
+<li><a href="#Class_Triangle">Class Triangle </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><strong>pixel</strong></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>pixel</code></h1>
+<p>Pixel objects for screen watching</p>
+<p></p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#colors">colors</a></td>
+	<td class="summary">Basic colors</td>
+	</tr>
+</table>
+<h2><a href="#Class_Pixel">Class Pixel </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Pixel:__init">Pixel:__init (x, y, color)</a></td>
+	<td class="summary">Create a Pixel object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixel:color_changed">Pixel:color_changed ()</a></td>
+	<td class="summary">Returns a function that checks if the pixel's color has changed</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixel:visible">Pixel:visible ()</a></td>
+	<td class="summary">Check if the pixel is in a screen</td>
+	</tr>
+</table>
+<h2><a href="#Class_Pixels">Class Pixels </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:__init">Pixels:__init (pixels)</a></td>
+	<td class="summary">Create a Pixels object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:visible">Pixels:visible ()</a></td>
+	<td class="summary">Check if all the pixels are in a screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:count">Pixels:count ()</a></td>
+	<td class="summary">Count how many of the pixels are in a screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:any_colors_changed">Pixels:any_colors_changed ()</a></td>
+	<td class="summary">Returns a function that checks if any pixels have changed color</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:all_colors_changed">Pixels:all_colors_changed ()</a></td>
+	<td class="summary">Returns a function that checks if all pixels have changed color</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Pixels:n_colors_changed">Pixels:n_colors_changed (n)</a></td>
+	<td class="summary">Returns a function that checks if n pixels have changed color</td>
+	</tr>
+</table>
+<h2><a href="#Class_Region">Class Region </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Region:__init">Region:__init (positions, color)</a></td>
+	<td class="summary">Create a Region object</td>
+	</tr>
+</table>
+<h2><a href="#Class_Ellipse">Class Ellipse </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Ellipse:__init">Ellipse:__init (options)</a></td>
+	<td class="summary">Create a Ellipse object</td>
+	</tr>
+</table>
+<h2><a href="#Class_Rectangle">Class Rectangle </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Rectangle:__init">Rectangle:__init (options)</a></td>
+	<td class="summary">Create a Rectangle object</td>
+	</tr>
+</table>
+<h2><a href="#Class_Triangle">Class Triangle </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Triangle:__init">Triangle:__init (options)</a></td>
+	<td class="summary">Create a Triangle object</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "colors"></a>
+    <strong>colors</strong>
+    </dt>
+    <dd>
+    Basic colors
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">aqua</span>
+        65535
+        </li>
+        <li><span class="parameter">black</span>
+        0
+        </li>
+        <li><span class="parameter">blue</span>
+        255
+        </li>
+        <li><span class="parameter">fuchsia</span>
+        16711935
+        </li>
+        <li><span class="parameter">gray</span>
+        8421504
+        </li>
+        <li><span class="parameter">green</span>
+        32768
+        </li>
+        <li><span class="parameter">lime</span>
+        65280
+        </li>
+        <li><span class="parameter">maroon</span>
+        8388608
+        </li>
+        <li><span class="parameter">navy</span>
+        128
+        </li>
+        <li><span class="parameter">olive</span>
+        8421376
+        </li>
+        <li><span class="parameter">orange</span>
+        16753920
+        </li>
+        <li><span class="parameter">purple</span>
+        8388736
+        </li>
+        <li><span class="parameter">red</span>
+        16711680
+        </li>
+        <li><span class="parameter">silver</span>
+        12632256
+        </li>
+        <li><span class="parameter">teal</span>
+        32896
+        </li>
+        <li><span class="parameter">yellow</span>
+        16776960
+        </li>
+        <li><span class="parameter">white</span>
+        16777215
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Pixel"></a>Class Pixel </h2>
+
+          <div class="section-description">
+          Pixel object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Pixel:__init"></a>
+    <strong>Pixel:__init (x, y, color)</strong>
+    </dt>
+    <dd>
+    Create a Pixel object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span></span>
+         x-position of pixel
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         y-position of pixel
+        </li>
+        <li><span class="parameter">color</span>
+            <span class="types"><span class="type">int</span></span>
+         expected color of pixel (default <a href="../modules/pixel.html#colors">colors</a>.white)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Pixel:color_changed"></a>
+    <strong>Pixel:color_changed ()</strong>
+    </dt>
+    <dd>
+    Returns a function that checks if the pixel's color has changed
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        check whether the color has changed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pixel:visible"></a>
+    <strong>Pixel:visible ()</strong>
+    </dt>
+    <dd>
+    Check if the pixel is in a screen
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        is the pixel visible on the screen
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Pixels"></a>Class Pixels </h2>
+
+          <div class="section-description">
+          Collection of Pixel objects
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Pixels:__init"></a>
+    <strong>Pixels:__init (pixels)</strong>
+    </dt>
+    <dd>
+    Create a Pixels object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pixels</span>
+         iterable of <a href="../modules/pixel.html#Pixel">Pixel</a> objects
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Pixels:visible"></a>
+    <strong>Pixels:visible ()</strong>
+    </dt>
+    <dd>
+    Check if all the pixels are in a screen
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        are all the pixels visible on the screen
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pixels:count"></a>
+    <strong>Pixels:count ()</strong>
+    </dt>
+    <dd>
+    Count how many of the pixels are in a screen
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        how many pixels are visible on the screen
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pixels:any_colors_changed"></a>
+    <strong>Pixels:any_colors_changed ()</strong>
+    </dt>
+    <dd>
+    Returns a function that checks if any pixels have changed color
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        check whether the colors have changed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pixels:all_colors_changed"></a>
+    <strong>Pixels:all_colors_changed ()</strong>
+    </dt>
+    <dd>
+    Returns a function that checks if all pixels have changed color
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        check whether the colors have changed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Pixels:n_colors_changed"></a>
+    <strong>Pixels:n_colors_changed (n)</strong>
+    </dt>
+    <dd>
+    Returns a function that checks if n pixels have changed color
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        check whether the colors have changed
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Region"></a>Class Region </h2>
+
+          <div class="section-description">
+          Group of evenly spaced pixels
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Region:__init"></a>
+    <strong>Region:__init (positions, color)</strong>
+    </dt>
+    <dd>
+    Create a Region object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">positions</span>
+         iterable of positions
+        </li>
+        <li><span class="parameter">color</span>
+            <span class="types"><span class="type">int</span></span>
+         color of region
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Ellipse"></a>Class Ellipse </h2>
+
+          <div class="section-description">
+          Ellipse <a href="../modules/pixel.html#Region">Region</a>
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Ellipse:__init"></a>
+    <strong>Ellipse:__init (options)</strong>
+    </dt>
+    <dd>
+    Create a Ellipse object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         (x, y, width, height, spacing)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Rectangle"></a>Class Rectangle </h2>
+
+          <div class="section-description">
+          Rectangle <a href="../modules/pixel.html#Region">Region</a>
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Rectangle:__init"></a>
+    <strong>Rectangle:__init (options)</strong>
+    </dt>
+    <dd>
+    Create a Rectangle object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         (x, y, width, height, spacing)
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Triangle"></a>Class Triangle </h2>
+
+          <div class="section-description">
+          Triangle <a href="../modules/pixel.html#Region">Region</a>
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Triangle:__init"></a>
+    <strong>Triangle:__init (options)</strong>
+    </dt>
+    <dd>
+    Create a Triangle object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">options</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/core.html#class">core.class</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

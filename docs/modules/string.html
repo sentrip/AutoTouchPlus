@@ -1,0 +1,464 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_string">Class string </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><strong>string</strong></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>string</code></h1>
+<p>String operation extensions</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#str_add">str_add (s, other)</a></td>
+	<td class="summary">Addable strings</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#str_call">str_call (s, i, j)</a></td>
+	<td class="summary">Callable string indexing
+ (see http://lua-users.org/wiki/StringIndexing)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#str_index">str_index (s, i)</a></td>
+	<td class="summary">Improved string indexing (see http://lua-users.org/wiki/StringIndexing)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#str_mul">str_mul (s, other)</a></td>
+	<td class="summary">Multiply strings</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#str_pairs">str_pairs (s)</a></td>
+	<td class="summary">Iterable strings</td>
+	</tr>
+</table>
+<h2><a href="#Class_string">Class string </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#string:endswith">string:endswith (s, value)</a></td>
+	<td class="summary">String ends with value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:format">string:format (s, ...)</a></td>
+	<td class="summary">String formatting (Python style! ...kinda)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:join">string:join (s, other)</a></td>
+	<td class="summary">Concatenate a list/table of strings with another string as the delimiter</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:replace">string:replace (s, sub, rep, limit)</a></td>
+	<td class="summary">Replace occurrences of sub in main with rep</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:split">string:split (s, delim)</a></td>
+	<td class="summary">String splitting (Python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:startswith">string:startswith (s, value)</a></td>
+	<td class="summary">String starts with value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string:strip">string:strip (s, remove)</a></td>
+	<td class="summary">String stripping (Python style!)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "str_add"></a>
+    <strong>str_add (s, other)</strong>
+    </dt>
+    <dd>
+    Addable strings
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         a thing
+        </li>
+        <li><span class="parameter">other</span>
+         athing
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="string">"abc"</span> + <span class="string">"cde"</span> =&gt; <span class="string">"abccde"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "str_call"></a>
+    <strong>str_call (s, i, j)</strong>
+    </dt>
+    <dd>
+    Callable string indexing
+ (see http://lua-users.org/wiki/StringIndexing)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">i</span>
+
+        </li>
+        <li><span class="parameter">j</span>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">x = <span class="string">'abcde'</span>
+x(<span class="number">2</span>, <span class="number">4</span>) =&gt; <span class="string">'bcd'</span>
+x{<span class="number">1</span>, -<span class="number">2</span>, <span class="number">3</span>} =&gt; <span class="string">'adc'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "str_index"></a>
+    <strong>str_index (s, i)</strong>
+    </dt>
+    <dd>
+    Improved string indexing (see http://lua-users.org/wiki/StringIndexing)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">i</span>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">x = <span class="string">'abcde'</span>
+x[<span class="number">3</span>] =&gt; <span class="string">'c'</span>
+x.&lt;command&gt; =&gt; <span class="keyword">function</span> <span class="keyword">or</span> <span class="keyword">nil</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "str_mul"></a>
+    <strong>str_mul (s, other)</strong>
+    </dt>
+    <dd>
+    Multiply strings
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">other</span>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="string">"ab"</span> * <span class="number">3</span> =&gt; <span class="string">"ababab"</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "str_pairs"></a>
+    <strong>str_pairs (s)</strong>
+    </dt>
+    <dd>
+    Iterable strings
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">x = <span class="string">'ab'</span>
+<span class="keyword">for</span> i, v <span class="keyword">in</span> <span class="global">pairs</span>(x) <span class="keyword">do</span> <span class="global">print</span>(i, v) <span class="keyword">end</span>
+prints -&gt;
+    <span class="number">1</span>, a
+    <span class="number">2</span>, b</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_string"></a>Class string </h2>
+
+          <div class="section-description">
+          Additional methods for lua's 'string' object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "string:endswith"></a>
+    <strong>string:endswith (s, value)</strong>
+    </dt>
+    <dd>
+    String ends with value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:format"></a>
+    <strong>string:format (s, ...)</strong>
+    </dt>
+    <dd>
+    String formatting (Python style! ...kinda)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:join"></a>
+    <strong>string:join (s, other)</strong>
+    </dt>
+    <dd>
+    Concatenate a list/table of strings with another string as the delimiter
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">other</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:replace"></a>
+    <strong>string:replace (s, sub, rep, limit)</strong>
+    </dt>
+    <dd>
+    Replace occurrences of sub in main with rep
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">sub</span>
+
+        </li>
+        <li><span class="parameter">rep</span>
+
+        </li>
+        <li><span class="parameter">limit</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:split"></a>
+    <strong>string:split (s, delim)</strong>
+    </dt>
+    <dd>
+    String splitting (Python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">delim</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:startswith"></a>
+    <strong>string:startswith (s, value)</strong>
+    </dt>
+    <dd>
+    String starts with value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string:strip"></a>
+    <strong>string:strip (s, remove)</strong>
+    </dt>
+    <dd>
+    String stripping (Python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">remove</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

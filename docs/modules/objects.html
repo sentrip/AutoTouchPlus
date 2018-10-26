@@ -1,0 +1,728 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_dict">Class dict </a></li>
+<li><a href="#Class_list">Class list </a></li>
+<li><a href="#Class_set">Class set </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><strong>objects</strong></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>objects</code></h1>
+<p>Python's basic objects: dict, list and set</p>
+<p></p>
+
+
+<h2><a href="#Class_dict">Class dict </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#dict:clear">dict:clear ()</a></td>
+	<td class="summary">Clear all the keys and values in the dictionary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:contains">dict:contains (key)</a></td>
+	<td class="summary">Check if the dict contains a key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:get">dict:get (key, default)</a></td>
+	<td class="summary">Get the value indexed by the given key in the dictionary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:items">dict:items ()</a></td>
+	<td class="summary">List all the key, value pairs in the dictionary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:keys">dict:keys ()</a></td>
+	<td class="summary">List all the keys in the dictionary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:pop">dict:pop (key, default)</a></td>
+	<td class="summary">Pop a value from the dictionary given by key, or return a default</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:set">dict:set (key, value)</a></td>
+	<td class="summary">Set the value indexed by given key to given value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:update">dict:update (other)</a></td>
+	<td class="summary">Update current dictionary's keys and values with given dictionary's keys and values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dict:values">dict:values ()</a></td>
+	<td class="summary">List all the values in the dictionary</td>
+	</tr>
+</table>
+<h2><a href="#Class_list">Class list </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#list:append">list:append (value)</a></td>
+	<td class="summary">Append a value to the list</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:clear">list:clear ()</a></td>
+	<td class="summary">Clear the list of all values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:contains">list:contains (value)</a></td>
+	<td class="summary">Check if the list contains a value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:extend">list:extend (values)</a></td>
+	<td class="summary">Extend the list with the given values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:index">list:index (value)</a></td>
+	<td class="summary">Get index of the requested value in the list</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:insert">list:insert (index, value)</a></td>
+	<td class="summary">Insert a value into the list at the given index</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:pop">list:pop (index)</a></td>
+	<td class="summary">Pop a value out of the list at given index.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list:remove">list:remove (value)</a></td>
+	<td class="summary">Remove a value from list</td>
+	</tr>
+</table>
+<h2><a href="#Class_set">Class set </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#set:add">set:add (value)</a></td>
+	<td class="summary">Add a value to the set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:clear">set:clear ()</a></td>
+	<td class="summary">Clear the set of all values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:contains">set:contains (value)</a></td>
+	<td class="summary">Check if the set contains a value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:difference">set:difference (other)</a></td>
+	<td class="summary">Difference of two sets</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:pop">set:pop (value)</a></td>
+	<td class="summary">Pop a value out of the set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:remove">set:remove (value)</a></td>
+	<td class="summary">Remove a value from the set</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:update">set:update (other)</a></td>
+	<td class="summary">Update the set with the values of an object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#set:values">set:values ()</a></td>
+	<td class="summary">List of the values in the set</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_dict"></a>Class dict </h2>
+
+          <div class="section-description">
+          Dict object - mirrors Python's 'dict' api as closely as possible
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "dict:clear"></a>
+    <strong>dict:clear ()</strong>
+    </dt>
+    <dd>
+    Clear all the keys and values in the dictionary
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:contains"></a>
+    <strong>dict:contains (key)</strong>
+    </dt>
+    <dd>
+    Check if the dict contains a key
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         key to check for
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (boolean) is the key in the dict
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:get"></a>
+    <strong>dict:get (key, default)</strong>
+    </dt>
+    <dd>
+    Get the value indexed by the given key in the dictionary
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         key index of dictionary
+        </li>
+        <li><span class="parameter">default</span>
+         value to return if key is not in dictionary
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        value indexed by key if key is in dictionary, otherwise default (nil)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:items"></a>
+    <strong>dict:items ()</strong>
+    </dt>
+    <dd>
+    List all the key, value pairs in the dictionary
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        pairs iterator
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:keys"></a>
+    <strong>dict:keys ()</strong>
+    </dt>
+    <dd>
+    List all the keys in the dictionary
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        'list' of keys
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:pop"></a>
+    <strong>dict:pop (key, default)</strong>
+    </dt>
+    <dd>
+    Pop a value from the dictionary given by key, or return a default
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         key index of dictionary
+        </li>
+        <li><span class="parameter">default</span>
+         default value to return
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:set"></a>
+    <strong>dict:set (key, value)</strong>
+    </dt>
+    <dd>
+    Set the value indexed by given key to given value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         key index of dictionary
+        </li>
+        <li><span class="parameter">value</span>
+         value to set at given key
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:update"></a>
+    <strong>dict:update (other)</strong>
+    </dt>
+    <dd>
+    Update current dictionary's keys and values with given dictionary's keys and values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+         dictionary (or string indexed table) to use for update
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dict:values"></a>
+    <strong>dict:values ()</strong>
+    </dt>
+    <dd>
+    List all the values in the dictionary
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        'list' of values
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_list"></a>Class list </h2>
+
+          <div class="section-description">
+          List object - mirrors Python's 'list' api as closely as possible
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "list:append"></a>
+    <strong>list:append (value)</strong>
+    </dt>
+    <dd>
+    Append a value to the list
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         the value to append
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:clear"></a>
+    <strong>list:clear ()</strong>
+    </dt>
+    <dd>
+    Clear the list of all values
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:contains"></a>
+    <strong>list:contains (value)</strong>
+    </dt>
+    <dd>
+    Check if the list contains a value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         value to check for
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        (boolean) is the value in the list
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:extend"></a>
+    <strong>list:extend (values)</strong>
+    </dt>
+    <dd>
+    Extend the list with the given values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">values</span>
+         values to add (can be a table or a list)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:index"></a>
+    <strong>list:index (value)</strong>
+    </dt>
+    <dd>
+    Get index of the requested value in the list
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         the value to index
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        index of requested value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:insert"></a>
+    <strong>list:insert (index, value)</strong>
+    </dt>
+    <dd>
+    Insert a value into the list at the given index
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">index</span>
+         the index at which to insert value
+        </li>
+        <li><span class="parameter">value</span>
+         value to insert
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:pop"></a>
+    <strong>list:pop (index)</strong>
+    </dt>
+    <dd>
+    Pop a value out of the list at given index.  If index is nil then returns first value in list
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">index</span>
+         the index of the value in the list
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list:remove"></a>
+    <strong>list:remove (value)</strong>
+    </dt>
+    <dd>
+    Remove a value from list
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         value to remove
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_set"></a>Class set </h2>
+
+          <div class="section-description">
+          Set object - mirrors Python's 'set' api as closely as possible
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "set:add"></a>
+    <strong>set:add (value)</strong>
+    </dt>
+    <dd>
+    Add a value to the set
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:clear"></a>
+    <strong>set:clear ()</strong>
+    </dt>
+    <dd>
+    Clear the set of all values
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:contains"></a>
+    <strong>set:contains (value)</strong>
+    </dt>
+    <dd>
+    Check if the set contains a value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:difference"></a>
+    <strong>set:difference (other)</strong>
+    </dt>
+    <dd>
+    Difference of two sets
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:pop"></a>
+    <strong>set:pop (value)</strong>
+    </dt>
+    <dd>
+    Pop a value out of the set
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:remove"></a>
+    <strong>set:remove (value)</strong>
+    </dt>
+    <dd>
+    Remove a value from the set
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:update"></a>
+    <strong>set:update (other)</strong>
+    </dt>
+    <dd>
+    Update the set with the values of an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">other</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "set:values"></a>
+    <strong>set:values ()</strong>
+    </dt>
+    <dd>
+    List of the values in the set
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><strong>system</strong></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>system</code></h1>
+<p>OS & filesystem operations</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#get_cwd">get_cwd (file)</a></td>
+	<td class="summary">Get the current working directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#exe">exe (cmd, split_output, suppress_log)</a></td>
+	<td class="summary">Execute a shell command and return the result</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fcopy">fcopy (src, dest, overwrite, prepend_rootDir)</a></td>
+	<td class="summary">Copy a file or directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#find">find (name, starting_directory)</a></td>
+	<td class="summary">Find a file or directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isDir">isDir (name)</a></td>
+	<td class="summary">Check if a path is a directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isFile">isFile (name)</a></td>
+	<td class="summary">Check if a path is a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#listdir">listdir (dirname)</a></td>
+	<td class="summary">List the contents of a directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pathExists">pathExists (path)</a></td>
+	<td class="summary">Check if a path exists</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pathJoin">pathJoin (...)</a></td>
+	<td class="summary">Join one or more paths</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#readLine">readLine (f, lineNumber, prepend_rootDir)</a></td>
+	<td class="summary">Read a single line from a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#readLines">readLines (f, prepend_rootDir)</a></td>
+	<td class="summary">Read all the lines in a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sizeof">sizeof (name, prepend_rootDir)</a></td>
+	<td class="summary">Get the size of a file or directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sleep">sleep (seconds)</a></td>
+	<td class="summary">Sleep for a certain amount of seconds (millisecond precision)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#writeLine">writeLine (line, lineNumber, filename, prepend_rootDir)</a></td>
+	<td class="summary">Write a single line to a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#writeLines">writeLines (lines, filename, mode, prepend_rootDir)</a></td>
+	<td class="summary">Write multiple lines to a file</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "get_cwd"></a>
+    <strong>get_cwd (file)</strong>
+    </dt>
+    <dd>
+    Get the current working directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         (Optional) file name to append to end of path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        path of current working directory
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "exe"></a>
+    <strong>exe (cmd, split_output, suppress_log)</strong>
+    </dt>
+    <dd>
+    Execute a shell command and return the result
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmd</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         Unix command to execute.
+ String commands are passed directly to the shell.
+ Table commands are concatenated with the space character.
+ So exe({'ls', 'mydir'}), exe{'ls', 'mydir'} and exe('ls mydir') are all equivalent.
+        </li>
+        <li><span class="parameter">split_output</span>
+            <span class="types"><span class="type">boolean</span></span>
+         if false then returns the entire stdout as a string, otherwise a table of lines
+        </li>
+        <li><span class="parameter">suppress_log</span>
+            <span class="types"><span class="type">boolean</span></span>
+         supress logging of executed command
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        result of command in stdout
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fcopy"></a>
+    <strong>fcopy (src, dest, overwrite, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Copy a file or directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">src</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         source to copy from (file or directory)
+        </li>
+        <li><span class="parameter">dest</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         desination to copy to (file or directory, but has to be a directory if src is a directory)
+        </li>
+        <li><span class="parameter">overwrite</span>
+            <span class="types"><span class="type">boolean</span></span>
+         whether to overwrite any existing files/directories
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "find"></a>
+    <strong>find (name, starting_directory)</strong>
+    </dt>
+    <dd>
+    Find a file or directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         name of file/directory to search for.
+ If you wish to search for a directory then you must pass a table as name.
+ If a table is passed then it must be of the format {type=name, start=starting_directory},
+ where type is one of f, file, dir or d, and start is an optional value in the table.
+        </li>
+        <li><span class="parameter">starting_directory</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         directory in which to begin search (can drastically increase speed)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        absolute path if it exists, an empty string otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isDir"></a>
+    <strong>isDir (name)</strong>
+    </dt>
+    <dd>
+    Check if a path is a directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         path to check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        is the path a directory
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isFile"></a>
+    <strong>isFile (name)</strong>
+    </dt>
+    <dd>
+    Check if a path is a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         path to check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        is the path a file
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "listdir"></a>
+    <strong>listdir (dirname)</strong>
+    </dt>
+    <dd>
+    List the contents of a directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dirname</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         path of the directory
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        sorted table of file names found in dirname
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pathExists"></a>
+    <strong>pathExists (path)</strong>
+    </dt>
+    <dd>
+    Check if a path exists
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         path to check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        does the path exist
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pathJoin"></a>
+    <strong>pathJoin (...)</strong>
+    </dt>
+    <dd>
+    Join one or more paths
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         file paths to join
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        concatenated path of all names with the correct number of /s
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "readLine"></a>
+    <strong>readLine (f, lineNumber, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Read a single line from a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">file</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         file or filename (see <a href="../modules/system.html#readLines">readLines</a>)
+        </li>
+        <li><span class="parameter">lineNumber</span>
+            <span class="types"><span class="type">number</span></span>
+         line number to read (starts at 1)
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        contents of line at lineNumber
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "readLines"></a>
+    <strong>readLines (f, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Read all the lines in a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">file</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         file object or file name. If a file object is passed, then it is not closed.
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        strings of each line with the newline character removed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sizeof"></a>
+    <strong>sizeof (name, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Get the size of a file or directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         path name to check size of
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        size of file/directory at path in bytes
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sleep"></a>
+    <strong>sleep (seconds)</strong>
+    </dt>
+    <dd>
+    Sleep for a certain amount of seconds (millisecond precision)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seconds</span>
+            <span class="types"><span class="type">number</span></span>
+         number of seconds to sleep for
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "writeLine"></a>
+    <strong>writeLine (line, lineNumber, filename, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Write a single line to a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">line</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         data to write to the file
+        </li>
+        <li><span class="parameter">lineNumber</span>
+            <span class="types"><span class="type">number</span></span>
+         line number at which to write the line
+        </li>
+        <li><span class="parameter">filename</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of file to write to
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "writeLines"></a>
+    <strong>writeLines (lines, filename, mode, prepend_rootDir)</strong>
+    </dt>
+    <dd>
+    Write multiple lines to a file
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lines</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         strings of each line
+        </li>
+        <li><span class="parameter">filename</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of file to write to
+        </li>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         write mode (uses same argument as io.open)
+        </li>
+        <li><span class="parameter">prepend_rootDir</span>
+            <span class="types"><span class="type">boolean</span></span>
+         should rootDir() be prepended to file name
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

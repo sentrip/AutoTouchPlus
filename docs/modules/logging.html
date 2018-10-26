@@ -1,0 +1,503 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Class_LogHandler">Class LogHandler </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><strong>logging</strong></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>logging</code></h1>
+<p>Basic logging utilities</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#log.add_handler">log.add_handler (handler)</a></td>
+	<td class="summary">Add a <a href="../modules/logging.html#LogHandler">LogHandler</a> that listens for and logs messages</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.basic_config">log.basic_config (level, fmt)</a></td>
+	<td class="summary">Add a logger that will log messages to stdout (or to log.txt in AutoTouch)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.debug">log.debug (s, ...)</a></td>
+	<td class="summary">Log a DEBUG level message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.info">log.info (s, ...)</a></td>
+	<td class="summary">Log an INFO level message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.warning">log.warning (s, ...)</a></td>
+	<td class="summary">Log a WARNING level message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.error">log.error (s, ...)</a></td>
+	<td class="summary">Log an ERROR level message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.critical">log.critical (s, ...)</a></td>
+	<td class="summary">Log a CRITICAL level message</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#log">log</a></td>
+	<td class="summary">Callable log object - improved `log` from AutoTouch</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#log.default_format">log.default_format</a></td>
+	<td class="summary">Default log format</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.default_level">log.default_level</a></td>
+	<td class="summary">Default log level - levels: (DEBUG, INFO, WARNING, ERROR, CRITICAL)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.file_handler">log.file_handler</a></td>
+	<td class="summary"><a href="../modules/logging.html#LogHandler">LogHandler</a> that logs messages to a file</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#log.stream_handler">log.stream_handler</a></td>
+	<td class="summary"><a href="../modules/logging.html#LogHandler">LogHandler</a> that logs messages to stdout (or to log.txt in AutoTouch)</td>
+	</tr>
+</table>
+<h2><a href="#Class_LogHandler">Class LogHandler </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#LogHandler:filter">LogHandler:filter (level)</a></td>
+	<td class="summary">Filter log message based on level</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#LogHandler:format">LogHandler:format (level, s, ...)</a></td>
+	<td class="summary">Create formatted log message</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#LogHandler:record">LogHandler:record (s)</a></td>
+	<td class="summary">Record the log message to an output.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "log.add_handler"></a>
+    <strong>log.add_handler (handler)</strong>
+    </dt>
+    <dd>
+    Add a <a href="../modules/logging.html#LogHandler">LogHandler</a> that listens for and logs messages
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">handler</span>
+            <span class="types"><a class="type" href="../modules/logging.html#LogHandler">LogHandler</a></span>
+         to add
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.basic_config"></a>
+    <strong>log.basic_config (level, fmt)</strong>
+    </dt>
+    <dd>
+    Add a logger that will log messages to stdout (or to log.txt in AutoTouch)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">level</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log level - one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        </li>
+        <li><span class="parameter">fmt</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log format to use for all messages
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.debug"></a>
+    <strong>log.debug (s, ...)</strong>
+    </dt>
+    <dd>
+    Log a DEBUG level message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log message
+        </li>
+        <li><span class="parameter">...</span>
+         arguments to format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.info"></a>
+    <strong>log.info (s, ...)</strong>
+    </dt>
+    <dd>
+    Log an INFO level message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log message
+        </li>
+        <li><span class="parameter">...</span>
+         arguments to format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.warning"></a>
+    <strong>log.warning (s, ...)</strong>
+    </dt>
+    <dd>
+    Log a WARNING level message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log message
+        </li>
+        <li><span class="parameter">...</span>
+         arguments to format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.error"></a>
+    <strong>log.error (s, ...)</strong>
+    </dt>
+    <dd>
+    Log an ERROR level message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log message
+        </li>
+        <li><span class="parameter">...</span>
+         arguments to format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.critical"></a>
+    <strong>log.critical (s, ...)</strong>
+    </dt>
+    <dd>
+    Log a CRITICAL level message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         log message
+        </li>
+        <li><span class="parameter">...</span>
+         arguments to format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "log"></a>
+    <strong>log</strong>
+    </dt>
+    <dd>
+    Callable log object - improved `log` from AutoTouch
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- All of the following usages result in the same message:
+</span>log(<span class="string">'message'</span>)
+log(<span class="string">'%s'</span>, <span class="string">'message'</span>)
+log(<span class="string">'INFO'</span>, <span class="string">'message'</span>)
+log(<span class="string">'INFO'</span>, <span class="string">'%s'</span>, <span class="string">'message'</span>)
+log.info(<span class="string">'message'</span>)
+log.info(<span class="string">'%s'</span>, <span class="string">'message'</span>)
+<span class="comment">--[INFO    ] message</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "log.default_format"></a>
+    <strong>log.default_format</strong>
+    </dt>
+    <dd>
+    Default log format
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.default_level"></a>
+    <strong>log.default_level</strong>
+    </dt>
+    <dd>
+    Default log level - levels: (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.file_handler"></a>
+    <strong>log.file_handler</strong>
+    </dt>
+    <dd>
+    <a href="../modules/logging.html#LogHandler">LogHandler</a> that logs messages to a file
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "log.stream_handler"></a>
+    <strong>log.stream_handler</strong>
+    </dt>
+    <dd>
+    <a href="../modules/logging.html#LogHandler">LogHandler</a> that logs messages to stdout (or to log.txt in AutoTouch)
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_LogHandler"></a>Class LogHandler </h2>
+
+          <div class="section-description">
+          LogHandler object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "LogHandler:filter"></a>
+    <strong>LogHandler:filter (level)</strong>
+    </dt>
+    <dd>
+    Filter log message based on level
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">level</span>
+         level to check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolen</span></span>
+        is level high enough to log
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "LogHandler:format"></a>
+    <strong>LogHandler:format (level, s, ...)</strong>
+    </dt>
+    <dd>
+    Create formatted log message
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">level</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         level of message
+        </li>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         format string of message
+        </li>
+        <li><span class="parameter">...</span>
+         (optional) arguments for format string `s`
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "LogHandler:record"></a>
+    <strong>LogHandler:record (s)</strong>
+    </dt>
+    <dd>
+    Record the log message to an output.
+ This can be overwritten to send log messages anywhere.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         message to record
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

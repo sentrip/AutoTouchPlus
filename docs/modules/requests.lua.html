@@ -1,0 +1,433 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_Request">Class Request </a></li>
+<li><a href="#Class_Response">Class Response </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><strong>requests.lua</strong></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>requests.lua</code></h1>
+<p>Web requests and data parsing.</p>
+<p>
+ Mirrors basic methods and api of Python's 'requests' module.
+ Requires wget to work, as <a href="../modules/requests.lua.html#">requests.lua</a> is simply a lua wrapper for the wget cli.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#requests.delete">requests.delete (url, args)</a></td>
+	<td class="summary">Make a DELETE request</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requests.get">requests.get (url, args)</a></td>
+	<td class="summary">Make a GET request</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requests.post">requests.post (url, args)</a></td>
+	<td class="summary">Make a POST request</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requests.put">requests.put (url, args)</a></td>
+	<td class="summary">Make a PUT request</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requests.request">requests.request (method, url, args)</a></td>
+	<td class="summary">Make an HTTP request</td>
+	</tr>
+</table>
+<h2><a href="#Class_Request">Class Request </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Request:build">Request:build ()</a></td>
+	<td class="summary">Build command for wget from request</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Request:send">Request:send (cmd)</a></td>
+	<td class="summary">Send wget command and return parsed response</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Request:verify">Request:verify ()</a></td>
+	<td class="summary">Verify request parameters (errors if parameters are invalid)</td>
+	</tr>
+</table>
+<h2><a href="#Class_Response">Class Response </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Response:iter_lines">Response:iter_lines ()</a></td>
+	<td class="summary">Iterate over the lines in the text of a response</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Response:json">Response:json ()</a></td>
+	<td class="summary">Convert a json formatted response text to a lua table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Response:raise_for_status">Response:raise_for_status ()</a></td>
+	<td class="summary">Check if the request was successful</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "requests.delete"></a>
+    <strong>requests.delete (url, args)</strong>
+    </dt>
+    <dd>
+    Make a DELETE request
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requests.get"></a>
+    <strong>requests.get (url, args)</strong>
+    </dt>
+    <dd>
+    Make a GET request
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requests.post"></a>
+    <strong>requests.post (url, args)</strong>
+    </dt>
+    <dd>
+    Make a POST request
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requests.put"></a>
+    <strong>requests.put (url, args)</strong>
+    </dt>
+    <dd>
+    Make a PUT request
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requests.request"></a>
+    <strong>requests.request (method, url, args)</strong>
+    </dt>
+    <dd>
+    Make an HTTP request
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">method</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         one of GET, POST, PUT, DELETE
+        </li>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         url to request
+        </li>
+        <li><span class="parameter">args</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         request arguments
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Request"></a>Class Request </h2>
+
+          <div class="section-description">
+          Request object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Request:build"></a>
+    <strong>Request:build ()</strong>
+    </dt>
+    <dd>
+    Build command for wget from request
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        wget command in list form
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Request:send"></a>
+    <strong>Request:send (cmd)</strong>
+    </dt>
+    <dd>
+    Send wget command and return parsed response
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cmd</span>
+         command list
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Reponse of request
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Request:verify"></a>
+    <strong>Request:verify ()</strong>
+    </dt>
+    <dd>
+    Verify request parameters (errors if parameters are invalid)
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Response"></a>Class Response </h2>
+
+          <div class="section-description">
+          Response object returned by <a href="../modules/requests.lua.html#requests.request">requests.request</a>
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Response:iter_lines"></a>
+    <strong>Response:iter_lines ()</strong>
+    </dt>
+    <dd>
+    Iterate over the lines in the text of a response
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        iterator of lines in response text
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Response:json"></a>
+    <strong>Response:json ()</strong>
+    </dt>
+    <dd>
+    Convert a json formatted response text to a lua table
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        dictionary-like table of response
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Response:raise_for_status"></a>
+    <strong>Response:raise_for_status ()</strong>
+    </dt>
+    <dd>
+    Check if the request was successful
+
+
+
+
+    <h3>Raises:</h3>
+    error if the response status code is not 200
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

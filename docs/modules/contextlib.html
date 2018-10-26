@@ -1,0 +1,505 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_ContextManager">Class ContextManager </a></li>
+<li><a href="#Class_Exception">Class Exception </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>contextlib</strong></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>contextlib</code></h1>
+<p>Context manager implementation</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#try">try (f, _except, finally)</a></td>
+	<td class="summary">Safely execute a function</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#except">except (types, f)</a></td>
+	<td class="summary">Handle exceptions of specific types</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#with">with (context, _do)</a></td>
+	<td class="summary">Execute a function within a context</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#yield">yield (...)</a></td>
+	<td class="summary">Yield control back to function inside the current context</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#contextmanager">contextmanager (f)</a></td>
+	<td class="summary">Create a ContextManager from a function</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#open">open (name, mode)</a></td>
+	<td class="summary">Open a file with a given mode, ensuring to close it after</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#run_and_close">run_and_close (name, close_after)</a></td>
+	<td class="summary">Run a clean copy of an app and close it after</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#run_if_closed">run_if_closed (name)</a></td>
+	<td class="summary">Run an app and close it after if it is not already running</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#suppress">suppress (...)</a></td>
+	<td class="summary">Suppress exceptions of a given type</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time_ensured">time_ensured (t)</a></td>
+	<td class="summary">Ensure code execution takes a certain amount of time</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#time_padded">time_padded (t_before, t_after)</a></td>
+	<td class="summary">Wait before and after executing code</td>
+	</tr>
+</table>
+<h2><a href="#Class_ContextManager">Class ContextManager </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ContextManager:__enter">ContextManager:__enter (...)</a></td>
+	<td class="summary">Enter (setup) the context</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ContextManager:__exit">ContextManager:__exit (_type, value)</a></td>
+	<td class="summary">Exit (teardown) the context</td>
+	</tr>
+</table>
+<h2><a href="#Class_Exception">Class Exception </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Exception:__init">Exception:__init (_type, message)</a></td>
+	<td class="summary">Create an Exception object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Exception.add_traceback">Exception.add_traceback (s, force)</a></td>
+	<td class="summary">Recent traceback for error tracking</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "try"></a>
+    <strong>try (f, _except, finally)</strong>
+    </dt>
+    <dd>
+    Safely execute a function
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+
+        </li>
+        <li><span class="parameter">_except</span>
+
+        </li>
+        <li><span class="parameter">finally</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "except"></a>
+    <strong>except (types, f)</strong>
+    </dt>
+    <dd>
+    Handle exceptions of specific types
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">types</span>
+
+        </li>
+        <li><span class="parameter">f</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "with"></a>
+    <strong>with (context, _do)</strong>
+    </dt>
+    <dd>
+    Execute a function within a context
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">context</span>
+
+        </li>
+        <li><span class="parameter">_do</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "yield"></a>
+    <strong>yield (...)</strong>
+    </dt>
+    <dd>
+    Yield control back to function inside the current context
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "contextmanager"></a>
+    <strong>contextmanager (f)</strong>
+    </dt>
+    <dd>
+    Create a ContextManager from a function
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         any function that yields
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "open"></a>
+    <strong>open (name, mode)</strong>
+    </dt>
+    <dd>
+    Open a file with a given mode, ensuring to close it after
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+        </li>
+        <li><span class="parameter">mode</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "run_and_close"></a>
+    <strong>run_and_close (name, close_after)</strong>
+    </dt>
+    <dd>
+    Run a clean copy of an app and close it after
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+        </li>
+        <li><span class="parameter">close_after</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "run_if_closed"></a>
+    <strong>run_if_closed (name)</strong>
+    </dt>
+    <dd>
+    Run an app and close it after if it is not already running
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "suppress"></a>
+    <strong>suppress (...)</strong>
+    </dt>
+    <dd>
+    Suppress exceptions of a given type
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "time_ensured"></a>
+    <strong>time_ensured (t)</strong>
+    </dt>
+    <dd>
+    Ensure code execution takes a certain amount of time
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "time_padded"></a>
+    <strong>time_padded (t_before, t_after)</strong>
+    </dt>
+    <dd>
+    Wait before and after executing code
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t_before</span>
+
+        </li>
+        <li><span class="parameter">t_after</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_ContextManager"></a>Class ContextManager </h2>
+
+          <div class="section-description">
+          Context manager object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "ContextManager:__enter"></a>
+    <strong>ContextManager:__enter (...)</strong>
+    </dt>
+    <dd>
+    Enter (setup) the context
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ContextManager:__exit"></a>
+    <strong>ContextManager:__exit (_type, value)</strong>
+    </dt>
+    <dd>
+    Exit (teardown) the context
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_type</span>
+
+        </li>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_Exception"></a>Class Exception </h2>
+
+          <div class="section-description">
+          Exception object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "Exception:__init"></a>
+    <strong>Exception:__init (_type, message)</strong>
+    </dt>
+    <dd>
+    Create an Exception object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_type</span>
+
+        </li>
+        <li><span class="parameter">message</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Exception.add_traceback"></a>
+    <strong>Exception.add_traceback (s, force)</strong>
+    </dt>
+    <dd>
+    Recent traceback for error tracking
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">force</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

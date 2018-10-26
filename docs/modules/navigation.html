@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_TransitionTree">Class TransitionTree </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><strong>navigation</strong></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>navigation</code></h1>
+<p>Generic navigation algorithms for GUI-based apps</p>
+<p></p>
+
+
+<h2><a href="#Class_TransitionTree">Class TransitionTree </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#TransitionTree:add">TransitionTree:add (name, forward, backward)</a></td>
+	<td class="summary">Add a node to the tree</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TransitionTree:path_to_root">TransitionTree:path_to_root ()</a></td>
+	<td class="summary">Get the path from the current node to the root node</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TransitionTree:path_to">TransitionTree:path_to (name)</a></td>
+	<td class="summary">Get the path from the current node to the named node</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TransitionTree:lca">TransitionTree:lca (name1, name2)</a></td>
+	<td class="summary">Least common ancestor of two nodes</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TransitionTree:navigate">TransitionTree:navigate (start, _end)</a></td>
+	<td class="summary">Navigate the tree calling forward and backward functions</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_TransitionTree"></a>Class TransitionTree </h2>
+
+          <div class="section-description">
+          Tree object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "TransitionTree:add"></a>
+    <strong>TransitionTree:add (name, forward, backward)</strong>
+    </dt>
+    <dd>
+    Add a node to the tree
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+        </li>
+        <li><span class="parameter">forward</span>
+
+        </li>
+        <li><span class="parameter">backward</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TransitionTree:path_to_root"></a>
+    <strong>TransitionTree:path_to_root ()</strong>
+    </dt>
+    <dd>
+    Get the path from the current node to the root node
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TransitionTree:path_to"></a>
+    <strong>TransitionTree:path_to (name)</strong>
+    </dt>
+    <dd>
+    Get the path from the current node to the named node
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TransitionTree:lca"></a>
+    <strong>TransitionTree:lca (name1, name2)</strong>
+    </dt>
+    <dd>
+    Least common ancestor of two nodes
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name1</span>
+
+        </li>
+        <li><span class="parameter">name2</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TransitionTree:navigate"></a>
+    <strong>TransitionTree:navigate (start, _end)</strong>
+    </dt>
+    <dd>
+    Navigate the tree calling forward and backward functions
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start</span>
+
+        </li>
+        <li><span class="parameter">_end</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

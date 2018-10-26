@@ -1,0 +1,693 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><strong>core</strong></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>core</code></h1>
+<p>Implementation of many of Python's builtin functions.</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#class">class (name, ...)</a></td>
+	<td class="summary">Create a new class type</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getattr">getattr (cls, value)</a></td>
+	<td class="summary">Indexing that supports Python-like property getters</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setattr">setattr (cls, key, value)</a></td>
+	<td class="summary">Index setting that supports Python-like property setters</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#copy">copy (object, deep)</a></td>
+	<td class="summary">Copy an object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#eval">eval (input)</a></td>
+	<td class="summary">Evaluates a string as code and returns result (Python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash">hash (input)</a></td>
+	<td class="summary">Unique integer representation of input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isin">isin (sub, main)</a></td>
+	<td class="summary">Check if sub is contained in main (like Python's "x in y" syntax)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isnotin">isnotin (sub, main)</a></td>
+	<td class="summary">Check if sub is NOT contained in main (like Python's "x not in y" syntax)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isinstance">isinstance (klass, other)</a></td>
+	<td class="summary">Check if class is an instance of another class recursively</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#max">max (...)</a></td>
+	<td class="summary">Get the maximum value of two or more values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#min">min (...)</a></td>
+	<td class="summary">Get the minimum value of two or more values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#num">num (input)</a></td>
+	<td class="summary">Numerical representation of input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#print">print (...)</a></td>
+	<td class="summary">Improved print function</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pprint">pprint (tbl)</a></td>
+	<td class="summary">Pretty print a table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#property">property (klass, name, getter, setter)</a></td>
+	<td class="summary">Create a property on a class</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#repr">repr (input)</a></td>
+	<td class="summary">Simple string representation of an object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#str">str (input)</a></td>
+	<td class="summary">Convert any object into a string</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#reversed">reversed (object)</a></td>
+	<td class="summary">Reverse the order of the elements in a table or list</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sorted">sorted (object, key)</a></td>
+	<td class="summary">Sort an object</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "class"></a>
+    <strong>class (name, ...)</strong>
+    </dt>
+    <dd>
+    Create a new class type
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of the class
+        </li>
+        <li><span class="parameter">...</span>
+         base classes to inherit from
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- create class A
+</span>A = class(<span class="string">'A'</span>)
+<span class="keyword">function</span> A:__init(value)
+ self.value = value
+<span class="keyword">end</span>
+<span class="comment">-- Create class B that inherits from A
+</span>B = class(<span class="string">'B'</span>, <span class="string">'A'</span>)
+<span class="comment">-- Create and use instances
+</span>a = A(<span class="number">5</span>)
+<span class="global">assert</span>(a.value == <span class="number">5</span>)
+b = B(<span class="number">5</span>)
+<span class="global">assert</span>(b.value == <span class="number">5</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getattr"></a>
+    <strong>getattr (cls, value)</strong>
+    </dt>
+    <dd>
+    Indexing that supports Python-like property getters
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cls</span>
+
+        </li>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "setattr"></a>
+    <strong>setattr (cls, key, value)</strong>
+    </dt>
+    <dd>
+    Index setting that supports Python-like property setters
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cls</span>
+
+        </li>
+        <li><span class="parameter">key</span>
+
+        </li>
+        <li><span class="parameter">value</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "copy"></a>
+    <strong>copy (object, deep)</strong>
+    </dt>
+    <dd>
+    Copy an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+         any table-like object
+        </li>
+        <li><span class="parameter">deep</span>
+         whether to copy recursively
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        copy of object at a new memory location
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "eval"></a>
+    <strong>eval (input)</strong>
+    </dt>
+    <dd>
+    Evaluates a string as code and returns result (Python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        stuff
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash"></a>
+    <strong>hash (input)</strong>
+    </dt>
+    <dd>
+    Unique integer representation of input
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         an integer, string or any object that has a __hash method
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        integer unique integer representation of object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isin"></a>
+    <strong>isin (sub, main)</strong>
+    </dt>
+    <dd>
+    Check if sub is contained in main (like Python's "x in y" syntax)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sub</span>
+
+        </li>
+        <li><span class="parameter">main</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isnotin"></a>
+    <strong>isnotin (sub, main)</strong>
+    </dt>
+    <dd>
+    Check if sub is NOT contained in main (like Python's "x not in y" syntax)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">sub</span>
+
+        </li>
+        <li><span class="parameter">main</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isinstance"></a>
+    <strong>isinstance (klass, other)</strong>
+    </dt>
+    <dd>
+    Check if class is an instance of another class recursively
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">klass</span>
+
+        </li>
+        <li><span class="parameter">other</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "max"></a>
+    <strong>max (...)</strong>
+    </dt>
+    <dd>
+    Get the maximum value of two or more values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         any objects that can be compared with <, >, and ==
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        maximum value of what was passed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "min"></a>
+    <strong>min (...)</strong>
+    </dt>
+    <dd>
+    Get the minimum value of two or more values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         any objects that can be compared with <, >, and ==
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        minimum value of what was passed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "num"></a>
+    <strong>num (input)</strong>
+    </dt>
+    <dd>
+    Numerical representation of input
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         any object that can be converted into a number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        numerical representation of input
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "print"></a>
+    <strong>print (...)</strong>
+    </dt>
+    <dd>
+    Improved print function
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pprint"></a>
+    <strong>pprint (tbl)</strong>
+    </dt>
+    <dd>
+    Pretty print a table
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tbl</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "property"></a>
+    <strong>property (klass, name, getter, setter)</strong>
+    </dt>
+    <dd>
+    Create a property on a class
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">klass</span>
+         class type to add the property to
+        </li>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of the property
+        </li>
+        <li><span class="parameter">getter</span>
+            <span class="types"><span class="type">function</span></span>
+         function to get the value of the property
+        </li>
+        <li><span class="parameter">setter</span>
+            <span class="types"><span class="type">function</span></span>
+         function to set the value of the property
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">A = class(<span class="string">'A'</span>)
+<span class="keyword">function</span> A:__init(value)
+  self._private = value
+<span class="keyword">end</span>
+
+property(A, <span class="string">'value'</span>,
+  <span class="keyword">function</span>(self) <span class="keyword">return</span> self._private * <span class="number">2</span> <span class="keyword">end</span>,
+  <span class="keyword">function</span>(self, value) self._private = value * <span class="number">2</span> <span class="keyword">end</span>,
+)
+a = A(<span class="number">1</span>)
+<span class="global">assert</span>(a.value == <span class="number">2</span>)
+a.value = <span class="number">2</span>
+<span class="global">assert</span>(a.value == <span class="number">4</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "repr"></a>
+    <strong>repr (input)</strong>
+    </dt>
+    <dd>
+    Simple string representation of an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "str"></a>
+    <strong>str (input)</strong>
+    </dt>
+    <dd>
+    Convert any object into a string
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         any object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        string representation of object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "reversed"></a>
+    <strong>reversed (object)</strong>
+    </dt>
+    <dd>
+    Reverse the order of the elements in a table or list
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+         object to reverse order of
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        copy of object with elements in reverse order
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sorted"></a>
+    <strong>sorted (object, key)</strong>
+    </dt>
+    <dd>
+    Sort an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+
+        </li>
+        <li><span class="parameter">key</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

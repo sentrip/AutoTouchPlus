@@ -1,0 +1,808 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Contexts">Contexts</a></li>
+<li><a href="#Registration">Registration</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><strong>screen.lua</strong></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>screen.lua</code></h1>
+<p>Screen interaction and observation helpers</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#screen.contains">screen.contains (pixel)</a></td>
+	<td class="summary">Check if the screen contains a pixel/set of pixels</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap">screen.tap (x, y, times, interval)</a></td>
+	<td class="summary">Tap the screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_if">screen.tap_if (condition, to_tap)</a></td>
+	<td class="summary">Tap the screen if a pixel/set of pixels is visible</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_until">screen.tap_until (condition, to_tap)</a></td>
+	<td class="summary">Tap the screen until a pixel/set of pixels is visible</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_while">screen.tap_while (condition, to_tap)</a></td>
+	<td class="summary">Tap the screen while a pixel/set of pixels is visible</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.swipe">screen.swipe (start_, end_, speed)</a></td>
+	<td class="summary">Swipe the screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.wait">screen.wait (condition)</a></td>
+	<td class="summary">Wait until a pixel/set of pixels is visible</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#screen.edge">screen.edge</a></td>
+	<td class="summary">Pixels on the corners of the screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.mid">screen.mid</a></td>
+	<td class="summary">Pixels centered on various locations on the screen</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#screen.check_interval">screen.check_interval</a></td>
+	<td class="summary">Number milliseconds after which the screen is checked for updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.wait_before_action">screen.wait_before_action</a></td>
+	<td class="summary">Number of seconds to wait before each action (tap_if, tap_until, ...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.wait_after_action">screen.wait_after_action</a></td>
+	<td class="summary">Number of seconds to wait after each action (tap_if, tap_until, ...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.wait_before_tap">screen.wait_before_tap</a></td>
+	<td class="summary">Number of seconds to wait before each tap</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.wait_after_tap">screen.wait_after_tap</a></td>
+	<td class="summary">Number of seconds to wait after each tap</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.debug">screen.debug</a></td>
+	<td class="summary">Print detailed information about taps, swipes and checks</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.width">screen.width</a></td>
+	<td class="summary">Width of screen from getScreenResolution() (not writable)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.height">screen.height</a></td>
+	<td class="summary">Height of screen from getScreenResolution() (not writable)</td>
+	</tr>
+</table>
+<h2><a href="#Contexts">Contexts</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#screen.action_context">screen.action_context</a></td>
+	<td class="summary">Context manager for screen actions and checking</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_context">screen.tap_context</a></td>
+	<td class="summary">Context manager for tapping</td>
+	</tr>
+</table>
+<h2><a href="#Registration">Registration</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#screen.before_action">screen.before_action (func)</a></td>
+	<td class="summary">Register a function to be run before an action (tap_if, tap_until, ...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.after_action">screen.after_action (func)</a></td>
+	<td class="summary">Register a function to be run after an action (tap_if, tap_until, ...)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.before_check">screen.before_check (func)</a></td>
+	<td class="summary">Register a function to be run before the screen is checked for updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.after_check">screen.after_check (func)</a></td>
+	<td class="summary">Register a function to be run after the screen is checked for updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.before_tap">screen.before_tap (func)</a></td>
+	<td class="summary">Register a function to be run before each tap</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.after_tap">screen.after_tap (func)</a></td>
+	<td class="summary">Register a function to be run after each tap</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.on_nth_check">screen.on_nth_check (n, func)</a></td>
+	<td class="summary">Register a function to be run after a number of consecutive screen checks</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "screen.contains"></a>
+    <strong>screen.contains (pixel)</strong>
+    </dt>
+    <dd>
+    Check if the screen contains a pixel/set of pixels
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pixel</span>
+            <span class="types"><span class="type">Pixel</span> or <span class="type">Pixels</span></span>
+         Pixel(s) instance to check position(s) of
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        does the screen contain the pixel(s)
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap"></a>
+    <strong>screen.tap (x, y, times, interval)</strong>
+    </dt>
+    <dd>
+    Tap the screen
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">int</span> or <span class="type">Pixel</span></span>
+         x-position or pixel to tap
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         (optional) y-position to tap
+        </li>
+        <li><span class="parameter">times</span>
+            <span class="types"><span class="type">int</span></span>
+         (optional) number of times to tap
+        </li>
+        <li><span class="parameter">interval</span>
+            <span class="types"><span class="type">number</span></span>
+         (optional) interval (in secs) between taps
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap_if"></a>
+    <strong>screen.tap_if (condition, to_tap)</strong>
+    </dt>
+    <dd>
+    Tap the screen if a pixel/set of pixels is visible
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">condition</span>
+            <span class="types"><span class="type">Pixel</span> or <span class="type">function</span></span>
+         pixel(s) to search for or an argumentless function that returns a boolean
+        </li>
+        <li><span class="parameter">to_tap</span>
+         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap_until"></a>
+    <strong>screen.tap_until (condition, to_tap)</strong>
+    </dt>
+    <dd>
+    Tap the screen until a pixel/set of pixels is visible
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">condition</span>
+            <span class="types"><span class="type">Pixel</span> or <span class="type">function</span></span>
+         see <a href="../modules/screen.lua.html#screen.tap_if">screen.tap_if</a>
+        </li>
+        <li><span class="parameter">to_tap</span>
+         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap_while"></a>
+    <strong>screen.tap_while (condition, to_tap)</strong>
+    </dt>
+    <dd>
+    Tap the screen while a pixel/set of pixels is visible
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">condition</span>
+            <span class="types"><span class="type">Pixel</span> or <span class="type">function</span></span>
+         see <a href="../modules/screen.lua.html#screen.tap_if">screen.tap_if</a>
+        </li>
+        <li><span class="parameter">to_tap</span>
+         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.swipe"></a>
+    <strong>screen.swipe (start_, end_, speed)</strong>
+    </dt>
+    <dd>
+    Swipe the screen
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start_</span>
+            <span class="types"><span class="type">Pixel</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         pixel at which to start the swipe
+        </li>
+        <li><span class="parameter">end_</span>
+            <span class="types"><span class="type">Pixel</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         pixel at which to end the swipe
+        </li>
+        <li><span class="parameter">speed</span>
+            <span class="types"><span class="type">int</span></span>
+         swipe speed (1-10)
+<p> Possible string arguments for start_ and end_ are:
+<p>     left, right, top, bottom, center,
+<p>     top_left, top_right, bottom_left, bottom_right
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.wait"></a>
+    <strong>screen.wait (condition)</strong>
+    </dt>
+    <dd>
+    Wait until a pixel/set of pixels is visible
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">condition</span>
+            <span class="types"><span class="type">Pixel</span> or <span class="type">function</span></span>
+         see <a href="../modules/screen.lua.html#screen.tap_if">screen.tap_if</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "screen.edge"></a>
+    <strong>screen.edge</strong>
+    </dt>
+    <dd>
+    Pixels on the corners of the screen
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">top_left</span>
+        x = 0, y = 0
+        </li>
+        <li><span class="parameter">top_right</span>
+        x = screen.width, y = 0
+        </li>
+        <li><span class="parameter">bottom_left</span>
+        x = 0, y = screen.height
+        </li>
+        <li><span class="parameter">bottom_right</span>
+        x = screen.width, y = screen.height
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.mid"></a>
+    <strong>screen.mid</strong>
+    </dt>
+    <dd>
+    Pixels centered on various locations on the screen
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">left</span>
+        x = 0, y = screen.height / 2
+        </li>
+        <li><span class="parameter">right</span>
+        x = screen.width, y = screen.height / 2
+        </li>
+        <li><span class="parameter">top</span>
+        x = screen.width / 2, y = 0
+        </li>
+        <li><span class="parameter">bottom</span>
+        x = screen.width / 2, y = screen.height
+        </li>
+        <li><span class="parameter">center</span>
+        x = screen.width / 2, y = screen.height / 2
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "screen.check_interval"></a>
+    <strong>screen.check_interval</strong>
+    </dt>
+    <dd>
+    Number milliseconds after which the screen is checked for updates
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.wait_before_action"></a>
+    <strong>screen.wait_before_action</strong>
+    </dt>
+    <dd>
+    Number of seconds to wait before each action (tap_if, tap_until, ...)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.wait_after_action"></a>
+    <strong>screen.wait_after_action</strong>
+    </dt>
+    <dd>
+    Number of seconds to wait after each action (tap_if, tap_until, ...)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.wait_before_tap"></a>
+    <strong>screen.wait_before_tap</strong>
+    </dt>
+    <dd>
+    Number of seconds to wait before each tap
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.wait_after_tap"></a>
+    <strong>screen.wait_after_tap</strong>
+    </dt>
+    <dd>
+    Number of seconds to wait after each tap
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.debug"></a>
+    <strong>screen.debug</strong>
+    </dt>
+    <dd>
+    Print detailed information about taps, swipes and checks
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.width"></a>
+    <strong>screen.width</strong>
+    </dt>
+    <dd>
+    Width of screen from getScreenResolution() (not writable)
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.height"></a>
+    <strong>screen.height</strong>
+    </dt>
+    <dd>
+    Height of screen from getScreenResolution() (not writable)
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Contexts"></a>Contexts</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "screen.action_context"></a>
+    <strong>screen.action_context</strong>
+    </dt>
+    <dd>
+    Context manager for screen actions and checking
+
+
+    <ul>
+        <li><span class="parameter">condition</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap_context"></a>
+    <strong>screen.tap_context</strong>
+    </dt>
+    <dd>
+    Context manager for tapping
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Registration"></a>Registration</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "screen.before_action"></a>
+    <strong>screen.before_action (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run before an action (tap_if, tap_until, ...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run before action (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.after_action"></a>
+    <strong>screen.after_action (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run after an action (tap_if, tap_until, ...)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run after action (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.before_check"></a>
+    <strong>screen.before_check (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run before the screen is checked for updates
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run before check (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.after_check"></a>
+    <strong>screen.after_check (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run after the screen is checked for updates
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run after check (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.before_tap"></a>
+    <strong>screen.before_tap (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run before each tap
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run before tap (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.after_tap"></a>
+    <strong>screen.after_tap (func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run after each tap
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run after tap (no arguments)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.on_nth_check"></a>
+    <strong>screen.on_nth_check (n, func)</strong>
+    </dt>
+    <dd>
+    Register a function to be run after a number of consecutive screen checks
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">int</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         number of checks to execute before calling function
+        </li>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         function to run after n consecutive checks
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-26 15:48:59 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
