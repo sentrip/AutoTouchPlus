@@ -2,6 +2,12 @@
 History
 -----------
 
+* 0.1.3 (2018-10-26)
+
+  * Changed install.lua to download latest GitHub release
+
+|
+
 * 0.1.2 (2018-10-26)
 
   * Added release script

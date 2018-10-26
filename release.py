@@ -30,28 +30,28 @@ if __name__ == '__main__':
   print('Creating release v%s...' % current_version)
 
   # Create release
-  form_args = []
-  for k, v in {
-    "tag_name": "v%s" % current_version,
-    "target_commitish": "master",
-    "name": "v%s" % current_version,
-    "body": changes,
-    "draft": 'false',
-    "prerelease": 'false'
-  }.items():
-    form_args.extend(['-F', '%s=%s' % (k, v)])
-  data = json.loads(subprocess.check_output(github + ['-X', 'POST'] + form_args + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases']))
-  if 'failed' in data['message'].lower():
-    print(red + 'Error creating release: %s - %s' % (data['message'], data['errors']))    
+  form_args = [
+    '--data', 
+    ("{" + ','.join(['"%s": "%s"' % (k, v) for k,v in {
+      'tag_name': 'v%s' % current_version,
+      'target_commitish': 'master',
+      'name': 'v%s' % current_version,
+      'body': 'Release of version %s' % current_version,
+      'draft': 'false',
+      'prerelease': 'false'
+    }.items()]) + "}").replace('"false"', 'false')
+  ]
+  data = json.loads(subprocess.check_output(github + ['-X', 'POST'] + form_args + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases']).decode())
+  if not data.get('name', None):
+    print(red + 'Error creating release: %s - %s' % (data['message'], data.get('errors', [])))    
     exit(0)
-
-  # resp = subprocess.check_output(github + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases/latest'])
+  # data = json.loads(subprocess.check_output(github + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases/latest']).decode())
   release_id = data['id']
 
   # Upload AutoTouchPlus.lua and tests.lua to latest release
-  for fname in ['AutoTouchPlus.lua', 'tests.lua']:
+  for fname in ['tests.lua']:#['AutoTouchPlus.lua', 'tests.lua']:
     data = json.loads(subprocess.check_output(github + ['-X', 'POST', '-F', "file=@%s" % fname, '-H', "Content-Type: application/octet-stream", 'https://uploads.github.com/repos/sentrip/AutoTouchPlus/releases/%s/assets?name=%s' % (release_id, fname)]).decode())
-    if 'failed' in data['message'].lower():
+    if not data.get('name', None):
       print(red + 'Error uploading %s: %s - %s' % (fname, data['message'], data['errors']))    
       break
   else:

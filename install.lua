@@ -1,10 +1,10 @@
 -- AutoTouchPlus installation script, simply run to install AutoTouchPlus!
+AUTOTOUCHPLUS_VERSION = '0.1.2'
 local _fcheck = io.popen('dpkg-query -W wget')
 local wget_not_installed = _fcheck:read('*a'):match('no packages found')
 _fcheck:close()
 assert(not wget_not_installed, 'wget not installed')
-local BASE_URL = "https://raw.githubusercontent.com/sentrip/AutoTouchPlus/master/"
-
+local BASE_URL = "https://github.com/sentrip/AutoTouchPlus/releases/download/v"..AUTOTOUCHPLUS_VERSION..'/'
 
 function get(name)
   local pth = string.format('%s/%s', rootDir(), name):gsub('/+', '/')
