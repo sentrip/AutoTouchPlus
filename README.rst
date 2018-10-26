@@ -8,7 +8,7 @@ AutoTouchPlus
 .. image:: https://coveralls.io/repos/github/sentrip/AutoTouchPlus/badge.svg
     :target: https://coveralls.io/github/sentrip/AutoTouchPlus
 
-.. image:: https://img.shields.io/github/release/qubyte/rubidium.svg
+.. image:: https://img.shields.io/github/release/sentrip/AutoTouchPlus.svg
     :alt: GitHub release 
     :target: https://github.com/sentrip/AutoTouchPlus.git
 
