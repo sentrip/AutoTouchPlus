@@ -8,6 +8,10 @@ AutoTouchPlus
 .. image:: https://coveralls.io/repos/github/sentrip/AutoTouchPlus/badge.svg
     :target: https://coveralls.io/github/sentrip/AutoTouchPlus
 
+.. image:: https://img.shields.io/github/release/qubyte/rubidium.svg
+    :alt: GitHub release 
+    :target: https://github.com/sentrip/AutoTouchPlus.git
+
 
 A framework for creating better, faster and shorter AutoTouch scripts
 
@@ -68,3 +72,5 @@ To use AutoTouchPlus, simply import it at the beginning of your script:
   -- lets print some nested objects!
   print(str(list{1, 2, (','):join{'a', 'b'}, sorted(list{5, 4, 3})}))
 
+
+.. include:: HISTORY.rst
