@@ -4,8 +4,8 @@
 -- @license Apache 2.0
 -- @copyright Djordje Pepic 2018
 -- @usage require("AutoTouchPlus")
--- @release 0.1.0
-AUTOTOUCHPLUS_VERSION = "0.1.0"
+-- @release 0.1.1
+AUTOTOUCHPLUS_VERSION = "0.1.1"
 
 abs = math.abs
 unpack = table.unpack
