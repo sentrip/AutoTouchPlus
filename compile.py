@@ -6,8 +6,8 @@ boilerplate = """---- AutoTouchPlus stuff and things.
 -- @license Apache 2.0
 -- @copyright Djordje Pepic 2018
 -- @usage require("AutoTouchPlus")
--- @release 0.1.1
-AUTOTOUCHPLUS_VERSION = "0.1.1"
+-- @release 0.1.2
+AUTOTOUCHPLUS_VERSION = "0.1.2"
 """
 
 files = ['src/core.lua', 'src/logic.lua'] + sorted(['src/' + i for i in os.listdir('src') if i != 'core.lua' and i != 'logic.lua'])
