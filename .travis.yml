@@ -1,34 +1,28 @@
 language: c
-
 sudo: false
-
 env:
   global:
-    - LUAROCKS=2.3.0
-    - secure: EsI6BqGKO5C7TSHN1B97tZhcCwrCBr8JviiMxgVhtx0rfuntqraA04AbtynJuQ1bM59TtJjDzz0DbqTgtYjDW4mcBEWodNBteHZYIc8IkssYQ7wtdfUrtECCDImvQQe0iJwj3D5Kkbb6iQw3MGjGs5lKpCN7JKPE4mYfpt0DT704l5W8uktnCNkC7JXqB4CUfsyjxJJ2XPR8FgbKFi40jnm2G1BAgGwsSaWLSgaoG1lmtr9Vk4plGDqhiVCLqm8hOisV4OLUS9YI+HLS6PGnISG2EX3osDgQgnXqi3TqtmHQA/0Z2xV1Ux7UdJeGEtxUPOqTnlmaCItgC0GdvbffqafAH75OlcLh/RbmCnJHi8WQgNlaW9WvW7a5yyEzUWvsAnNPfIMxI4UugXwbCfNPD398yHJwdKu8wLgdKwWJdoCEdVTQHxnw7hy20khVuB0fBm0m3LrrmoNikDqilev4R07q8wmU5x8Bd4m+CX0XMdZhddQgV9VsjE3wbKYK/lW+B9v0AJJct06im/mSXPg3IT9yvf66C1B8TeuBGwOb4XxEka0nQCTjVEFzJD//zNGDg8xo/3mh3ZQuubBC4wz6QjMTsVCIrDbhnd6ixcxYYJHnlH1qd/roUZIsHlHiYCbOh8aGHL6172KZn5iHnTK3HOvkvXJOyiTwx/YFRcqVabM=
+  - LUAROCKS=2.3.0
+  - secure: MARfZtmgk6SN6s1AjrEM4kL4CBZdOwg499h7/ZI06ADD9uucdbbLdp1X2UMYNwirzZ82FHHpv/6Uuw7MqAfnhH7fyjUDzYtmGcZc/7HSff1YmZuG9OJVwPuBRO2iW26EjkmIHnObcEwUCSLP0qPyHvZ+IneZNIhVm++wxE6a0zINnPZSM1XhnGKRehcTIK5Tw0TQz8/e3bOiQ1Bq7SKHVguWh2F0Pt40Hm9IGgoHjoFNZUdf/T/BohVoO0lAnWgOz95lddLTqHLsfUE8cCuJPDrGAz7sVexxaCvNVYzkAZxdV84chz7ywYhIHCxNaoP3MxE5JRTVMbFgP/24/cy1U4NNJoLYVagYEUiwGkmZECBGUH1+R1XfW+VrAKhDC3wcXlL/Io2dPXMTSgH19F3Z/4Oly0oR7/HEO5xNRa/RAYm6TxCAWDbgR4W5n878omqW6ogBmV07K3T1jtncr6SjfLZakg6BlxC3/41SzoC7DdZ0s6UYSSPuwxIo8MWNuW6IVoope4vrem/t+fanGxLtt0JOiZ5ULRMmUFMT1ySJzzCqeuvcmjhSffhPzx32LYtDco0O+c/0Q88YcHRyiWBm/Ttf5kPLcqelbZezWT1aoLEvndVGJ1VxzCa+dcuWdW8ub0kiNEHDqLbeBmq76p4C+v2t1crG0Ql7QFxQ6suLnAk=
   matrix:
-    - LUA=lua5.2
+  - LUA=lua5.2
 branches:
   only:
-    - master
-
+  - master
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install python3
-  - source .travis/setenv_lua.sh
-  - pip install --user cpp-coveralls
-  - luarocks install Lua-cURL         --server=https://luarocks.org/dev
-  - luarocks install luacov-coveralls --server=https://luarocks.org/dev
-  - luarocks install lunitx
-
+- sudo apt-get update
+- sudo apt-get install python3
+- source .travis/setenv_lua.sh
+- pip install --user cpp-coveralls
+- luarocks install Lua-cURL         --server=https://luarocks.org/dev
+- luarocks install luacov-coveralls --server=https://luarocks.org/dev
+- luarocks install lunitx
 script:
-  - make coverage
-  - make test
-
+- make coverage
+- make test
 after_success:
-  - coveralls -b .. -r .. -i ./src --dump c.report.json
-  - luacov-coveralls -j c.report.json -v
-
+- coveralls -b .. -r .. -i ./src --dump c.report.json
+- luacov-coveralls -j c.report.json -v
 deploy:
   skip_cleanup: true
   provider: script
@@ -36,7 +30,6 @@ deploy:
   on:
     tags: true
     branch: master
-
 notifications:
   email:
     on_success: change
