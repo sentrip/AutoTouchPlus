@@ -1576,6 +1576,12 @@ describe('path',
     assert(tostring(relative) == string.format('<RelativePath(points=%s, duration=%.2fs)>', len(relative.locations), relative.duration))
   end),
 
+  it('can get pairs of a Path', function() 
+    for i, v in pairs(Path{{x=1,y=1},{x=2,y=2}}) do
+      assert(v.x == i and v.y == i, 'Did not yield correct position in pairs')
+    end
+  end),
+
   it('can do Path + Path', function() 
     local path = Path{{x=0, y=0}, {x=10, y=10}}
     assert(path.point_count == 2, 'Did not create path with correct number of points')

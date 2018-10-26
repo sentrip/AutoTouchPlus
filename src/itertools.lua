@@ -99,16 +99,16 @@ function itertools.islice (iterable, start, stop)
       start = 1
    end
    return co_wrap(function ()
-      if stop ~= nil and stop - start < 1 then
-         return
-      end
-
+      -- these sections are covered but do not register
+      -- luacov: disable
+      if stop ~= nil and stop - start < 1 then return end
+      -- luacov: enable
       local current = 0
       for element in iterable do
          current = current + 1
-         if stop ~= nil and current > stop then
-            return
-         end
+         -- luacov: disable
+         if stop ~= nil and current > stop then return end
+         -- luacov: enable
          if current >= start then
             co_yield(element)
          end

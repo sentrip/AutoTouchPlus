@@ -74,19 +74,14 @@ is = setmetatable({}, {
     elseif isType(object, 'string') then
       return #object > 0
     elseif isType(object, 'table') then
-      if object.__is then 
-        return object:__is()
-      else
-        local size = #object
-        if size == 0 then
-          for i, v in pairs(object) do
-            size = size + 1
-          end
+      local size = #object
+      if size == 0 then
+        for i, v in pairs(object) do
+          size = size + 1
         end
-        return size > 0
       end
+      return size > 0
     end
-    return false
   end,
   --check type
   __index = function(s, value)

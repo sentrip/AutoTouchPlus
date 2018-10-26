@@ -10,7 +10,6 @@ local function namedRequality(name)
     if mt and mt.__name == name then
       return requal(me, other) 
     end
-    return false
   end
 end
 

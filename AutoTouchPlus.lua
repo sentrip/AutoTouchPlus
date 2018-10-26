@@ -559,9 +559,6 @@ return true
 elseif isType(object, 'string') then
 return #object > 0
 elseif isType(object, 'table') then
-if object.__is then
-return object:__is()
-else
 local size = #object
 if size == 0 then
 for i, v in pairs(object) do
@@ -570,8 +567,6 @@ end
 end
 return size > 0
 end
-end
-return false
 end,
 --check type
 __index = function(s, value)
@@ -981,16 +976,16 @@ if start == nil then
 start = 1
 end
 return co_wrap(function ()
-if stop ~= nil and stop - start < 1 then
-return
-end
-
+-- these sections are covered but do not register
+-- luacov: disable
+if stop ~= nil and stop - start < 1 then return end
+-- luacov: enable
 local current = 0
 for element in iterable do
 current = current + 1
-if stop ~= nil and current > stop then
-return
-end
+-- luacov: disable
+if stop ~= nil and current > stop then return end
+-- luacov: enable
 if current >= start then
 co_yield(element)
 end
@@ -1587,7 +1582,6 @@ local mt = getmetatable(other)
 if mt and mt.__name == name then
 return requal(me, other)
 end
-return false
 end
 end
 
