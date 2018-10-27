@@ -4,8 +4,8 @@
 -- @license Apache 2.0
 -- @copyright Djordje Pepic 2018
 -- @usage require("AutoTouchPlus")
--- @release 0.1.4
-AUTOTOUCHPLUS_VERSION = "0.1.4"
+-- @release 0.2.0
+AUTOTOUCHPLUS_VERSION = "0.2.0"
 
 unpack = table.unpack
 local _string_converters = {}
