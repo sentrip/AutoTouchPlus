@@ -1,5 +1,5 @@
 -- AutoTouchPlus installation script, simply run to install AutoTouchPlus!
-AUTOTOUCHPLUS_VERSION = '0.1.3'
+AUTOTOUCHPLUS_VERSION = '0.1.4'
 local _fcheck = io.popen('dpkg-query -W wget')
 local wget_not_installed = _fcheck:read('*a'):match('no packages found')
 _fcheck:close()
