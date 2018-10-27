@@ -1,6 +1,12 @@
 History
 -----------
 
+* 0.2.2 (2018-10-27)
+
+  * Refactored string functions out of global namespace
+
+|
+
 * 0.2.1 (2018-10-27)
 
   * Fixed file path bug in logging FileHandler

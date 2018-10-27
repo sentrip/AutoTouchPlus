@@ -20,19 +20,6 @@ describe('string',
     assert(not ('abc'):endswith('\n'), 'Not endswith \\n')
   end),
 
-  it('format', function() 
-    local o = 'Hello {}, {} and {}'
-    local x = 'Hello {:-8}, {:2}, {:3}'
-    local y = 'hello {j}, i am {d}'
-    local eo = 'Hello jayjay, bob and 1000'
-    local ex = 'Hello k       , bob, 1000'
-    local ey = 'hello john, i am djordje'
-    assertEqual(o:format('jayjay', 'bob', 1000), eo, 'Bad string format')
-    assertEqual(x:format('k', 'bob', 1000), ex, 'Bad string format')
-    assertEqual(y:format{j='john', d='djordje'}, ey, 'Bad string format')
-    assertEqual(('%s, %d'):format('hello', 100), 'hello, 100', 'Bad string format')
-  end),
-
   it('join', function() 
     assertEqual(('\n'):join({'a', 'b'}), 'a\nb', 
       'String join table failed')
@@ -60,15 +47,15 @@ describe('string',
     assertEqual(x:strip('ab'), expected, 'String not stripped correctly')
   end),
 
-  it('str_add', function() 
+  it('metafuncs add', function() 
     assertEqual('a' + 'b', 'ab', 'String add incorrect')
   end),
 
-  it('str_mul', function() 
+  it('metafuncs mul', function() 
     assertEqual('ab' * 2, 'abab', 'String mul incorrect') 
   end),
 
-  it('str_pairs', function() 
+  it('metafuncs pairs', function() 
     local c = 1
     local _t = {'a', 'b', 'c'}
     for i, v in pairs('abc') do 
@@ -78,13 +65,16 @@ describe('string',
     end
   end),
 
-  it('str_index', function() 
+  it('metafuncs index', function() 
     local s = 'abc'
     for i, v in pairs(string) do
       assert(Not.Nil(s[i]), 'string missing function '..i)
     end
     assertEqual(s[1], 'a', 'Positive string index failed')
     assertEqual(s[-1], 'c', 'Negative string index failed')
+  end), 
+  
+  it('metafuncs call', function() 
     local x = 'abcde'
     assert(x(2, 4) == 'bcd', 'Did not slice string correctly')
     assert(x{1, -2, 3} == 'adc', 'Did not slice string correctly')

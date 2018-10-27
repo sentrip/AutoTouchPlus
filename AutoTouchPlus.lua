@@ -2685,9 +2685,11 @@ return screen
 end
 
 
-function str_add(s, other) return s .. other end
+local metafuncs = {}
 
-function str_call(s,i,j)
+function metafuncs.add(s, other) return s .. other end
+
+function metafuncs.call(s,i,j)
 if isType(i, 'number') then
 return string.sub(s, i, j or #s)
 elseif isType(i, 'table') then
@@ -2697,59 +2699,38 @@ return table.concat(t)
 end
 end
 
-function str_index(s, i) end
+function metafuncs.index(s, i)
+if isType(i, 'number') then
+if i < 0 then i = #s + 1 + i end
+return string.sub(s, i, i)
+end
+return string[i]
+end
 
-function str_mul(s, other)
+function metafuncs.mul(s, other)
 local t = {}
 for i=1, other do t[i] = s end
 return table.concat(t)
 end
 
-function str_pairs(s)
+function metafuncs.pairs(s)
 local function _iter(s, idx)
 if idx < #s then return idx + 1, s[idx + 1] end
 end
 return _iter, s, 0
 end
 
-_string = {
-endswith = function(s, value) return s(-#value, -1) == value end,
+function string.endswith(s, value) return s(-#value, -1) == value end
 
-format = function(s, ...)
-if Not.Nil(string.find(s, '{[^}]*}')) then
-local args; local modified = ''; local stringified = '';
-local index = 1; local length = 0; local pad = 0
-if is.table(...) then args = ... else args = {...} end
+function string.join(s, other) return table.concat(other, s) end
 
-local function formatter(prev, match)
--- replace match
-if match == '' then
-stringified = str(args[index])
-elseif match:startswith(':') then
-length = tonumber(match(2))
-stringified = str(args[index])
-else
-for i, v in pairs(args) do if i == match then stringified = v end end
-end
--- apply padding if any
-pad = math.max(0, math.abs(length) - #stringified)
-if length < 0 then modified = modified + prev + stringified + ' ' * pad
-else modified = modified + prev + ' ' *  pad + stringified end
-index = index + 1
-length = 0
+function string.replace(s, sub, rep, limit)
+-- local _s, n = string.gsub(s, sub, rep, limit)
+-- return _s
+return string.gsub(s, sub, rep, limit)
 end
 
-s:gsub('(.-){([^}]*)}', formatter)
-return modified
-else return string.format(s, ...) end
-end,
-
-join = function(s, other) return table.concat(other, s) end,
-
-replace = function(s, sub, rep, limit)
-local _s, n = string.gsub(s, sub, rep, limit) return _s end,
-
-split = function(s, delim)
+function string.split(s, delim)
 local i = 1
 local idx = 1
 local values = {}
@@ -2767,33 +2748,24 @@ end
 end
 for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
 return list(values)
-end,
+end
 
-startswith = function(s, value) return s(1, #value) == value end,
+function string.startswith(s, value) return s(1, #value) == value end
 
-strip = function(s, remove)
+function string.strip(s, remove)
 local start=1
 local _end = #s
 for i=1, #s do if isnotin(s[i], remove) then start = i break end end
 for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
 return s(start, _end)
 end
-}
 
-
-getmetatable('').__add = str_add
-getmetatable('').__call = str_call
-getmetatable('').__ipairs = str_pairs
-getmetatable('').__mul = str_mul
-getmetatable('').__pairs = str_pairs
-getmetatable('').__index = function(s, i)
-if isType(i, 'number') then
-if i < 0 then i = #s + 1 + i end
-return string.sub(s, i, i)
-else
-return _string[i] or string[i]
-end
-end
+getmetatable('').__add = metafuncs.add
+getmetatable('').__call = metafuncs.call
+getmetatable('').__ipairs = metafuncs.pairs
+getmetatable('').__mul = metafuncs.mul
+getmetatable('').__pairs = metafuncs.pairs
+getmetatable('').__index = metafuncs.index
 
 
 local function _getType(name)

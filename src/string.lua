@@ -1,19 +1,23 @@
 --- String operation extensions
--- @module string
+-- @module string.lua
 
 
----- Addable strings
+local metafuncs = {}
+
+---- Add strings together with `+` operator
+-- @within Metatable functions
 -- @param s a thing
 -- @param other athing
 -- @usage "abc" + "cde" => "abccde"
-function str_add(s, other) return s .. other end 
+function metafuncs.add(s, other) return s .. other end 
 
----- Callable string indexing
+---- Slice a string into a smaller string.
 -- (see http://lua-users.org/wiki/StringIndexing)
+-- @within Metatable functions
 -- @usage x = 'abcde'
 --- x(2, 4) => 'bcd'
 --- x{1, -2, 3} => 'adc'
-function str_call(s,i,j)
+function metafuncs.call(s,i,j)
   if isType(i, 'number') then 
     return string.sub(s, i, j or #s) 
   elseif isType(i, 'table') then
@@ -23,122 +27,113 @@ function str_call(s,i,j)
   end
 end
 
----- Improved string indexing (see http://lua-users.org/wiki/StringIndexing)
+---- Index a single character in a string.
+-- (see http://lua-users.org/wiki/StringIndexing)
+-- @within Metatable functions
 -- @usage x = 'abcde'
---- x[3] => 'c'
---- x.<command> => function or nil
-function str_index(s, i) end
+--- x[3] == x[-3] == 'c'
+--- x.<command> == function or nil
+function metafuncs.index(s, i) 
+  if isType(i, 'number') then 
+    if i < 0 then i = #s + 1 + i end
+    return string.sub(s, i, i) 
+  end 
+  return string[i] 
+end
 
----- Multiply strings
+---- Multiply a string to repeat it
+-- @within Metatable functions
 -- @usage "ab" * 3 => "ababab"
-function str_mul(s, other) 
+function metafuncs.mul(s, other) 
   local t = {}
   for i=1, other do t[i] = s end
   return table.concat(t) 
 end 
 
----- Iterable strings
+---- Iterate over the characters in a string
+-- @within Metatable functions
 -- @usage x = 'ab'
 --- for i, v in pairs(x) do print(i, v) end
 --- prints -> 
 ---     1, a
 ---     2, b
-function str_pairs(s)
+function metafuncs.pairs(s)
   local function _iter(s, idx)
     if idx < #s then return idx + 1, s[idx + 1] end
   end
   return _iter, s, 0
 end
 
---- Additional methods for lua's 'string' object
--- @type string
-_string = {
----- String ends with value
-  endswith = function(s, value) return s(-#value, -1) == value end,
-
----- String formatting (Python style! ...kinda)
-  format = function(s, ...)
-    if Not.Nil(string.find(s, '{[^}]*}')) then
-      local args; local modified = ''; local stringified = ''; 
-      local index = 1; local length = 0; local pad = 0
-      if is.table(...) then args = ... else args = {...} end
-      
-      local function formatter(prev, match) 
-        -- replace match
-        if match == '' then 
-          stringified = str(args[index])
-        elseif match:startswith(':') then 
-          length = tonumber(match(2))
-          stringified = str(args[index])
-        else
-          for i, v in pairs(args) do if i == match then stringified = v end end 
-        end
-        -- apply padding if any
-        pad = math.max(0, math.abs(length) - #stringified)
-        if length < 0 then modified = modified + prev + stringified + ' ' * pad
-        else modified = modified + prev + ' ' *  pad + stringified end
-        index = index + 1
-        length = 0
-      end
-      
-      s:gsub('(.-){([^}]*)}', formatter)
-      return modified
-    else return string.format(s, ...) end
-  end,
+---- Check if a string ends with a value
+-- @tparam string s
+-- @tparam string value
+-- @treturn boolean
+function string.endswith(s, value) return s(-#value, -1) == value end
 
 ---- Concatenate a list/table of strings with another string as the delimiter
-  join = function(s, other) return table.concat(other, s) end,
+-- @tparam string s
+-- @param other
+-- @treturn string
+function string.join(s, other) return table.concat(other, s) end
 
----- Replace occurrences of sub in main with rep
-  replace = function(s, sub, rep, limit)  
-    local _s, n = string.gsub(s, sub, rep, limit) return _s end,
+---- Replace occurrences of a substring in a string
+-- @tparam string s
+-- @tparam string sub
+-- @param rep
+-- @int limit
+-- @treturn string
+function string.replace(s, sub, rep, limit)  
+  -- local _s, n = string.gsub(s, sub, rep, limit) 
+  -- return _s 
+  return string.gsub(s, sub, rep, limit)
+end
 
----- String splitting (Python style!)
-  split = function(s, delim)
-    local i = 1
-    local idx = 1
-    local values = {}
+---- Split a string by a delimiter into a table of strings
+-- @tparam string s
+-- @param delim
+-- @treturn list
+function string.split(s, delim)
+  local i = 1
+  local idx = 1
+  local values = {}
 
-    while i <= #s do
-      if is.Nil(delim) then values[i] = s[i]; i = i + 1
-      else
-        if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
-      else 
-          if is.Nil(values[idx]) then values[idx] = '' end
-          values[idx] = values[idx] .. s[i] 
-        end
-        i = i + 1
+  while i <= #s do
+    if is.Nil(delim) then values[i] = s[i]; i = i + 1
+    else
+      if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
+    else 
+        if is.Nil(values[idx]) then values[idx] = '' end
+        values[idx] = values[idx] .. s[i] 
       end
+      i = i + 1
     end
-    for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
-    return list(values)
-  end,
+  end
+  for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
+  return list(values)
+end
 
----- String starts with value
-  startswith = function(s, value) return s(1, #value) == value end,
+---- Check if a string starts with a value
+-- @tparam string s
+-- @tparam string value
+-- @treturn boolean
+function string.startswith(s, value) return s(1, #value) == value end
 
----- String stripping (Python style!)
-  strip = function(s, remove) 
-    local start=1
-    local _end = #s
-    for i=1, #s do if isnotin(s[i], remove) then start = i break end end
-    for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
-    return s(start, _end)
-    end
-}
-
+---- Strip characters from the beginning and end of a string
+-- @tparam string s
+-- @tparam string remove
+-- @treturn string
+function string.strip(s, remove) 
+  local start=1
+  local _end = #s
+  for i=1, #s do if isnotin(s[i], remove) then start = i break end end
+  for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
+  return s(start, _end)
+end
 
 -- Metatable patching
-getmetatable('').__add = str_add
-getmetatable('').__call = str_call
-getmetatable('').__ipairs = str_pairs
-getmetatable('').__mul = str_mul
-getmetatable('').__pairs = str_pairs
-getmetatable('').__index = function(s, i) 
-  if isType(i, 'number') then 
-    if i < 0 then i = #s + 1 + i end
-    return string.sub(s, i, i) 
-  else 
-    return _string[i] or string[i] 
-  end 
-end
+getmetatable('').__add = metafuncs.add
+getmetatable('').__call = metafuncs.call
+getmetatable('').__ipairs = metafuncs.pairs
+getmetatable('').__mul = metafuncs.mul
+getmetatable('').__pairs = metafuncs.pairs
+getmetatable('').__index = metafuncs.index

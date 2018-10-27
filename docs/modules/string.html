@@ -73,56 +73,56 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#str_add">str_add (s, other)</a></td>
+	<td class="name" nowrap><a href="#metafuncs.add">metafuncs.add (s, other)</a></td>
 	<td class="summary">Addable strings</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#str_call">str_call (s, i, j)</a></td>
+	<td class="name" nowrap><a href="#metafuncs.call">metafuncs.call (s, i, j)</a></td>
 	<td class="summary">Callable string indexing
  (see http://lua-users.org/wiki/StringIndexing)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#str_index">str_index (s, i)</a></td>
+	<td class="name" nowrap><a href="#metafuncs.index">metafuncs.index (s, i)</a></td>
 	<td class="summary">Improved string indexing (see http://lua-users.org/wiki/StringIndexing)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#str_mul">str_mul (s, other)</a></td>
+	<td class="name" nowrap><a href="#metafuncs.mul">metafuncs.mul (s, other)</a></td>
 	<td class="summary">Multiply strings</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#str_pairs">str_pairs (s)</a></td>
+	<td class="name" nowrap><a href="#metafuncs.pairs">metafuncs.pairs (s)</a></td>
 	<td class="summary">Iterable strings</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#endswith">endswith (s, value)</a></td>
+	<td class="summary">String ends with value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#join">join (s, other)</a></td>
+	<td class="summary">Concatenate a list/table of strings with another string as the delimiter</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#replace">replace (s, sub, rep, limit)</a></td>
+	<td class="summary">Replace occurrences of sub in main with rep</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#split">split (s, delim)</a></td>
+	<td class="summary">String splitting (Python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#startswith">startswith (s, value)</a></td>
+	<td class="summary">String starts with value</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#strip">strip (s, remove)</a></td>
+	<td class="summary">String stripping (Python style!)</td>
 	</tr>
 </table>
 <h2><a href="#Class_string">Class string </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#string:endswith">string:endswith (s, value)</a></td>
-	<td class="summary">String ends with value</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#string:format">string:format (s, ...)</a></td>
 	<td class="summary">String formatting (Python style! ...kinda)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#string:join">string:join (s, other)</a></td>
-	<td class="summary">Concatenate a list/table of strings with another string as the delimiter</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#string:replace">string:replace (s, sub, rep, limit)</a></td>
-	<td class="summary">Replace occurrences of sub in main with rep</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#string:split">string:split (s, delim)</a></td>
-	<td class="summary">String splitting (Python style!)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#string:startswith">string:startswith (s, value)</a></td>
-	<td class="summary">String starts with value</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#string:strip">string:strip (s, remove)</a></td>
-	<td class="summary">String stripping (Python style!)</td>
 	</tr>
 </table>
 
@@ -134,8 +134,8 @@
 
     <dl class="function">
     <dt>
-    <a name = "str_add"></a>
-    <strong>str_add (s, other)</strong>
+    <a name = "metafuncs.add"></a>
+    <strong>metafuncs.add (s, other)</strong>
     </dt>
     <dd>
     Addable strings
@@ -161,8 +161,8 @@
 
 </dd>
     <dt>
-    <a name = "str_call"></a>
-    <strong>str_call (s, i, j)</strong>
+    <a name = "metafuncs.call"></a>
+    <strong>metafuncs.call (s, i, j)</strong>
     </dt>
     <dd>
     Callable string indexing
@@ -194,8 +194,8 @@ x{<span class="number">1</span>, -<span class="number">2</span>, <span class="nu
 
 </dd>
     <dt>
-    <a name = "str_index"></a>
-    <strong>str_index (s, i)</strong>
+    <a name = "metafuncs.index"></a>
+    <strong>metafuncs.index (s, i)</strong>
     </dt>
     <dd>
     Improved string indexing (see http://lua-users.org/wiki/StringIndexing)
@@ -223,8 +223,8 @@ x.&lt;command&gt; =&gt; <span class="keyword">function</span> <span class="keywo
 
 </dd>
     <dt>
-    <a name = "str_mul"></a>
-    <strong>str_mul (s, other)</strong>
+    <a name = "metafuncs.mul"></a>
+    <strong>metafuncs.mul (s, other)</strong>
     </dt>
     <dd>
     Multiply strings
@@ -250,8 +250,8 @@ x.&lt;command&gt; =&gt; <span class="keyword">function</span> <span class="keywo
 
 </dd>
     <dt>
-    <a name = "str_pairs"></a>
-    <strong>str_pairs (s)</strong>
+    <a name = "metafuncs.pairs"></a>
+    <strong>metafuncs.pairs (s)</strong>
     </dt>
     <dd>
     Iterable strings
@@ -277,16 +277,9 @@ prints -&gt;
     </ul>
 
 </dd>
-</dl>
-    <h2 class="section-header has-description"><a name="Class_string"></a>Class string </h2>
-
-          <div class="section-description">
-          Additional methods for lua's 'string' object
-          </div>
-    <dl class="function">
     <dt>
-    <a name = "string:endswith"></a>
-    <strong>string:endswith (s, value)</strong>
+    <a name = "endswith"></a>
+    <strong>endswith (s, value)</strong>
     </dt>
     <dd>
     String ends with value
@@ -308,31 +301,8 @@ prints -&gt;
 
 </dd>
     <dt>
-    <a name = "string:format"></a>
-    <strong>string:format (s, ...)</strong>
-    </dt>
-    <dd>
-    String formatting (Python style! ...kinda)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">s</span>
-
-        </li>
-        <li><span class="parameter">...</span>
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "string:join"></a>
-    <strong>string:join (s, other)</strong>
+    <a name = "join"></a>
+    <strong>join (s, other)</strong>
     </dt>
     <dd>
     Concatenate a list/table of strings with another string as the delimiter
@@ -354,8 +324,8 @@ prints -&gt;
 
 </dd>
     <dt>
-    <a name = "string:replace"></a>
-    <strong>string:replace (s, sub, rep, limit)</strong>
+    <a name = "replace"></a>
+    <strong>replace (s, sub, rep, limit)</strong>
     </dt>
     <dd>
     Replace occurrences of sub in main with rep
@@ -383,8 +353,8 @@ prints -&gt;
 
 </dd>
     <dt>
-    <a name = "string:split"></a>
-    <strong>string:split (s, delim)</strong>
+    <a name = "split"></a>
+    <strong>split (s, delim)</strong>
     </dt>
     <dd>
     String splitting (Python style!)
@@ -406,8 +376,8 @@ prints -&gt;
 
 </dd>
     <dt>
-    <a name = "string:startswith"></a>
-    <strong>string:startswith (s, value)</strong>
+    <a name = "startswith"></a>
+    <strong>startswith (s, value)</strong>
     </dt>
     <dd>
     String starts with value
@@ -429,8 +399,8 @@ prints -&gt;
 
 </dd>
     <dt>
-    <a name = "string:strip"></a>
-    <strong>string:strip (s, remove)</strong>
+    <a name = "strip"></a>
+    <strong>strip (s, remove)</strong>
     </dt>
     <dd>
     String stripping (Python style!)
@@ -452,13 +422,43 @@ prints -&gt;
 
 </dd>
 </dl>
+    <h2 class="section-header has-description"><a name="Class_string"></a>Class string </h2>
+
+          <div class="section-description">
+          Additional methods for lua's 'string' object
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "string:format"></a>
+    <strong>string:format (s, ...)</strong>
+    </dt>
+    <dd>
+    String formatting (Python style! ...kinda)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+        </li>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-27 21:33:18 </i>
+<i style="float:right;">Last updated 2018-10-27 22:01:32 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
