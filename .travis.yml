@@ -29,7 +29,7 @@ deploy:
   script: python3 .scripts/release.py
   on:
     tags: true
-    branch: master
+    all_branches: true
 notifications:
   email:
     on_success: change
