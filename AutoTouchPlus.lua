@@ -546,8 +546,11 @@ end
 
 function int(input) return math.floor(input) end
 
-function iter(iterable) return itertools.values(iterable) end
 
+function iter(iterable)
+if type(iterable) == 'function' then return iterable end
+return itertools.values(iterable)
+end
 
 function len(input)
 if is.Nil(input) then return 0

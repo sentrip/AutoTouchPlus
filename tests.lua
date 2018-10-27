@@ -70,6 +70,19 @@ describe('builtins',
     assert((hash(function() end)))
   end),
 
+  it('iter', function() 
+    local c = 1
+    for i in iter({1,2,3}) do
+      assert(i == c, 'Iter did not yield correct value')
+      c = c + 1
+    end
+    c = 1
+    for i in iter(iter(iter(iter({1,2,3})))) do
+      assert(i == c, 'Nested iter did not yield correct value')
+      c = c + 1
+    end
+  end),
+
   it('len', function() 
     assertEqual(len({1,2,3}), 3, 'Incorrect table length') 
   end),

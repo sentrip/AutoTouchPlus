@@ -100,12 +100,15 @@ end
 -- @treturn int of input
 function int(input) return math.floor(input) end
 
+-- luacov: enable
+
 ---- Iterate over the elements in an iterable
 -- @param iterable
 -- @return 
-function iter(iterable) return itertools.values(iterable) end
-
--- luacov: enable
+function iter(iterable) 
+  if type(iterable) == 'function' then return iterable end
+  return itertools.values(iterable) 
+end
 
 ---- Length of iterable
 -- @param input any iterable
