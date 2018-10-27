@@ -113,7 +113,7 @@ end
 -- @param name
 -- @param mode
 function open(name, mode)
-  if rootDir then name = pathJoin(rootDir(), name) end
+  if rootDir then name = os.path_join(rootDir(), name) end
   local f = assert(io.open(name, mode or 'r'))
   yield(f)
   f:close()
@@ -167,7 +167,7 @@ end
 function time_ensured(t)
   local start = os.time()
   yield()
-  sleep(max(0, t - (os.time() - start)))
+  os.sleep(max(0, t - (os.time() - start)))
 end
 
 
@@ -175,9 +175,9 @@ end
 -- @param t_before
 -- @param t_after
 function time_padded(t_before, t_after)
-  sleep(t_before)
+  os.sleep(t_before)
   yield()
-  sleep(t_after or t_before)
+  os.sleep(t_after or t_before)
 end
 
 

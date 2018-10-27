@@ -66,7 +66,7 @@ end
 
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
   
-  sleep(before_wait)
+  os.sleep(before_wait)
     
   for func in iter(before_funcs) do
     func()
@@ -78,7 +78,7 @@ local create_context = contextmanager(function(before_wait, after_wait, before_f
     func()
   end
 
-  sleep(after_wait)
+  os.sleep(after_wait)
 
 end)
 ---

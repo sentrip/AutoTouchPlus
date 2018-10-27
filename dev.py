@@ -3,10 +3,10 @@ import argparse, os, subprocess, sys
 
 def get_cli_args():
   parser = argparse.ArgumentParser(usage='dev.py [-h] [-ip IP] [-p P] cmd: (autotouch | dav | install | stop_dav | tail) [cmd_args]')
-  parser.add_argument('-ip', type=str, help='Ip address of device')
-  parser.add_argument('-p', type=str, help='Ssh password of device')
-  parser.add_argument('cmd', type=str, help='Command to run (autotouch, dav, install, stop_dav, tail)')
-  parser.add_argument('cmd_args', nargs='*')
+  parser.add_argument('-ip', type=str, help='ip address of device')
+  parser.add_argument('-p', type=str, help='ssh password of device')
+  parser.add_argument('cmd', type=str, help='command to run (autotouch, dav, install, stop_dav, tail)')
+  parser.add_argument('cmd_args', nargs='*', help='(optional) arguments for command (only for: autotouch, tail)')
   args = parser.parse_args()
   ip_pass = {}
   for name, fname, argname in [('ip', '.last_ip', '-ip'), ('p', '.sshpass', '-p')]:

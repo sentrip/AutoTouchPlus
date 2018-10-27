@@ -71,63 +71,63 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#get_cwd">get_cwd (file)</a></td>
-	<td class="summary">Get the current working directory</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#exe">exe (cmd, split_output, suppress_log)</a></td>
 	<td class="summary">Execute a shell command and return the result</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#fcopy">fcopy (src, dest, overwrite, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.copy">os.copy (src, dest, overwrite, add_rootDir)</a></td>
 	<td class="summary">Copy a file or directory</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#find">find (name, starting_directory)</a></td>
+	<td class="name" nowrap><a href="#os.find">os.find (name, starting_directory)</a></td>
 	<td class="summary">Find a file or directory</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isDir">isDir (name)</a></td>
+	<td class="name" nowrap><a href="#os.getcwd">os.getcwd (file)</a></td>
+	<td class="summary">Get the current working directory</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#os.is_dir">os.is_dir (name)</a></td>
 	<td class="summary">Check if a path is a directory</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isFile">isFile (name)</a></td>
+	<td class="name" nowrap><a href="#os.is_file">os.is_file (name)</a></td>
 	<td class="summary">Check if a path is a file</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#listdir">listdir (dirname)</a></td>
+	<td class="name" nowrap><a href="#os.listdir">os.listdir (dirname)</a></td>
 	<td class="summary">List the contents of a directory</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#pathExists">pathExists (path)</a></td>
+	<td class="name" nowrap><a href="#os.path_exists">os.path_exists (path)</a></td>
 	<td class="summary">Check if a path exists</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#pathJoin">pathJoin (...)</a></td>
+	<td class="name" nowrap><a href="#os.path_join">os.path_join (...)</a></td>
 	<td class="summary">Join one or more paths</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#readLine">readLine (f, lineNumber, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.read_line">os.read_line (f, lineNumber, add_rootDir)</a></td>
 	<td class="summary">Read a single line from a file</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#readLines">readLines (f, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.read_lines">os.read_lines (f, add_rootDir)</a></td>
 	<td class="summary">Read all the lines in a file</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#sizeof">sizeof (name, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.sizeof">os.sizeof (name, add_rootDir)</a></td>
 	<td class="summary">Get the size of a file or directory</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#sleep">sleep (seconds)</a></td>
+	<td class="name" nowrap><a href="#os.sleep">os.sleep (seconds)</a></td>
 	<td class="summary">Sleep for a certain amount of seconds (millisecond precision)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#writeLine">writeLine (line, lineNumber, filename, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.write_line">os.write_line (line, lineNumber, filename, add_rootDir)</a></td>
 	<td class="summary">Write a single line to a file</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#writeLines">writeLines (lines, filename, mode, prepend_rootDir)</a></td>
+	<td class="name" nowrap><a href="#os.write_lines">os.write_lines (lines, filename, mode, add_rootDir)</a></td>
 	<td class="summary">Write multiple lines to a file</td>
 	</tr>
 </table>
@@ -139,33 +139,6 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
-    <dt>
-    <a name = "get_cwd"></a>
-    <strong>get_cwd (file)</strong>
-    </dt>
-    <dd>
-    Get the current working directory
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">file</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         (Optional) file name to append to end of path
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-        path of current working directory
-    </ol>
-
-
-
-
-</dd>
     <dt>
     <a name = "exe"></a>
     <strong>exe (cmd, split_output, suppress_log)</strong>
@@ -205,8 +178,8 @@
 
 </dd>
     <dt>
-    <a name = "fcopy"></a>
-    <strong>fcopy (src, dest, overwrite, prepend_rootDir)</strong>
+    <a name = "os.copy"></a>
+    <strong>os.copy (src, dest, overwrite, add_rootDir)</strong>
     </dt>
     <dd>
     Copy a file or directory
@@ -226,7 +199,7 @@
             <span class="types"><span class="type">boolean</span></span>
          whether to overwrite any existing files/directories
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -238,8 +211,8 @@
 
 </dd>
     <dt>
-    <a name = "find"></a>
-    <strong>find (name, starting_directory)</strong>
+    <a name = "os.find"></a>
+    <strong>os.find (name, starting_directory)</strong>
     </dt>
     <dd>
     Find a file or directory
@@ -272,8 +245,35 @@
 
 </dd>
     <dt>
-    <a name = "isDir"></a>
-    <strong>isDir (name)</strong>
+    <a name = "os.getcwd"></a>
+    <strong>os.getcwd (file)</strong>
+    </dt>
+    <dd>
+    Get the current working directory
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         (Optional) file name to append to end of path
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        path of current working directory
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "os.is_dir"></a>
+    <strong>os.is_dir (name)</strong>
     </dt>
     <dd>
     Check if a path is a directory
@@ -299,8 +299,8 @@
 
 </dd>
     <dt>
-    <a name = "isFile"></a>
-    <strong>isFile (name)</strong>
+    <a name = "os.is_file"></a>
+    <strong>os.is_file (name)</strong>
     </dt>
     <dd>
     Check if a path is a file
@@ -326,8 +326,8 @@
 
 </dd>
     <dt>
-    <a name = "listdir"></a>
-    <strong>listdir (dirname)</strong>
+    <a name = "os.listdir"></a>
+    <strong>os.listdir (dirname)</strong>
     </dt>
     <dd>
     List the contents of a directory
@@ -353,8 +353,8 @@
 
 </dd>
     <dt>
-    <a name = "pathExists"></a>
-    <strong>pathExists (path)</strong>
+    <a name = "os.path_exists"></a>
+    <strong>os.path_exists (path)</strong>
     </dt>
     <dd>
     Check if a path exists
@@ -380,8 +380,8 @@
 
 </dd>
     <dt>
-    <a name = "pathJoin"></a>
-    <strong>pathJoin (...)</strong>
+    <a name = "os.path_join"></a>
+    <strong>os.path_join (...)</strong>
     </dt>
     <dd>
     Join one or more paths
@@ -406,8 +406,8 @@
 
 </dd>
     <dt>
-    <a name = "readLine"></a>
-    <strong>readLine (f, lineNumber, prepend_rootDir)</strong>
+    <a name = "os.read_line"></a>
+    <strong>os.read_line (f, lineNumber, add_rootDir)</strong>
     </dt>
     <dd>
     Read a single line from a file
@@ -417,13 +417,13 @@
     <ul>
         <li><span class="parameter">f</span>
             <span class="types"><span class="type">file</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         file or filename (see <a href="../modules/system.html#readLines">readLines</a>)
+         file or filename (see <a href="../modules/system.html#os.read_lines">os.read_lines</a>)
         </li>
         <li><span class="parameter">lineNumber</span>
             <span class="types"><span class="type">number</span></span>
          line number to read (starts at 1)
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -441,8 +441,8 @@
 
 </dd>
     <dt>
-    <a name = "readLines"></a>
-    <strong>readLines (f, prepend_rootDir)</strong>
+    <a name = "os.read_lines"></a>
+    <strong>os.read_lines (f, add_rootDir)</strong>
     </dt>
     <dd>
     Read all the lines in a file
@@ -454,7 +454,7 @@
             <span class="types"><span class="type">file</span> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
          file object or file name. If a file object is passed, then it is not closed.
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -472,8 +472,8 @@
 
 </dd>
     <dt>
-    <a name = "sizeof"></a>
-    <strong>sizeof (name, prepend_rootDir)</strong>
+    <a name = "os.sizeof"></a>
+    <strong>os.sizeof (name, add_rootDir)</strong>
     </dt>
     <dd>
     Get the size of a file or directory
@@ -484,7 +484,7 @@
         <li><span class="parameter">name</span>
          path name to check size of
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -502,8 +502,8 @@
 
 </dd>
     <dt>
-    <a name = "sleep"></a>
-    <strong>sleep (seconds)</strong>
+    <a name = "os.sleep"></a>
+    <strong>os.sleep (seconds)</strong>
     </dt>
     <dd>
     Sleep for a certain amount of seconds (millisecond precision)
@@ -523,8 +523,8 @@
 
 </dd>
     <dt>
-    <a name = "writeLine"></a>
-    <strong>writeLine (line, lineNumber, filename, prepend_rootDir)</strong>
+    <a name = "os.write_line"></a>
+    <strong>os.write_line (line, lineNumber, filename, add_rootDir)</strong>
     </dt>
     <dd>
     Write a single line to a file
@@ -544,7 +544,7 @@
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
          name of file to write to
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -556,8 +556,8 @@
 
 </dd>
     <dt>
-    <a name = "writeLines"></a>
-    <strong>writeLines (lines, filename, mode, prepend_rootDir)</strong>
+    <a name = "os.write_lines"></a>
+    <strong>os.write_lines (lines, filename, mode, add_rootDir)</strong>
     </dt>
     <dd>
     Write multiple lines to a file
@@ -577,7 +577,7 @@
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
          write mode (uses same argument as io.open)
         </li>
-        <li><span class="parameter">prepend_rootDir</span>
+        <li><span class="parameter">add_rootDir</span>
             <span class="types"><span class="type">boolean</span></span>
          should rootDir() be prepended to file name
         </li>
@@ -595,7 +595,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-26 23:04:51 </i>
+<i style="float:right;">Last updated 2018-10-27 03:38:44 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

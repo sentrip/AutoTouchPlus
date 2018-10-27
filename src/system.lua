@@ -8,13 +8,6 @@ local function _getType(name)
     name, name), true, true)
 end
 
---- Get the current working directory
--- @tparam string file (Optional) file name to append to end of path
--- @treturn string path of current working directory
-function get_cwd(file)
-  return exe('pwd')
-end
-
 --- Execute a shell command and return the result
 -- @tparam string|table cmd Unix command to execute.
 -- String commands are passed directly to the shell.
@@ -30,7 +23,7 @@ function exe(cmd, split_output, suppress_log)
   if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
   
   local f = assert(io.popen(cmd, 'r'))
-  local data = readLines(f)
+  local data = os.read_lines(f)
   local success, status, code = f:close()
   if split_output then
     if #data == 1 then data = data[1] end
@@ -49,16 +42,16 @@ end
 -- @tparam string src source to copy from (file or directory)
 -- @tparam string dest desination to copy to (file or directory, but has to be a directory if src is a directory)
 -- @tparam boolean overwrite whether to overwrite any existing files/directories 
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
-function fcopy(src, dest, overwrite, prepend_rootDir) 
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
+function os.copy(src, dest, overwrite, add_rootDir) 
   if is.Nil(overwrite) then overwrite = true end
   log.debug('Copying files from %s to %s', src, dest)
   local cmd = list{'cp'}
-  if isDir(src) then cmd:append('-R') end
+  if os.is_dir(src) then cmd:append('-R') end
   if not overwrite then cmd:append('-n') end
-  if prepend_rootDir ~= false and rootDir then 
-    src = pathJoin(rootDir(), src) 
-    dest = pathJoin(rootDir(), dest) 
+  if add_rootDir ~= false and rootDir then 
+    src = os.path_join(rootDir(), src) 
+    dest = os.path_join(rootDir(), dest) 
   end
   cmd:extend{src, dest}
   exe(cmd, true, true)
@@ -71,7 +64,7 @@ end
 -- where type is one of f, file, dir or d, and start is an optional value in the table.
 -- @tparam string starting_directory directory in which to begin search (can drastically increase speed)
 -- @treturn string absolute path if it exists, an empty string otherwise
-function find(name, starting_directory) 
+function os.find(name, starting_directory) 
   local _type = 'f'
   if is.table(name) then
     starting_directory = name.start
@@ -88,30 +81,35 @@ function find(name, starting_directory)
   return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
 end
 
+--- Get the current working directory
+-- @tparam string file (Optional) file name to append to end of path
+-- @treturn string path of current working directory
+function os.getcwd(file) return exe('pwd') end
+
 ---- Check if a path is a directory
 -- @tparam string name path to check
 -- @treturn boolean is the path a directory
-function isDir(name) return _getType(name) == 'DIR' end
+function os.is_dir(name) return _getType(name) == 'DIR' end
 
 ---- Check if a path is a file
 -- @tparam string name path to check
 -- @treturn boolean is the path a file
-function isFile(name) return _getType(name) == 'FILE' end
+function os.is_file(name) return _getType(name) == 'FILE' end
 
 ---- List the contents of a directory
 -- @tparam string dirname path of the directory
 -- @treturn table sorted table of file names found in dirname
-function listdir(dirname) return sorted(exe{'ls', dirname}) end
+function os.listdir(dirname) return sorted(exe{'ls', dirname}) end
 
 ---- Check if a path exists
 -- @tparam string path path to check
 -- @treturn boolean does the path exist
-function pathExists(path) return _getType(path) ~= 'INVALID' end
+function os.path_exists(path) return _getType(path) ~= 'INVALID' end
 
 ---- Join one or more paths
 -- @param ... file paths to join
 -- @treturn string concatenated path of all names with the correct number of /s
-function pathJoin(...) 
+function os.path_join(...) 
   local values
   if is.table(...) then values = ... else values = {...} end
   local s = string.gsub(table.concat(values, '/'), '/+', '/')
@@ -119,25 +117,25 @@ function pathJoin(...)
 end
 
 ---- Read a single line from a file
--- @tparam file|string f file or filename (see @{readLines})
+-- @tparam file|string f file or filename (see @{os.read_lines})
 -- @tparam number lineNumber line number to read (starts at 1)
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
 -- @treturn string contents of line at lineNumber
-function readLine(f, lineNumber, prepend_rootDir) 
-  local lines = readLines(f, prepend_rootDir)
+function os.read_line(f, lineNumber, add_rootDir) 
+  local lines = os.read_lines(f, add_rootDir)
   return lines[lineNumber] 
 end 
 
 ---- Read all the lines in a file
 -- @tparam file|string f file object or file name. If a file object is passed, then it is not closed.
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
 -- @treturn table strings of each line with the newline character removed
-function readLines(f, prepend_rootDir) 
+function os.read_lines(f, add_rootDir) 
   local lines = list()
   local is_file = is.file(f)
   if not is_file then 
     log.debug('Opening file: %s', f)
-    if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
+    if rootDir and add_rootDir ~= false then f = os.path_join(rootDir(), f) end
     f = assert(io.open(f, 'r')) 
   end
   log.debug('Reading lines: %s', f)
@@ -148,10 +146,10 @@ end
 
 ---- Get the size of a file or directory
 -- @param name path name to check size of
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
 -- @treturn number size of file/directory at path in bytes
-function sizeof(name, prepend_rootDir) 
-  if rootDir and prepend_rootDir ~= false then name = pathJoin(rootDir(), name) end
+function os.sizeof(name, add_rootDir) 
+  if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end
   local f = assert(io.open(name))
   local size = tonumber(f:seek('end'))
   f:close()
@@ -160,7 +158,7 @@ end
 
 ---- Sleep for a certain amount of seconds (millisecond precision)
 -- @tparam number seconds number of seconds to sleep for
-function sleep(seconds)
+function os.sleep(seconds)
   log.debug('Sleeping for %.1fs', seconds)
   if seconds <= 0.01 then
     local current = os.clock()
@@ -177,21 +175,21 @@ end
 -- @tparam string line data to write to the file
 -- @tparam number lineNumber line number at which to write the line
 -- @tparam string filename name of file to write to 
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
-function writeLine(line, lineNumber, filename, prepend_rootDir) 
-  local lines = readLines(filename, prepend_rootDir)
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
+function os.write_line(line, lineNumber, filename, add_rootDir) 
+  local lines = os.read_lines(filename, add_rootDir)
   lines[lineNumber] = line
-  writeLines(lines, filename, 'w', prepend_rootDir)
+  os.write_lines(lines, filename, 'w', add_rootDir)
 end 
 
 ---- Write multiple lines to a file
 -- @tparam table lines strings of each line
 -- @tparam string filename name of file to write to
 -- @tparam string mode write mode (uses same argument as io.open)
--- @tparam boolean prepend_rootDir should rootDir() be prepended to file name
-function writeLines(lines, filename, mode, prepend_rootDir) 
+-- @tparam boolean add_rootDir should rootDir() be prepended to file name
+function os.write_lines(lines, filename, mode, add_rootDir) 
   log.debug('Writing lines: %s', filename)
-  if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
+  if rootDir and add_rootDir ~= false then filename = os.path_join(rootDir(), filename) end
   local f = assert(io.open(filename, mode or 'w'))
   for i, v in pairs(lines) do f:write(v .. '\n') end 
   assert(f:close())

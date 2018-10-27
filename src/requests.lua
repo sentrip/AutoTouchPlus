@@ -89,7 +89,7 @@ function Request:__init(request)
   self.url = request.url or request[1] or ''
   -- luacov: disable
   if rootDir then
-    self._response_fn = pathJoin(rootDir(), '_response.txt')
+    self._response_fn = os.path_join(rootDir(), '_response.txt')
   else
     self._response_fn = '_response.txt'
   end

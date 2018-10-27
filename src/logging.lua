@@ -117,7 +117,7 @@ function FileHandler:__init(options)
   LogHandler.__init(self, options)
   self.filename = options[1] or options.file
   assert(self.filename, 'Must provide filename for FileHandler')
-  if rootDir then self.filename = pathJoin(rootDir(), self.filename) end
+  if rootDir then self.filename = os.path_join(rootDir(), self.filename) end
 end
 
 function FileHandler:record(s) 

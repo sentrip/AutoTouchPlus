@@ -758,7 +758,7 @@ end
 
 
 function open(name, mode)
-if rootDir then name = pathJoin(rootDir(), name) end
+if rootDir then name = os.path_join(rootDir(), name) end
 local f = assert(io.open(name, mode or 'r'))
 yield(f)
 f:close()
@@ -803,14 +803,14 @@ end
 function time_ensured(t)
 local start = os.time()
 yield()
-sleep(max(0, t - (os.time() - start)))
+os.sleep(max(0, t - (os.time() - start)))
 end
 
 
 function time_padded(t_before, t_after)
-sleep(t_before)
+os.sleep(t_before)
 yield()
-sleep(t_after or t_before)
+os.sleep(t_after or t_before)
 end
 
 
@@ -1479,7 +1479,7 @@ function FileHandler:__init(options)
 LogHandler.__init(self, options)
 self.filename = options[1] or options.file
 assert(self.filename, 'Must provide filename for FileHandler')
-if rootDir then self.filename = pathJoin(rootDir(), self.filename) end
+if rootDir then self.filename = os.path_join(rootDir(), self.filename) end
 end
 
 function FileHandler:record(s)
@@ -2295,7 +2295,7 @@ self.method = request.method or "GET"
 self.url = request.url or request[1] or ''
 -- luacov: disable
 if rootDir then
-self._response_fn = pathJoin(rootDir(), '_response.txt')
+self._response_fn = os.path_join(rootDir(), '_response.txt')
 else
 self._response_fn = '_response.txt'
 end
@@ -2484,7 +2484,7 @@ end
 
 local create_context = contextmanager(function(before_wait, after_wait, before_funcs, after_funcs)
 
-sleep(before_wait)
+os.sleep(before_wait)
 
 for func in iter(before_funcs) do
 func()
@@ -2496,7 +2496,7 @@ for func in iter(after_funcs) do
 func()
 end
 
-sleep(after_wait)
+os.sleep(after_wait)
 
 end)
 
@@ -2801,10 +2801,6 @@ return exe(string.format(
 name, name), true, true)
 end
 
-function get_cwd(file)
-return exe('pwd')
-end
-
 function exe(cmd, split_output, suppress_log)
 if is.Nil(split_output) then split_output = true end
 if isNotType(cmd, 'string') then cmd = table.concat(cmd, ' ') end
@@ -2812,7 +2808,7 @@ if not suppress_log then log.debug('Executing command: '..cmd:gsub('%%', '\\')) 
 if rootDir then cmd = 'cd '..rootDir()..' && '..cmd end
 
 local f = assert(io.popen(cmd, 'r'))
-local data = readLines(f)
+local data = os.read_lines(f)
 local success, status, code = f:close()
 if split_output then
 if #data == 1 then data = data[1] end
@@ -2827,21 +2823,21 @@ return data or ''
 end
 end
 
-function fcopy(src, dest, overwrite, prepend_rootDir)
+function os.copy(src, dest, overwrite, add_rootDir)
 if is.Nil(overwrite) then overwrite = true end
 log.debug('Copying files from %s to %s', src, dest)
 local cmd = list{'cp'}
-if isDir(src) then cmd:append('-R') end
+if os.is_dir(src) then cmd:append('-R') end
 if not overwrite then cmd:append('-n') end
-if prepend_rootDir ~= false and rootDir then
-src = pathJoin(rootDir(), src)
-dest = pathJoin(rootDir(), dest)
+if add_rootDir ~= false and rootDir then
+src = os.path_join(rootDir(), src)
+dest = os.path_join(rootDir(), dest)
 end
 cmd:extend{src, dest}
 exe(cmd, true, true)
 end
 
-function find(name, starting_directory)
+function os.find(name, starting_directory)
 local _type = 'f'
 if is.table(name) then
 starting_directory = name.start
@@ -2858,32 +2854,34 @@ end
 return exe({'find', starting_directory or '.', '-type', _type, '-name', name})
 end
 
-function isDir(name) return _getType(name) == 'DIR' end
+function os.getcwd(file) return exe('pwd') end
 
-function isFile(name) return _getType(name) == 'FILE' end
+function os.is_dir(name) return _getType(name) == 'DIR' end
 
-function listdir(dirname) return sorted(exe{'ls', dirname}) end
+function os.is_file(name) return _getType(name) == 'FILE' end
 
-function pathExists(path) return _getType(path) ~= 'INVALID' end
+function os.listdir(dirname) return sorted(exe{'ls', dirname}) end
 
-function pathJoin(...)
+function os.path_exists(path) return _getType(path) ~= 'INVALID' end
+
+function os.path_join(...)
 local values
 if is.table(...) then values = ... else values = {...} end
 local s = string.gsub(table.concat(values, '/'), '/+', '/')
 return s
 end
 
-function readLine(f, lineNumber, prepend_rootDir)
-local lines = readLines(f, prepend_rootDir)
+function os.read_line(f, lineNumber, add_rootDir)
+local lines = os.read_lines(f, add_rootDir)
 return lines[lineNumber]
 end
 
-function readLines(f, prepend_rootDir)
+function os.read_lines(f, add_rootDir)
 local lines = list()
 local is_file = is.file(f)
 if not is_file then
 log.debug('Opening file: %s', f)
-if rootDir and prepend_rootDir ~= false then f = pathJoin(rootDir(), f) end
+if rootDir and add_rootDir ~= false then f = os.path_join(rootDir(), f) end
 f = assert(io.open(f, 'r'))
 end
 log.debug('Reading lines: %s', f)
@@ -2892,15 +2890,15 @@ if not is_file then assert(f:close()) end
 return lines
 end
 
-function sizeof(name, prepend_rootDir)
-if rootDir and prepend_rootDir ~= false then name = pathJoin(rootDir(), name) end
+function os.sizeof(name, add_rootDir)
+if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end
 local f = assert(io.open(name))
 local size = tonumber(f:seek('end'))
 f:close()
 return size
 end
 
-function sleep(seconds)
+function os.sleep(seconds)
 log.debug('Sleeping for %.1fs', seconds)
 if seconds <= 0.01 then
 local current = os.clock()
@@ -2913,15 +2911,15 @@ io.popen('sleep 0.001'):close()
 end
 end
 
-function writeLine(line, lineNumber, filename, prepend_rootDir)
-local lines = readLines(filename, prepend_rootDir)
+function os.write_line(line, lineNumber, filename, add_rootDir)
+local lines = os.read_lines(filename, add_rootDir)
 lines[lineNumber] = line
-writeLines(lines, filename, 'w', prepend_rootDir)
+os.write_lines(lines, filename, 'w', add_rootDir)
 end
 
-function writeLines(lines, filename, mode, prepend_rootDir)
+function os.write_lines(lines, filename, mode, add_rootDir)
 log.debug('Writing lines: %s', filename)
-if rootDir and prepend_rootDir ~= false then filename = pathJoin(rootDir(), filename) end
+if rootDir and add_rootDir ~= false then filename = os.path_join(rootDir(), filename) end
 local f = assert(io.open(filename, mode or 'w'))
 for i, v in pairs(lines) do f:write(v .. '\n') end
 assert(f:close())

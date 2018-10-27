@@ -1,6 +1,11 @@
-
 History
 -----------
+
+* 0.1.4 (2018-10-27)
+
+  * Refactored system functions into os namespace
+
+|
 
 * 0.1.3 (2018-10-26)
 
