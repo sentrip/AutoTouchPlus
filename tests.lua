@@ -725,7 +725,19 @@ describe('core',
   end),
 
   it('property', function() 
-    -- TODO: property test
+    local A = class('A')
+    function A:__init(value) 
+      self._private = value
+    end
+
+    property(A, 'value', 
+      function(self) return self._private * 2 end,
+      function(self, value) self._private = value * 2 end
+    )
+    local a = A(1)
+    assert(a.value == 2)
+    a.value = 2
+    assert(a.value == 8)
   end),
 
   it('str', function()
@@ -1127,9 +1139,9 @@ describe('logging',
 
   it('can log to a file', function(patched_stdout, request) 
     local fn = 'log.txt'
+    log.handlers = {FileHandler{fn}}
     if rootDir then fn = os.path_join(rootDir(), fn) end
     request.addfinalizer(function() io.popen('rm '..fn):close() end)
-    log.handlers = {FileHandler{fn}}
     log.info('test')
     assert(requal(os.read_lines(fn), {'[INFO    ] test'}), 'FileHandler did not write to file')
   end)

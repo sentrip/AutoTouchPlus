@@ -234,7 +234,19 @@ describe('core',
   end),
 
   it('property', function() 
-    -- TODO: property test
+    local A = class('A')
+    function A:__init(value) 
+      self._private = value
+    end
+
+    property(A, 'value', 
+      function(self) return self._private * 2 end,
+      function(self, value) self._private = value * 2 end
+    )
+    local a = A(1)
+    assert(a.value == 2)
+    a.value = 2
+    assert(a.value == 8)
   end),
 
   it('str', function()

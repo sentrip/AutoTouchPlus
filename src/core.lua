@@ -239,12 +239,12 @@ end
 --
 -- property(A, 'value', 
 --   function(self) return self._private * 2 end,
---   function(self, value) self._private = value * 2 end,
+--   function(self, value) self._private = value * 2 end
 -- )
 -- a = A(1)
 -- assert(a.value == 2)
 -- a.value = 2
--- assert(a.value == 4)
+-- assert(a.value == 8)
 function property(klass, name, getter, setter) 
   assert(klass and name and getter, 'Must provide a class, name and getter function')
   klass.__getters[name] = getter

@@ -67,9 +67,9 @@ describe('logging',
 
   it('can log to a file', function(patched_stdout, request) 
     local fn = 'log.txt'
+    log.handlers = {FileHandler{fn}}
     if rootDir then fn = os.path_join(rootDir(), fn) end
     request.addfinalizer(function() io.popen('rm '..fn):close() end)
-    log.handlers = {FileHandler{fn}}
     log.info('test')
     assert(requal(os.read_lines(fn), {'[INFO    ] test'}), 'FileHandler did not write to file')
   end)
