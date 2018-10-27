@@ -36,7 +36,7 @@ if __name__ == '__main__':
     print('\nConnecting to WebDAV server: %s\n' % ip_address)
     os.system('yes "" | sudo mount -t davfs -o noexec %s mount/' % ip_address)
   elif command == 'install':
-    os.system("sshpass -p '%s' scp AutoTouchPlus.lua tests.lua root@%s:/var/mobile/Library/AutoTouch/Scripts/" % (password, ip_address))
+    os.system("sshpass -p '%s' scp install.lua AutoTouchPlus.lua tests.lua root@%s:/var/mobile/Library/AutoTouch/Scripts/" % (password, ip_address))
     os.system("sshpass -p '%s' ssh root@%s 'chmod ugo+rwx /var/mobile/Library/AutoTouch/Scripts/*'" % (password, ip_address))
   elif command == 'stop-dav':
     print('\nDisconnecting from WebDAV server: %s\n' % ip_address)
