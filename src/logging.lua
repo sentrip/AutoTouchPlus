@@ -118,13 +118,15 @@ function FileHandler:__init(options)
   self.filename = options[1] or options.file
   assert(self.filename, 'Must provide filename for FileHandler')
   if rootDir then self.filename = os.path_join(rootDir(), self.filename) end
+  self._file = assert(io.open(self.filename, 'a'))
 end
 
 function FileHandler:record(s) 
-  local _file = io.open(self.filename, 'a')
-  _file:write(s..'\n') 
-  _file:close()
+  self._file:write(s..'\n') 
+  self._file:flush()
 end
+
+function FileHandler:__gc() self._file:close() end
 
 
 --allows for log('msg') and log.debug('msg') syntax
