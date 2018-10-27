@@ -38,6 +38,7 @@
 
 <h2>Modules</h2>
 <ul class="nowrap">
+  <li><a href="../modules/builtins.html">builtins</a></li>
   <li><a href="../modules/contextlib.html">contextlib</a></li>
   <li><strong>core</strong></li>
   <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
@@ -64,7 +65,7 @@
 <div id="content">
 
 <h1>Module <code>core</code></h1>
-<p>Implementation of many of Python's builtin functions.</p>
+<p>Core functions and object orientation</p>
 <p></p>
 
 
@@ -87,40 +88,12 @@
 	<td class="summary">Copy an object</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#eval">eval (input)</a></td>
-	<td class="summary">Evaluates a string as code and returns result (Python style!)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#hash">hash (input)</a></td>
-	<td class="summary">Unique integer representation of input</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#isin">isin (sub, main)</a></td>
-	<td class="summary">Check if sub is contained in main (like Python's "x in y" syntax)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#isnotin">isnotin (sub, main)</a></td>
-	<td class="summary">Check if sub is NOT contained in main (like Python's "x not in y" syntax)</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#isinstance">isinstance (klass, other)</a></td>
 	<td class="summary">Check if class is an instance of another class recursively</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#max">max (...)</a></td>
-	<td class="summary">Get the maximum value of two or more values</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#min">min (...)</a></td>
-	<td class="summary">Get the minimum value of two or more values</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#num">num (input)</a></td>
-	<td class="summary">Numerical representation of input</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#print">print (...)</a></td>
-	<td class="summary">Improved print function</td>
+	<td class="summary">Write a string to stdout (or to log.txt in AutoTouch)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#pprint">pprint (tbl)</a></td>
@@ -131,20 +104,8 @@
 	<td class="summary">Create a property on a class</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#repr">repr (input)</a></td>
-	<td class="summary">Simple string representation of an object</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#str">str (input)</a></td>
 	<td class="summary">Convert any object into a string</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#reversed">reversed (object)</a></td>
-	<td class="summary">Reverse the order of the elements in a table or list</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#sorted">sorted (object, key)</a></td>
-	<td class="summary">Sort an object</td>
 	</tr>
 </table>
 
@@ -272,112 +233,6 @@ b = B(<span class="number">5</span>)
 
 </dd>
     <dt>
-    <a name = "eval"></a>
-    <strong>eval (input)</strong>
-    </dt>
-    <dd>
-    Evaluates a string as code and returns result (Python style!)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">input</span>
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        stuff
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "hash"></a>
-    <strong>hash (input)</strong>
-    </dt>
-    <dd>
-    Unique integer representation of input
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">input</span>
-         an integer, string or any object that has a __hash method
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        integer unique integer representation of object
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "isin"></a>
-    <strong>isin (sub, main)</strong>
-    </dt>
-    <dd>
-    Check if sub is contained in main (like Python's "x in y" syntax)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">sub</span>
-
-        </li>
-        <li><span class="parameter">main</span>
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "isnotin"></a>
-    <strong>isnotin (sub, main)</strong>
-    </dt>
-    <dd>
-    Check if sub is NOT contained in main (like Python's "x not in y" syntax)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">sub</span>
-
-        </li>
-        <li><span class="parameter">main</span>
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "isinstance"></a>
     <strong>isinstance (klass, other)</strong>
     </dt>
@@ -406,86 +261,11 @@ b = B(<span class="number">5</span>)
 
 </dd>
     <dt>
-    <a name = "max"></a>
-    <strong>max (...)</strong>
-    </dt>
-    <dd>
-    Get the maximum value of two or more values
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">...</span>
-         any objects that can be compared with <, >, and ==
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        maximum value of what was passed
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "min"></a>
-    <strong>min (...)</strong>
-    </dt>
-    <dd>
-    Get the minimum value of two or more values
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">...</span>
-         any objects that can be compared with <, >, and ==
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        minimum value of what was passed
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "num"></a>
-    <strong>num (input)</strong>
-    </dt>
-    <dd>
-    Numerical representation of input
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">input</span>
-         any object that can be converted into a number
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        numerical representation of input
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "print"></a>
     <strong>print (...)</strong>
     </dt>
     <dd>
-    Improved print function
+    Write a string to stdout (or to log.txt in AutoTouch)
 
 
     <h3>Parameters:</h3>
@@ -575,31 +355,6 @@ a.value = <span class="number">2</span>
 
 </dd>
     <dt>
-    <a name = "repr"></a>
-    <strong>repr (input)</strong>
-    </dt>
-    <dd>
-    Simple string representation of an object
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">input</span>
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "str"></a>
     <strong>str (input)</strong>
     </dt>
@@ -625,60 +380,6 @@ a.value = <span class="number">2</span>
 
 
 </dd>
-    <dt>
-    <a name = "reversed"></a>
-    <strong>reversed (object)</strong>
-    </dt>
-    <dd>
-    Reverse the order of the elements in a table or list
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">object</span>
-         object to reverse order of
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-        copy of object with elements in reverse order
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "sorted"></a>
-    <strong>sorted (object, key)</strong>
-    </dt>
-    <dd>
-    Sort an object
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">object</span>
-
-        </li>
-        <li><span class="parameter">key</span>
-
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-
-    </ol>
-
-
-
-
-</dd>
 </dl>
 
 
@@ -686,7 +387,7 @@ a.value = <span class="number">2</span>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-27 03:38:44 </i>
+<i style="float:right;">Last updated 2018-10-27 14:57:28 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

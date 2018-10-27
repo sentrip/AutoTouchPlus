@@ -1,8 +1,6 @@
----- Implementation of many of Python's builtin functions.
+---- Core functions and object orientation
 -- @module core
 
---Global variable patching
-abs = math.abs
 unpack = table.unpack
 -- Index of string converting functions (at end of file)
 local _string_converters = {}
@@ -128,7 +126,7 @@ end
 -- @param cls 
 -- @param value
 function getattr(cls, value)  
-  if cls and isType(cls, 'table') then
+  if cls and type(cls) == 'table' then
     local mt = getmetatable(cls)
     local primary = rawget(cls, value)
     if primary then
@@ -163,7 +161,6 @@ function setattr(cls, key, value)
   end
 end
 
-
 ---- Copy an object
 -- @param object any table-like object
 -- @param deep whether to copy recursively
@@ -182,77 +179,6 @@ function copy(object, deep)
   
   return c
 end
-
----- Evaluates a string as code and returns result (Python style!)
--- @param input 
--- @return stuff
-function eval(input) 
-  local f = load(input)
-  if f then
-    return f() 
-  else
-    error('Syntax error occurred while parsing input: '..input)
-  end
-end
-
----- Unique integer representation of input
--- @param input an integer, string or any object that has a __hash method
--- @return integer unique integer representation of object
-function hash(input)
-  if is.func(input) then 
-    input = tostring(input):match('function: (.*)') 
-  else
-    local m = getmetatable(input)  
-    if m and m.__hash then return m.__hash(input) end
-  end
-  
-  local hsh
-  local mod = 2 ^ 64
-  if is.num(input) then 
-    if input > 0 then hsh = -input * 2 
-    elseif input < 0 then hsh = input * 2 - 1
-    else hsh = input end
-  elseif not is.str(input) then error("Can only hash functions, integers and strings")
-  else
-    hsh = string.byte(input[1]) * 2 ^ 7
-    for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
-  end
-  return hsh
-end
-
-
----- Check if sub is contained in main (like Python's "x in y" syntax)
--- @param sub
--- @param main
--- @return
-function isin(sub, main) 
-  local _is = false
-  local length, subLength
-  local mt = getmetatable(main)
-  if not mt or not mt.contains then 
-    if is.str(main) then return Not.Nil(main:find(sub))
-    elseif is.table(main) then length = #main; subLength = 1
-    else length = 1; subLength = 1 end
-    for i=1, length do 
-      if _is then break end
-      for j=0, subLength do 
-        if requal(main[i + j], sub) then 
-          _is = true
-          break 
-        end 
-      end 
-    end
-  else
-    _is = main:contains(sub) 
-  end
-  return _is
-end
-
----- Check if sub is NOT contained in main (like Python's "x not in y" syntax)
--- @param sub
--- @param main
--- @return
-function isnotin(sub, main) return not isin(sub, main) end
 
 ---- Check if class is an instance of another class recursively
 -- @param klass
@@ -284,43 +210,9 @@ function isinstance(klass, other)
   return false
 end
 
----- Get the maximum value of two or more values
--- @param ... any objects that can be compared with <, >, and ==
--- @return maximum value of what was passed
-function max(...) 
-  local args
-  if is.table(...) then args = ... else args = {...} end
-  local mt = getmetatable(args)
-  if mt and mt.__name == 'set' then -- special case for set objects
-    args = args:values() 
-  end
-  return math.max(unpack(args))
-end
-
----- Get the minimum value of two or more values
--- @param ... any objects that can be compared with <, >, and ==
--- @return minimum value of what was passed
-function min(...) 
-  local args
-  if is.table(...) then args = ... else args = {...} end
-  local mt = getmetatable(args)
-  if mt and mt.__name == 'set' then -- special case for set objects
-    args = args:values() 
-  end
-  return math.min(unpack(args))
-end
-
----- Numerical representation of input
--- @param input any object that can be converted into a number
--- @return numerical representation of input
-function num(input) 
-  if is.num(input) then return input else return tonumber(input) end 
-end
-
-
 --defaults to log in AutoTouch, otherwise print in IDEs or terminal for developement
 local _print = log or print
----- Improved print function
+---- Write a string to stdout (or to log.txt in AutoTouch)
 -- @param ... 
 -- @return
 function print(...) 
@@ -359,17 +251,6 @@ function property(klass, name, getter, setter)
   klass.__setters[name] = setter
 end
 
-
----- Simple string representation of an object
--- @param input
--- @return 
-function repr(input) 
-  local m = getmetatable(input)
-  if m and m.__repr then return input:__repr()
-  else return tostring(input) end
-end
-
-
 ---- Convert any object into a string
 -- @param input any object
 -- @treturn string string representation of object
@@ -379,40 +260,11 @@ function str(input)
     local _m = getmetatable(m)
     if m.__tostring then return tostring(input)
     elseif _m and _m.__tostring then return _m.__tostring(input) end
-  elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
-  elseif isType(input, 'nil') then return 'nil'
-  elseif isType(input, 'string') then return input 
-  elseif isType(input, 'table') then return _string_converters.table2string(input) end
+  elseif type(input) == 'number' or type(input) == 'bool' then return tostring(input)
+  elseif type(input) == 'nil' then return 'nil'
+  elseif type(input) == 'string' then return input 
+  elseif type(input) == 'table' then return _string_converters.table2string(input) end
   return repr(input)
-end
-
-
-
----- Reverse the order of the elements in a table or list
--- @param object object to reverse order of
--- @treturn table copy of object with elements in reverse order
-function reversed(object)
-  if is.str(object) then return object:reverse() end
-  local result = list()
-  for i, v in pairs(object) do result:insert(1, v) end
-  return result
-end
-
----- Sort an object
--- @param object
--- @param key
--- @return 
-function sorted(object, key) 
-  local sorter
-  local cp = copy(object)
-  if isType(key, 'function') then
-    sorter = function(v1, v2)
-      v1, v2 = key(v1), key(v2)
-      return v1 < v2
-    end
-  end
-  table.sort(cp, sorter)
-  return cp
 end
 
 

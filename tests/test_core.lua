@@ -1,5 +1,6 @@
 require('src/test')
 require('src/core')
+require('src/builtins')
 require('src/contextlib')
 require('src/objects')
 require('src/string')
@@ -156,6 +157,32 @@ describe('core',
     assertEqual(b.v, b.value * 2, 'Getter did not return custom value with child class')
   end),
 
+  it('getattr', function()
+    local A = class('A')
+    function A:__init()
+      self.val = 5
+    end
+    local a = A()
+    assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
+    assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
+    assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
+    -- TODO: __getters test
+    -- TODO: __getitem test
+  end),
+
+  it('setattr', function()
+    local A = class('A')
+    function A:__init()
+      self.val = 5
+    end
+    local a = A()
+    setattr(a, 'val', 3)
+    assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
+    assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
+    -- TODO: __setters test
+    -- TODO: __setitem test
+  end),
+  
   it('copy', function()
     local t1, t2 = {1, 2}, {1, {1, 2}}
     local nt1 = copy(t1)
@@ -174,117 +201,11 @@ describe('core',
     assert(nl:isinstance(list), 'Did not copy object type')
   end),
 
-  it('eval', function()
-    assertEqual(eval('return 1 + 1'), 2, 'eval 1 + 1 failed')
-    assertRaises('Syntax', function() eval('x =') end, 'eval of syntax error did not fail')
+  it('isinstance', function() 
+    -- TODO: isinstance test
   end),
 
-  it('hash', function()
-    local h
-    local values = {}
-    for i=1, 128 do 
-      h = hash(string.char(i))
-      assert(isnotin(h, values), 'Hash collision in first 128 bits')
-      values[#values + 1] = h
-    end
-    for i=0, 100 do
-      h = hash(i - 50)
-      assert(isnotin(h, values), 'Hash collision in first 50 +/- numbers')
-      values[#values + 1] = h
-    end
-  end),
-
-  it('isin', function()
-    assert(isin('a', 'abc'), 'Character not in string when it should be')
-    assert(not isin('t', 'abc'), "Character in string when it shouldn't be")
-    assert(isin('failed', 'stuff and thingsandstuffthisfailedand other'), "Sub not in string when it should be")
-    assert(isin(1, {1,2,3}), 'Number not in table when it should be')
-    assert(not isin(5, {1,2,3}), "Number in table when it shouldn't be")
-    assert(isin({1,2,3}, {{1,2,3}, {4,5,6}}), 'Table not in nested table when it should be')
-    assert(not isin({5}, {{1,2,3}, {4,5,6}}), "Table in nested table when it shouldn't be")
-  end),
-
-  it('max', function()
-    local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
-    assertEqual(math.max(unpack(t)), max(t), 'table max not same as math.max')
-    assertEqual(math.max(unpack(t)), max(l), 'list max not same as math.max')
-    assertEqual(math.max(unpack(t)), max(s), 'set max not same as math.max')
-  end),
-
-  it('min', function()
-    local l, s, t = list{2,1,3}, set{3,2,1}, {3,1,2}
-    assertEqual(math.min(unpack(t)), min(t), 'table min not same as math.min')
-    assertEqual(math.min(unpack(t)), min(l), 'list min not same as math.min')
-    assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
-  end),
-
-  it('num', function()
-    assert(is.num(num(1)), 'Converted int to non number')
-    assert(is.num(num(1.0)), 'Converted float to non number')
-    assert(is.num(num(-1)), 'Converted negative to non number')
-    assertEqual(num('1'), 1, 'Converted string int to non number')
-    assertEqual(num('-1.0'), -1.0, 'Converted negative string float to non number')
-  end),
-
-  it('str', function()
-    assertEqual(str(1), '1', 'str number failed')
-    assertEqual(str('1'), '1', 'str string failed')
-    assertEqual(str({1,2}), '{1, 2}', 'table number failed')
-    assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
-    assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
-  end),
-
-  it('getattr', function()
-    local A = class('A')
-    function A:__init()
-      self.val = 5
-    end
-    local a = A()
-    assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
-    assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
-    assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-  end),
-
-  it('setattr', function()
-    local A = class('A')
-    function A:__init()
-      self.val = 5
-    end
-    local a = A()
-    setattr(a, 'val', 3)
-    assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
-    assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-  end),
-
-  it('reversed', function()
-    local l, s = {1, 2, 3}, 'abc'
-    local e1, e2 = {3, 2, 1}, {'c', 'b', 'a'}
-    for i, v in pairs(reversed(l)) do 
-      assertEqual(e1[i], v, 'Did not reverse table correctly')
-    end
-    for i, v in pairs(reversed(s)) do 
-      assertEqual(e2[i], v, 'Did not reverse string correctly')
-    end
-  end),
-
-  it('sorted', function()
-    --basic sort
-    local a, b = {3, 1, 2}, {'c', 'a', 'b'}
-    local ea, eb = {1,2,3}, {'a','b','c'}
-    for i, v in pairs(sorted(a)) do
-      assertEqual(v, ea[i], 'Integer sorting failed')
-    end
-    for i, v in pairs(sorted(list(b))) do
-      assertEqual(v, eb[i], 'String sorting failed')
-    end
-    --key based sort
-    local a2, e2 = {list{'a', 2}, list{'b', 1}}, {list{'b', 1}, list{'a', 2}}
-    for i, v in pairs(sorted(list(a2), function(m) return m[2] end)) do
-      assertEqual(v, e2[i], 'String sorting failed')
-    end
-  end),
-
-  it('pretty prints nested table', function(monkeypatch) 
+  it('pprint', function(monkeypatch) 
     monkeypatch.setattr('print', function(...) return ... end)
     local text = pprint{
       n=1,
@@ -306,6 +227,22 @@ describe('core',
     'n = %d,\n\t\ts = "%w",\n\t\tt = {\n\t\t\td = {\n\t\t\t\ta = %d,\n\t\t\t\tb = %d,\n\t\t\t},'..
     '\n\t\t\tl = {%d, %d},\n\t\t\tst = {%d, %d},\n\t\t},\n\t},\n\tf = file %([%w%d]+%),\n}'
     assert(text:match(expected), 'pprint did not print correctly')
+  end),
+
+  it('print', function() 
+    -- TODO: print test
+  end),
+
+  it('property', function() 
+    -- TODO: property test
+  end),
+
+  it('str', function()
+    assertEqual(str(1), '1', 'str number failed')
+    assertEqual(str('1'), '1', 'str string failed')
+    assertEqual(str({1,2}), '{1, 2}', 'table number failed')
+    assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
+    assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
   end)
 )
 

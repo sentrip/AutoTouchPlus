@@ -1,4 +1,5 @@
 require('src/test')
+require('src/builtins')
 require('src/itertools')
 require('src/logic')
 require('src/objects')

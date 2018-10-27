@@ -1,6 +1,12 @@
 History
 -----------
 
+* 0.2.0 (2018-10-27)
+
+  * Refactored functions into builtins module
+
+|
+
 * 0.1.4 (2018-10-27)
 
   * Refactored system functions into os namespace

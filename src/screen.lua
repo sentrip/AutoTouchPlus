@@ -136,7 +136,7 @@ end)
 ---
 
 ---- Register a function to be run before an action (tap_if, tap_until, ...)
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run before action (no arguments)
 function screen.before_action(func)
   screen.before_action_funcs:add(func)
@@ -144,7 +144,7 @@ end
 
 
 ---- Register a function to be run after an action (tap_if, tap_until, ...)
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run after action (no arguments)
 function screen.after_action(func)
   screen.after_action_funcs:add(func)
@@ -152,7 +152,7 @@ end
 
 
 ---- Register a function to be run before the screen is checked for updates
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run before check (no arguments)
 function screen.before_check(func)
   screen.before_check_funcs:add(func)
@@ -160,7 +160,7 @@ end
 
 
 ---- Register a function to be run after the screen is checked for updates
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run after check (no arguments)
 function screen.after_check(func)
   screen.after_check_funcs:add(func)
@@ -168,7 +168,7 @@ end
 
 
 ---- Register a function to be run before each tap
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run before tap (no arguments)
 function screen.before_tap(func)
   screen.before_tap_funcs:add(func)
@@ -176,7 +176,7 @@ end
 
 
 ---- Register a function to be run after each tap
--- @within Registration
+-- @within Listeners
 -- @tparam function func function to run after tap (no arguments)
 function screen.after_tap(func)
   screen.after_tap_funcs:add(func)
@@ -184,7 +184,7 @@ end
 
 
 ---- Register a function to be run after a number of consecutive screen checks
--- @within Registration
+-- @within Listeners
 -- @tparam int|table n number of checks to execute before calling function
 -- @tparam function func function to run after n consecutive checks
 function screen.on_nth_check(n, func)

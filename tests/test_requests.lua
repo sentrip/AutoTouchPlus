@@ -1,5 +1,6 @@
 require('src/test')
 require('src/core')
+require('src/builtins')
 require('src/contextlib')
 require('src/objects')
 require('src/logic')

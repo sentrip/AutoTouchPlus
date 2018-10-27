@@ -32,13 +32,14 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Logic">Logic </a></li>
-<li><a href="#Math">Math </a></li>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
 </ul>
 
 
 <h2>Modules</h2>
 <ul class="nowrap">
+  <li><a href="../modules/builtins.html">builtins</a></li>
   <li><a href="../modules/contextlib.html">contextlib</a></li>
   <li><a href="../modules/core.html">core</a></li>
   <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
@@ -65,19 +66,19 @@
 <div id="content">
 
 <h1>Module <code>logic</code></h1>
-<p>Logic and math operations.</p>
+<p>Logical operation utilites</p>
 <p></p>
 
 
-<h2><a href="#Logic">Logic </a></h2>
+<h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#all">all (iterable)</a></td>
-	<td class="summary">All elements in an iterable evaluate to true</td>
+	<td class="name" nowrap><a href="#isin">isin (sub, main)</a></td>
+	<td class="summary">Check if sub is contained in main (like Python's "x in y" syntax)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#any">any (iterable)</a></td>
-	<td class="summary">Any elements in an iterable evaluate to true</td>
+	<td class="name" nowrap><a href="#isnotin">isnotin (sub, main)</a></td>
+	<td class="summary">Check if sub is NOT contained in main (like Python's "x not in y" syntax)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isType">isType (object, ...)</a></td>
@@ -87,6 +88,9 @@
 	<td class="name" nowrap><a href="#isNotType">isNotType (object, ...)</a></td>
 	<td class="summary">Check if an object is not of one or more types</td>
 	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#is">is</a></td>
 	<td class="summary">Check if an object is truthy (like Python's "if x" syntax).</td>
@@ -95,66 +99,37 @@
 	<td class="name" nowrap><a href="#Not">Not</a></td>
 	<td class="summary">Check if an object is falsy (like Python's "if not x" syntax)</td>
 	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#requal">requal (value1, value2)</a></td>
-	<td class="summary">Check if all values in two tables are equal (recursive-equal)</td>
-	</tr>
-</table>
-<h2><a href="#Math">Math </a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#count">count (value, input)</a></td>
-	<td class="summary">Count occurrences of value in input</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#div">div (x, y)</a></td>
-	<td class="summary">Floor division of x by y</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#len">len (input)</a></td>
-	<td class="summary">Length of object (python style!)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#round">round (num, places)</a></td>
-	<td class="summary">Round number to places (python style!)</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#sign">sign (n)</a></td>
-	<td class="summary">Sign of a number</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#sum">sum (object)</a></td>
-	<td class="summary">Sum of an object (python style!)</td>
-	</tr>
 </table>
 
 <br/>
 <br/>
 
 
-    <h2 class="section-header "><a name="Logic"></a>Logic </h2>
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
     <dt>
-    <a name = "all"></a>
-    <strong>all (iterable)</strong>
+    <a name = "isin"></a>
+    <strong>isin (sub, main)</strong>
     </dt>
     <dd>
-    All elements in an iterable evaluate to true
+    Check if sub is contained in main (like Python's "x in y" syntax)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">iterable</span>
-         any table-like object
+        <li><span class="parameter">sub</span>
+
+        </li>
+        <li><span class="parameter">main</span>
+
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><span class="type">boolean</span></span>
-        all elements are true
+
     </ol>
 
 
@@ -162,25 +137,27 @@
 
 </dd>
     <dt>
-    <a name = "any"></a>
-    <strong>any (iterable)</strong>
+    <a name = "isnotin"></a>
+    <strong>isnotin (sub, main)</strong>
     </dt>
     <dd>
-    Any elements in an iterable evaluate to true
+    Check if sub is NOT contained in main (like Python's "x not in y" syntax)
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">iterable</span>
-         any table-like object
+        <li><span class="parameter">sub</span>
+
+        </li>
+        <li><span class="parameter">main</span>
+
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><span class="type">boolean</span></span>
-        any elements are true
+
     </ol>
 
 
@@ -245,6 +222,10 @@
 
 
 </dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
     <dt>
     <a name = "is"></a>
     <strong>is</strong>
@@ -254,6 +235,7 @@
  Truthy objects are any objects except for 0, false, nil and objects where len(object) == 0
 
 
+    <h3>Fields:</h3>
     <ul>
         <li><span class="parameter">object</span>
 
@@ -273,218 +255,13 @@
     Check if an object is falsy (like Python's "if not x" syntax)
 
 
+    <h3>Fields:</h3>
     <ul>
         <li><span class="parameter">object</span>
 
         </li>
     </ul>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "requal"></a>
-    <strong>requal (value1, value2)</strong>
-    </dt>
-    <dd>
-    Check if all values in two tables are equal (recursive-equal)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">value1</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         table for equality check
-        </li>
-        <li><span class="parameter">value2</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         table for equality check
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">boolean</span></span>
-        all values in both tables are recursively equal
-    </ol>
-
-
-
-
-</dd>
-</dl>
-    <h2 class="section-header "><a name="Math"></a>Math </h2>
-
-    <dl class="function">
-    <dt>
-    <a name = "count"></a>
-    <strong>count (value, input)</strong>
-    </dt>
-    <dd>
-    Count occurrences of value in input
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">value</span>
-         any object
-        </li>
-        <li><span class="parameter">input</span>
-         any object that can contain value
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">number</span></span>
-        how many of value is in input
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "div"></a>
-    <strong>div (x, y)</strong>
-    </dt>
-    <dd>
-    Floor division of x by y
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-            <span class="types"><span class="type">number</span></span>
-         the numerator
-        </li>
-        <li><span class="parameter">y</span>
-            <span class="types"><span class="type">number</span></span>
-         the denominator
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">number</span></span>
-        integer result of x / y
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "len"></a>
-    <strong>len (input)</strong>
-    </dt>
-    <dd>
-    Length of object (python style!)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">input</span>
-         any object
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">number</span></span>
-        length of the object
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "round"></a>
-    <strong>round (num, places)</strong>
-    </dt>
-    <dd>
-    Round number to places (python style!)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">num</span>
-            <span class="types"><span class="type">number</span></span>
-         number to round
-        </li>
-        <li><span class="parameter">places</span>
-            <span class="types"><span class="type">number</span></span>
-         number of decimal places to round to
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">number</span></span>
-        num rounded to places
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "sign"></a>
-    <strong>sign (n)</strong>
-    </dt>
-    <dd>
-    Sign of a number
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">n</span>
-            <span class="types"><span class="type">number</span></span>
-         any number
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">1</span> or <span class="type">-1</span></span>
-        sign of the number
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "sum"></a>
-    <strong>sum (object)</strong>
-    </dt>
-    <dd>
-    Sum of an object (python style!)
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">object</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         containing numbers
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">number</span></span>
-        result of adding all numbers in the object
-    </ol>
 
 
 
@@ -497,7 +274,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-27 03:38:44 </i>
+<i style="float:right;">Last updated 2018-10-27 14:57:28 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

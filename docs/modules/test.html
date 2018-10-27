@@ -33,11 +33,13 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Assertion_Functions">Assertion Functions</a></li>
 </ul>
 
 
 <h2>Modules</h2>
 <ul class="nowrap">
+  <li><a href="../modules/builtins.html">builtins</a></li>
   <li><a href="../modules/contextlib.html">contextlib</a></li>
   <li><a href="../modules/core.html">core</a></li>
   <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
@@ -69,6 +71,29 @@
 
 
 <h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#describe">describe (description, ...)</a></td>
+	<td class="summary">Define a group of tests</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#it">it (description, f)</a></td>
+	<td class="summary">Define a single test to be used in <a href="../modules/test.html#describe">describe</a></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fixture">fixture (name, scope, f)</a></td>
+	<td class="summary">Define a fixture to be used in tests</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parametrize">parametrize (names, parameters, f)</a></td>
+	<td class="summary">Run a single test with multiple parameters</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#run_tests">run_tests ()</a></td>
+	<td class="summary">Run all described tests and write results to stdout</td>
+	</tr>
+</table>
+<h2><a href="#Assertion_Functions">Assertion Functions</a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#assertEqual">assertEqual (v1, v2, msg)</a></td>
@@ -106,26 +131,6 @@
 	<td class="name" nowrap><a href="#assertRaises">assertRaises (exception, func, msg)</a></td>
 	<td class="summary">Assert a function raises an error mathing a pattern</td>
 	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#describe">describe (description, ...)</a></td>
-	<td class="summary">Define a group of tests</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#it">it (description, f)</a></td>
-	<td class="summary">Define a single test to be used in <a href="../modules/test.html#describe">describe</a></td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#fixture">fixture (name, scope, f)</a></td>
-	<td class="summary">Define a fixture to be used in tests</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#parametrize">parametrize (names, parameters, f)</a></td>
-	<td class="summary">Run a single test with multiple parameters</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#run_tests">run_tests ()</a></td>
-	<td class="summary">Run all described tests and write results to stdout</td>
-	</tr>
 </table>
 
 <br/>
@@ -133,6 +138,160 @@
 
 
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "describe"></a>
+    <strong>describe (description, ...)</strong>
+    </dt>
+    <dd>
+    Define a group of tests
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">description</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         description of test group
+        </li>
+        <li><span class="parameter">...</span>
+         tests defined with <a href="../modules/test.html#it">it</a>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">describe(<span class="string">'Example tests'</span>,
+ it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>()
+   <span class="global">assert</span>(<span class="keyword">true</span>)
+ <span class="keyword">end</span>)
+)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "it"></a>
+    <strong>it (description, f)</strong>
+    </dt>
+    <dd>
+    Define a single test to be used in <a href="../modules/test.html#describe">describe</a>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">description</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         description of test
+        </li>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         a test function (function that makes assertions)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fixture"></a>
+    <strong>fixture (name, scope, f)</strong>
+    </dt>
+    <dd>
+    Define a fixture to be used in tests
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of the fixture
+        </li>
+        <li><span class="parameter">scope</span>
+         (optional) scope in which to create fixture ('func', 'group', 'module')
+        </li>
+        <li><span class="parameter">f</span>
+         function that creates the fixture (if the 'scope' argument is omitted then 'scope' is treated as 'f')
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">fixture(<span class="string">'myFixture'</span>, <span class="string">'func'</span>, <span class="keyword">function</span>()
+  <span class="keyword">return</span> <span class="number">1</span>
+<span class="keyword">end</span>)
+describe(<span class="string">'Example tests'</span>,
+ it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>(myFixture)
+   <span class="global">assert</span>(myFixture == <span class="number">1</span>)
+ <span class="keyword">end</span>)
+)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "parametrize"></a>
+    <strong>parametrize (names, parameters, f)</strong>
+    </dt>
+    <dd>
+    Run a single test with multiple parameters
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">names</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         fixtures to parametrize (comma separated)
+        </li>
+        <li><span class="parameter">parameters</span>
+         table of parameters - if more than one parameter is specified this must be a table of tables
+        </li>
+        <li><span class="parameter">f</span>
+            <span class="types"><span class="type">function</span></span>
+         test function created with <a href="../modules/test.html#it">it</a>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">describe(<span class="string">'Example tests'</span>,
+ parametrize(<span class="string">'a,b,c'</span>,
+ {
+   {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>},
+   {<span class="number">4</span>, <span class="number">5</span>, <span class="number">9</span>}
+ },
+ it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>(a, b, c)
+   <span class="global">assert</span>(a + b == c)
+ <span class="keyword">end</span>))
+)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "run_tests"></a>
+    <strong>run_tests ()</strong>
+    </dt>
+    <dd>
+    Run all described tests and write results to stdout
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Assertion_Functions"></a>Assertion Functions</h2>
 
     <dl class="function">
     <dt>
@@ -369,156 +528,6 @@
 
 
 </dd>
-    <dt>
-    <a name = "describe"></a>
-    <strong>describe (description, ...)</strong>
-    </dt>
-    <dd>
-    Define a group of tests
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">description</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         description of test group
-        </li>
-        <li><span class="parameter">...</span>
-         tests defined with <a href="../modules/test.html#it">it</a>
-        </li>
-    </ul>
-
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example">describe(<span class="string">'Example tests'</span>,
- it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>()
-   <span class="global">assert</span>(<span class="keyword">true</span>)
- <span class="keyword">end</span>)
-)</pre>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "it"></a>
-    <strong>it (description, f)</strong>
-    </dt>
-    <dd>
-    Define a single test to be used in <a href="../modules/test.html#describe">describe</a>
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">description</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         description of test
-        </li>
-        <li><span class="parameter">f</span>
-            <span class="types"><span class="type">function</span></span>
-         a test function (function that makes assertions)
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "fixture"></a>
-    <strong>fixture (name, scope, f)</strong>
-    </dt>
-    <dd>
-    Define a fixture to be used in tests
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         name of the fixture
-        </li>
-        <li><span class="parameter">scope</span>
-         (optional) scope in which to create fixture ('func', 'group', 'module')
-        </li>
-        <li><span class="parameter">f</span>
-         function that creates the fixture (if the 'scope' argument is omitted then 'scope' is treated as 'f')
-        </li>
-    </ul>
-
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example">fixture(<span class="string">'myFixture'</span>, <span class="string">'func'</span>, <span class="keyword">function</span>()
-  <span class="keyword">return</span> <span class="number">1</span>
-<span class="keyword">end</span>)
-describe(<span class="string">'Example tests'</span>,
- it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>(myFixture)
-   <span class="global">assert</span>(myFixture == <span class="number">1</span>)
- <span class="keyword">end</span>)
-)</pre>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "parametrize"></a>
-    <strong>parametrize (names, parameters, f)</strong>
-    </dt>
-    <dd>
-    Run a single test with multiple parameters
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">names</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         fixtures to parametrize (comma separated)
-        </li>
-        <li><span class="parameter">parameters</span>
-         table of parameters - if more than one parameter is specified this must be a table of tables
-        </li>
-        <li><span class="parameter">f</span>
-            <span class="types"><span class="type">function</span></span>
-         test function created with <a href="../modules/test.html#it">it</a>
-        </li>
-    </ul>
-
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example">describe(<span class="string">'Example tests'</span>,
- parametrize(<span class="string">'a,b,c'</span>,
- {
-   {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>},
-   {<span class="number">4</span>, <span class="number">5</span>, <span class="number">9</span>}
- },
- it(<span class="string">'makes an assertion'</span>, <span class="keyword">function</span>(a, b, c)
-   <span class="global">assert</span>(a + b == c)
- <span class="keyword">end</span>))
-)</pre>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "run_tests"></a>
-    <strong>run_tests ()</strong>
-    </dt>
-    <dd>
-    Run all described tests and write results to stdout
-
-
-
-
-
-
-
-</dd>
 </dl>
 
 
@@ -526,7 +535,7 @@ describe(<span class="string">'Example tests'</span>,
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-27 03:38:44 </i>
+<i style="float:right;">Last updated 2018-10-27 14:57:28 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

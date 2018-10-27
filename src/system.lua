@@ -118,12 +118,12 @@ end
 
 ---- Read a single line from a file
 -- @tparam file|string f file or filename (see @{os.read_lines})
--- @tparam number lineNumber line number to read (starts at 1)
+-- @tparam number n line number to read (starts at 1)
 -- @tparam boolean add_rootDir should rootDir() be prepended to file name
--- @treturn string contents of line at lineNumber
-function os.read_line(f, lineNumber, add_rootDir) 
+-- @treturn string contents of line at n
+function os.read_line(f, n, add_rootDir) 
   local lines = os.read_lines(f, add_rootDir)
-  return lines[lineNumber] 
+  return lines[n] 
 end 
 
 ---- Read all the lines in a file
@@ -173,24 +173,24 @@ end
 
 ---- Write a single line to a file
 -- @tparam string line data to write to the file
--- @tparam number lineNumber line number at which to write the line
--- @tparam string filename name of file to write to 
+-- @tparam number n line number at which to write the line
+-- @tparam string name name of file to write to 
 -- @tparam boolean add_rootDir should rootDir() be prepended to file name
-function os.write_line(line, lineNumber, filename, add_rootDir) 
-  local lines = os.read_lines(filename, add_rootDir)
-  lines[lineNumber] = line
-  os.write_lines(lines, filename, 'w', add_rootDir)
+function os.write_line(line, n, name, add_rootDir) 
+  local lines = os.read_lines(name, add_rootDir)
+  lines[n] = line
+  os.write_lines(lines, name, 'w', add_rootDir)
 end 
 
 ---- Write multiple lines to a file
 -- @tparam table lines strings of each line
--- @tparam string filename name of file to write to
+-- @tparam string name name of file to write to
 -- @tparam string mode write mode (uses same argument as io.open)
 -- @tparam boolean add_rootDir should rootDir() be prepended to file name
-function os.write_lines(lines, filename, mode, add_rootDir) 
-  log.debug('Writing lines: %s', filename)
-  if rootDir and add_rootDir ~= false then filename = os.path_join(rootDir(), filename) end
-  local f = assert(io.open(filename, mode or 'w'))
+function os.write_lines(lines, name, mode, add_rootDir) 
+  log.debug('Writing lines: %s', name)
+  if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end
+  local f = assert(io.open(name, mode or 'w'))
   for i, v in pairs(lines) do f:write(v .. '\n') end 
   assert(f:close())
 end

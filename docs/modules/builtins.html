@@ -1,0 +1,776 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>AutoTouchPlus Documentation</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>AutoTouchPlus</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>builtins</strong></li>
+  <li><a href="../modules/contextlib.html">contextlib</a></li>
+  <li><a href="../modules/core.html">core</a></li>
+  <li><a href="../modules/itertools.lua.html">itertools.lua</a></li>
+  <li><a href="../modules/json.lua.html">json.lua</a></li>
+  <li><a href="../modules/logging.html">logging</a></li>
+  <li><a href="../modules/logic.html">logic</a></li>
+  <li><a href="../modules/navigation.html">navigation</a></li>
+  <li><a href="../modules/objects.html">objects</a></li>
+  <li><a href="../modules/path.html">path</a></li>
+  <li><a href="../modules/pixel.html">pixel</a></li>
+  <li><a href="../modules/requests.lua.html">requests.lua</a></li>
+  <li><a href="../modules/screen.lua.html">screen.lua</a></li>
+  <li><a href="../modules/string.html">string</a></li>
+  <li><a href="../modules/system.html">system</a></li>
+  <li><a href="../modules/test.html">test</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>builtins</code></h1>
+<p>Some of Python's builtin functions</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#abs">abs (n)</a></td>
+	<td class="summary">Get absolute value of a number</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#all">all (iterable)</a></td>
+	<td class="summary">All elements in an iterable evaluate to true</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#any">any (iterable)</a></td>
+	<td class="summary">Any elements in an iterable evaluate to true</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#count">count (value, input)</a></td>
+	<td class="summary">Count occurrences of value in input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#div">div (x, y)</a></td>
+	<td class="summary">Floor division of x by y</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#eval">eval (input)</a></td>
+	<td class="summary">Evaluates a string as code and returns result (Python style!)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#filter">filter (filt, iterable)</a></td>
+	<td class="summary">Filter elements of an iterable with a function</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash">hash (input)</a></td>
+	<td class="summary">Unique integer representation of input</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#int">int (input)</a></td>
+	<td class="summary">Convert input into an integer</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#iter">iter (iterable)</a></td>
+	<td class="summary">Iterate over the elements in an iterable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#len">len (input)</a></td>
+	<td class="summary">Length of iterable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#map">map (func, iterable)</a></td>
+	<td class="summary">Call function on each element of an iterable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#max">max (...)</a></td>
+	<td class="summary">Get the maximum value of two or more values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#min">min (...)</a></td>
+	<td class="summary">Get the minimum value of two or more values</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#num">num (input)</a></td>
+	<td class="summary">Convert input into a number</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#repr">repr (input)</a></td>
+	<td class="summary">Simple string representation of an object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#requal">requal (value1, value2)</a></td>
+	<td class="summary">Check if all values in two iterables are equal (recursive-equal)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#reversed">reversed (iterable)</a></td>
+	<td class="summary">Reverse the order of the elements in an iterable</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#round">round (n, places)</a></td>
+	<td class="summary">Round a number to places</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sign">sign (n)</a></td>
+	<td class="summary">Sign of a number</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sorted">sorted (object, key, reverse)</a></td>
+	<td class="summary">Sort an object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#sum">sum (iterable)</a></td>
+	<td class="summary">Sum of the values in an iterable</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "abs"></a>
+    <strong>abs (n)</strong>
+    </dt>
+    <dd>
+    Get absolute value of a number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">number</span></span>
+         any number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        absolute value of number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "all"></a>
+    <strong>all (iterable)</strong>
+    </dt>
+    <dd>
+    All elements in an iterable evaluate to true
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iterable</span>
+         any table-like object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        all elements are true
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "any"></a>
+    <strong>any (iterable)</strong>
+    </dt>
+    <dd>
+    Any elements in an iterable evaluate to true
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iterable</span>
+         any table-like object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        any elements are true
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "count"></a>
+    <strong>count (value, input)</strong>
+    </dt>
+    <dd>
+    Count occurrences of value in input
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value</span>
+         any object
+        </li>
+        <li><span class="parameter">input</span>
+         any object that can contain value
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        how many of value is in input
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "div"></a>
+    <strong>div (x, y)</strong>
+    </dt>
+    <dd>
+    Floor division of x by y
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span></span>
+         the numerator
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">number</span></span>
+         the denominator
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        integer result of x / y
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "eval"></a>
+    <strong>eval (input)</strong>
+    </dt>
+    <dd>
+    Evaluates a string as code and returns result (Python style!)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        stuff
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "filter"></a>
+    <strong>filter (filt, iterable)</strong>
+    </dt>
+    <dd>
+    Filter elements of an iterable with a function
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filt</span>
+
+        </li>
+        <li><span class="parameter">iterable</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "hash"></a>
+    <strong>hash (input)</strong>
+    </dt>
+    <dd>
+    Unique integer representation of input
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         an integer, string or any object that has a __hash method
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        integer unique integer representation of object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "int"></a>
+    <strong>int (input)</strong>
+    </dt>
+    <dd>
+    Convert input into an integer
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         any object that can be converted into an integer
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/builtins.html#int">int</a></span>
+        of input
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "iter"></a>
+    <strong>iter (iterable)</strong>
+    </dt>
+    <dd>
+    Iterate over the elements in an iterable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iterable</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "len"></a>
+    <strong>len (input)</strong>
+    </dt>
+    <dd>
+    Length of iterable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         any iterable
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        length of the iterable
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "map"></a>
+    <strong>map (func, iterable)</strong>
+    </dt>
+    <dd>
+    Call function on each element of an iterable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+
+        </li>
+        <li><span class="parameter">iterable</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "max"></a>
+    <strong>max (...)</strong>
+    </dt>
+    <dd>
+    Get the maximum value of two or more values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         any objects that can be compared with <, >, and ==
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        maximum value of what was passed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "min"></a>
+    <strong>min (...)</strong>
+    </dt>
+    <dd>
+    Get the minimum value of two or more values
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         any objects that can be compared with <, >, and ==
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        minimum value of what was passed
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "num"></a>
+    <strong>num (input)</strong>
+    </dt>
+    <dd>
+    Convert input into a number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+         any object that can be converted into a number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        input as a number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "repr"></a>
+    <strong>repr (input)</strong>
+    </dt>
+    <dd>
+    Simple string representation of an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">input</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "requal"></a>
+    <strong>requal (value1, value2)</strong>
+    </dt>
+    <dd>
+    Check if all values in two iterables are equal (recursive-equal)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">value1</span>
+         iterable for equality check
+        </li>
+        <li><span class="parameter">value2</span>
+         iterable for equality check
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        all values in both iterables are recursively equal
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "reversed"></a>
+    <strong>reversed (iterable)</strong>
+    </dt>
+    <dd>
+    Reverse the order of the elements in an iterable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iterable</span>
+         object to reverse order of
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        copy of object with elements in reverse order
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "round"></a>
+    <strong>round (n, places)</strong>
+    </dt>
+    <dd>
+    Round a number to places
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">number</span></span>
+         number to round
+        </li>
+        <li><span class="parameter">places</span>
+            <span class="types"><span class="type">number</span></span>
+         number of decimal places to round to
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        num rounded to places
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sign"></a>
+    <strong>sign (n)</strong>
+    </dt>
+    <dd>
+    Sign of a number
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">number</span></span>
+         any number
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">1</span> or <span class="type">-1</span></span>
+        sign of the number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sorted"></a>
+    <strong>sorted (object, key, reverse)</strong>
+    </dt>
+    <dd>
+    Sort an object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+
+        </li>
+        <li><span class="parameter">key</span>
+
+        </li>
+        <li><span class="parameter">reverse</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "sum"></a>
+    <strong>sum (iterable)</strong>
+    </dt>
+    <dd>
+    Sum of the values in an iterable
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iterable</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         containing numbers
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+        result of adding all numbers in the iterable
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2018-10-27 14:57:28 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

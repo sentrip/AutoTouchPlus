@@ -7,7 +7,6 @@
 -- @release 0.1.4
 AUTOTOUCHPLUS_VERSION = "0.1.4"
 
-abs = math.abs
 unpack = table.unpack
 local _string_converters = {}
 local _metamethods = {
@@ -110,7 +109,7 @@ return classes[name]
 end
 
 function getattr(cls, value)
-if cls and isType(cls, 'table') then
+if cls and type(cls) == 'table' then
 local mt = getmetatable(cls)
 local primary = rawget(cls, value)
 if primary then
@@ -141,7 +140,6 @@ end
 end
 end
 
-
 function copy(object, deep)
 --copy object attributes
 local c = {}
@@ -156,63 +154,6 @@ if m then setmetatable(c, m) end
 
 return c
 end
-
-function eval(input)
-local f = load(input)
-if f then
-return f()
-else
-error('Syntax error occurred while parsing input: '..input)
-end
-end
-
-function hash(input)
-if is.func(input) then
-input = tostring(input):match('function: (.*)')
-else
-local m = getmetatable(input)
-if m and m.__hash then return m.__hash(input) end
-end
-
-local hsh
-local mod = 2 ^ 64
-if is.num(input) then
-if input > 0 then hsh = -input * 2
-elseif input < 0 then hsh = input * 2 - 1
-else hsh = input end
-elseif not is.str(input) then error("Can only hash functions, integers and strings")
-else
-hsh = string.byte(input[1]) * 2 ^ 7
-for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
-end
-return hsh
-end
-
-
-function isin(sub, main)
-local _is = false
-local length, subLength
-local mt = getmetatable(main)
-if not mt or not mt.contains then
-if is.str(main) then return Not.Nil(main:find(sub))
-elseif is.table(main) then length = #main; subLength = 1
-else length = 1; subLength = 1 end
-for i=1, length do
-if _is then break end
-for j=0, subLength do
-if requal(main[i + j], sub) then
-_is = true
-break
-end
-end
-end
-else
-_is = main:contains(sub)
-end
-return _is
-end
-
-function isnotin(sub, main) return not isin(sub, main) end
 
 function isinstance(klass, other)
 local m = getmetatable(klass)
@@ -240,31 +181,6 @@ end
 return false
 end
 
-function max(...)
-local args
-if is.table(...) then args = ... else args = {...} end
-local mt = getmetatable(args)
-if mt and mt.__name == 'set' then -- special case for set objects
-args = args:values()
-end
-return math.max(unpack(args))
-end
-
-function min(...)
-local args
-if is.table(...) then args = ... else args = {...} end
-local mt = getmetatable(args)
-if mt and mt.__name == 'set' then -- special case for set objects
-args = args:values()
-end
-return math.min(unpack(args))
-end
-
-function num(input)
-if is.num(input) then return input else return tonumber(input) end
-end
-
-
 local _print = log or print
 function print(...)
 local strings = {}
@@ -282,47 +198,17 @@ klass.__getters[name] = getter
 klass.__setters[name] = setter
 end
 
-
-function repr(input)
-local m = getmetatable(input)
-if m and m.__repr then return input:__repr()
-else return tostring(input) end
-end
-
-
 function str(input)
 local m = getmetatable(input)
 if m then
 local _m = getmetatable(m)
 if m.__tostring then return tostring(input)
 elseif _m and _m.__tostring then return _m.__tostring(input) end
-elseif isType(input, 'number') or isType(input, 'bool') then return tostring(input)
-elseif isType(input, 'nil') then return 'nil'
-elseif isType(input, 'string') then return input
-elseif isType(input, 'table') then return _string_converters.table2string(input) end
+elseif type(input) == 'number' or type(input) == 'bool' then return tostring(input)
+elseif type(input) == 'nil' then return 'nil'
+elseif type(input) == 'string' then return input
+elseif type(input) == 'table' then return _string_converters.table2string(input) end
 return repr(input)
-end
-
-
-
-function reversed(object)
-if is.str(object) then return object:reverse() end
-local result = list()
-for i, v in pairs(object) do result:insert(1, v) end
-return result
-end
-
-function sorted(object, key)
-local sorter
-local cp = copy(object)
-if isType(key, 'function') then
-sorter = function(v1, v2)
-v1, v2 = key(v1), key(v2)
-return v1 < v2
-end
-end
-table.sort(cp, sorter)
-return cp
 end
 
 
@@ -508,25 +394,6 @@ return output
 end
 
 
-
-function all(iterable)
-for k, v in pairs(iterable) do
-if Not(v) then return false end
-end
-return true
-end
-
-
-function any(iterable)
-for k, v in pairs(iterable) do
-if is(v) then return true end
-end
-return false
-end
-
-
-
-
 local type_index = {
 ['str'] = 'string',
 ['num'] = 'number',
@@ -535,6 +402,30 @@ local type_index = {
 ['file'] = 'userdata',
 ['func'] = 'function'
 }
+
+function isin(sub, main)
+local mt = getmetatable(main)
+
+if mt and mt.contains then
+return main:contains(sub)
+
+else
+if is.str(main) then
+return Not.Nil(main:find(sub))
+
+elseif is.table(main) then
+for i=1, #main do
+if requal(sub, main[i]) then
+return true
+end
+end
+end
+end
+
+return false
+end
+
+function isnotin(sub, main) return not isin(sub, main) end
 
 function isType(object, ...)
 local types = {...}
@@ -551,7 +442,11 @@ return not isType(object, ...)
 end
 
 
-is = setmetatable({}, {
+is = {}
+
+Not = {}
+
+is = setmetatable(is, {
 --check truthy
 __call = function(s, object)
 if object == nil or object == false or object == 0 then
@@ -573,13 +468,12 @@ end,
 --check type
 __index = function(s, value)
 return function(v)
-local s = type_index[value] or value
-return isType(v, s:lower())
+return isType(v, (type_index[value] or value):lower())
 end
 end
 })
 
-Not = setmetatable({}, {
+Not = setmetatable(Not, {
 --check falsy
 __call = function(s, object) return not is(object) end,
 --check type
@@ -587,6 +481,117 @@ __index = function(s, value)
 return function(v) return not is[value](v) end
 end
 })
+
+
+function abs(n) return math.abs(n) end
+
+
+function all(iterable)
+for k, v in pairs(iterable) do
+if Not(v) then return false end
+end
+return true
+end
+
+function any(iterable)
+for k, v in pairs(iterable) do
+if is(v) then return true end
+end
+return false
+end
+
+function count(value, input)
+local total = 0
+for i, v in pairs(input) do if v == value then total = total + 1 end end
+return total
+end
+
+function div(x, y) return math.floor(x / y) end
+
+function eval(input)
+local f = load(input)
+if f then
+return f()
+else
+error('Syntax error occurred while parsing input: '..input)
+end
+end
+
+
+function filter(filt, iterable) return itertools.filter(filt, iter(iterable)) end
+
+
+function hash(input)
+if is.func(input) then
+input = tostring(input):match('function: (.*)')
+else
+local m = getmetatable(input)
+if m and m.__hash then return m.__hash(input) end
+end
+
+local hsh
+local mod = 2 ^ 64
+if is.num(input) then
+if input > 0 then hsh = -input * 2
+elseif input < 0 then hsh = input * 2 - 1
+else hsh = input end
+elseif not is.str(input) then error("Can only hash functions, integers and strings")
+else
+hsh = string.byte(input[1]) * 2 ^ 7
+for i, v in pairs(input) do hsh = (1000003 * hsh + string.byte(v)) % mod end
+end
+return hsh
+end
+
+
+function int(input) return math.floor(input) end
+
+function iter(iterable) return itertools.values(iterable) end
+
+
+function len(input)
+if is.Nil(input) then return 0
+elseif is.num(input) or is.Bool(input) then return 1
+else
+local total = 0
+for i, v in pairs(input) do total = total + 1 end
+return total
+end
+end
+
+
+function map(func, iterable) return itertools.map(func, iter(iterable)) end
+
+
+function max(...)
+local args
+if is.table(...) then args = ... else args = {...} end
+local mt = getmetatable(args)
+if mt and mt.__name == 'set' then -- special case for set objects
+args = args:values()
+end
+return math.max(unpack(args))
+end
+
+function min(...)
+local args
+if is.table(...) then args = ... else args = {...} end
+local mt = getmetatable(args)
+if mt and mt.__name == 'set' then -- special case for set objects
+args = args:values()
+end
+return math.min(unpack(args))
+end
+
+
+function num(input) return tonumber(input) end
+
+
+function repr(input)
+local m = getmetatable(input)
+if m and m.__repr then return input:__repr()
+else return tostring(input) end
+end
 
 function requal(value1, value2)
 local all_equal = type(value1) == type(value2)
@@ -627,28 +632,16 @@ end
 return all_equal
 end
 
-
-
-function count(value, input)
-local total = 0
-for i, v in pairs(input) do if v == value then total = total + 1 end end
-return total
+function reversed(iterable)
+if is.str(iterable) then return iterable:reverse() end
+local result = list()
+for i, v in pairs(iterable) do result:insert(1, v) end
+return result
 end
 
-function div(x, y) return math.floor(x / y) end
-
-function len(input)
-if is.Nil(input) then return 0
-elseif is.num(input) or is.Bool(input) then return 1
-else
-local total = 0
-for i, v in pairs(input) do total = total + 1 end
-return total
-end
-end
-
-function round(num, places)
-local value = num * 10^places
+function round(n, places)
+places = places or 1
+local value = n * 10^places
 if value - math.floor(value) >= 0.5 then value = value + 1 end
 return math.floor(value) / 10 ^ places
 end
@@ -658,9 +651,26 @@ if n == 0 then return 1
 else return math.floor(n / math.abs(n)) end
 end
 
-function sum(object)
+function sorted(object, key, reverse)
+local sorter
+local cp = copy(object)
+if type(key) == 'function' then
+sorter = function(v1, v2)
+v1, v2 = key(v1), key(v2)
+return v1 < v2
+end
+elseif type(key) == 'boolean' then
+reverse = key
+end
+table.sort(cp, sorter)
+if reverse then cp = reversed(cp) end
+return cp
+end
+
+
+function sum(iterable)
 local total = 0
-for i, v in pairs(object) do total = total + v end
+for i, v in pairs(iterable) do total = total + v end
 return total
 end
 
@@ -900,23 +910,20 @@ run_if_closed = contextmanager(run_if_closed)
 time_ensured = contextmanager(time_ensured)
 time_padded = contextmanager(time_padded)
 
-local pairs, ipairs, t_sort = pairs, ipairs, table.sort
-local co_yield, co_wrap = coroutine.yield, coroutine.wrap
-local co_resume = coroutine.resume
 itertools = {}
 
 function itertools.values (table)
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for _, v in pairs(table) do
-co_yield(v)
+coroutine.yield(v)
 end
 end)
 end
 
 function itertools.each (table)
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for _, v in ipairs(table) do
-co_yield(v)
+coroutine.yield(v)
 end
 end)
 end
@@ -933,9 +940,9 @@ end
 function itertools.count (n, step)
 if n == nil then n = 1 end
 if step == nil then step = 1 end
-return co_wrap(function ()
+return coroutine.wrap(function ()
 while true do
-co_yield(n)
+coroutine.yield(n)
 n = n + step
 end
 end)
@@ -944,15 +951,15 @@ end
 function itertools.cycle (iterable)
 local saved = {}
 local nitems = 0
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for element in iterable do
-co_yield(element)
+coroutine.yield(element)
 nitems = nitems + 1
 saved[nitems] = element
 end
 while nitems > 0 do
 for i = 1, nitems do
-co_yield(saved[i])
+coroutine.yield(saved[i])
 end
 end
 end)
@@ -960,15 +967,15 @@ end
 
 function itertools.value (value, times)
 if times then
-return co_wrap(function ()
+return coroutine.wrap(function ()
 while times > 0 do
 times = times - 1
-co_yield(value)
+coroutine.yield(value)
 end
 end)
 else
-return co_wrap(function ()
-while true do co_yield(value) end
+return coroutine.wrap(function ()
+while true do coroutine.yield(value) end
 end)
 end
 end
@@ -977,7 +984,7 @@ function itertools.islice (iterable, start, stop)
 if start == nil then
 start = 1
 end
-return co_wrap(function ()
+return coroutine.wrap(function ()
 -- these sections are covered but do not register
 -- luacov: disable
 if stop ~= nil and stop - start < 1 then return end
@@ -989,17 +996,17 @@ current = current + 1
 if stop ~= nil and current > stop then return end
 -- luacov: enable
 if current >= start then
-co_yield(element)
+coroutine.yield(element)
 end
 end
 end)
 end
 
 function itertools.takewhile (predicate, iterable)
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for element in iterable do
 if predicate(element) then
-co_yield(element)
+coroutine.yield(element)
 else
 break
 end
@@ -1008,50 +1015,44 @@ end)
 end
 
 function itertools.map (func, iterable)
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for element in iterable do
-co_yield(func(element))
+coroutine.yield(func(element))
 end
 end)
 end
 
 function itertools.filter (predicate, iterable)
-return co_wrap(function ()
+return coroutine.wrap(function ()
 for element in iterable do
 if predicate(element) then
-co_yield(element)
+coroutine.yield(element)
 end
 end
 end)
 end
 
 local function make_comp_func(key)
-if key == nil then
-return nil
-end
+if type(key) == 'function' then
 return function (a, b)
 return key(a) < key(b)
 end
 end
-
-local _collect = itertools.collect
+end
 
 function itertools.sorted (iterable, key, reverse)
-local t, n = _collect(iterable)
-t_sort(t, make_comp_func(key))
+local t, n = itertools.collect(iterable)
+table.sort(t, make_comp_func(key))
 if reverse then
-return co_wrap(function ()
-for i = n, 1, -1 do co_yield(t[i]) end
+return coroutine.wrap(function ()
+for i = n, 1, -1 do coroutine.yield(t[i]) end
 end)
 else
-return co_wrap(function ()
-for i = 1, n do co_yield(t[i]) end
+return coroutine.wrap(function ()
+for i = 1, n do coroutine.yield(t[i]) end
 end)
 end
 end
-
-iter = itertools.values
-
 json = {}
 
 local encode
@@ -2871,9 +2872,9 @@ local s = string.gsub(table.concat(values, '/'), '/+', '/')
 return s
 end
 
-function os.read_line(f, lineNumber, add_rootDir)
+function os.read_line(f, n, add_rootDir)
 local lines = os.read_lines(f, add_rootDir)
-return lines[lineNumber]
+return lines[n]
 end
 
 function os.read_lines(f, add_rootDir)
@@ -2911,16 +2912,16 @@ io.popen('sleep 0.001'):close()
 end
 end
 
-function os.write_line(line, lineNumber, filename, add_rootDir)
-local lines = os.read_lines(filename, add_rootDir)
-lines[lineNumber] = line
-os.write_lines(lines, filename, 'w', add_rootDir)
+function os.write_line(line, n, name, add_rootDir)
+local lines = os.read_lines(name, add_rootDir)
+lines[n] = line
+os.write_lines(lines, name, 'w', add_rootDir)
 end
 
-function os.write_lines(lines, filename, mode, add_rootDir)
-log.debug('Writing lines: %s', filename)
-if rootDir and add_rootDir ~= false then filename = os.path_join(rootDir(), filename) end
-local f = assert(io.open(filename, mode or 'w'))
+function os.write_lines(lines, name, mode, add_rootDir)
+log.debug('Writing lines: %s', name)
+if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end
+local f = assert(io.open(name, mode or 'w'))
 for i, v in pairs(lines) do f:write(v .. '\n') end
 assert(f:close())
 end
@@ -3002,6 +3003,7 @@ function assertLessThanEqual(less, more, msg) assert(less <= more, format_ge(msg
 
 function assertMoreThanEqual(more, less, msg) assert(more >= less, format_ge(msg, more, less)) end
 
+-- @param exception
 function assertRaises(exception, func, msg)
 local success, result = pcall(func)
 if isNotType(exception, 'string') then

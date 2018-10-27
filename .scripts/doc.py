@@ -25,6 +25,6 @@ if __name__ == '__main__':
     for ln in data[:b[1]] + data[e[0]:ct[0]] + data[ht[0]:]:
       f.write(ln + '\n')
 
-  if len(sys.argv) < 2 or sys.argv[1] != '--only-render':
+  if int(os.environ.get('NO_RENDER', 0)) == 0:
     webbrowser.open('docs/index.html')
   
