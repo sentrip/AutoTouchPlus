@@ -44,7 +44,7 @@ if __name__ == '__main__':
   data = json.loads(subprocess.check_output(github + ['-X', 'POST'] + form_args + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases']).decode())
   if not data.get('name', None):
     print(red + 'Error creating release: %s - %s' % (data['message'], data.get('errors', [])))    
-    exit(0)
+    exit(1)
   # data = json.loads(subprocess.check_output(github + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases/latest']).decode())
   release_id = data['id']
 
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     data = json.loads(subprocess.check_output(github + ['-X', 'POST', '-F', "file=@%s" % fname, '-H', "Content-Type: application/octet-stream", 'https://uploads.github.com/repos/sentrip/AutoTouchPlus/releases/%s/assets?name=%s' % (release_id, fname)]).decode())
     if not data.get('name', None):
       print(red + 'Error uploading %s: %s - %s' % (fname, data['message'], data['errors']))    
-      break
+      exit(1)
   else:
     print(green + 'Success!' + reset)
