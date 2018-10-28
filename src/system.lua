@@ -26,7 +26,7 @@ function exe(cmd, split_output, suppress_log)
   local data = os.read_lines(f)
   local success, status, code = f:close()
   if split_output then
-    if #data == 1 then data = data[1] end
+    if len(data) == 1 then data = data[1] end
   else
     data = table.concat(data, '\n')
   end

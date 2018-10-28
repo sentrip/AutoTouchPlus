@@ -26,7 +26,7 @@ function isin(sub, main)
       return Not.Nil(main:find(sub))
 
     elseif is.table(main) then 
-      for i=1, #main do 
+      for i=1, rawlen(main) do 
         if requal(sub, main[i]) then 
           return true 
         end 
@@ -49,7 +49,7 @@ function isnotin(sub, main) return not isin(sub, main) end
 -- @treturn boolean is the object type in the given types
 function isType(object, ...)
   local types = {...}
-  if #types == 1 then return type(object) == types[1] end
+  if rawlen(types) == 1 then return type(object) == types[1] end
   local is_type = false
   for i, v in pairs(types) do
     is_type = is_type or type(object) == (type_index[v] or v)
@@ -83,9 +83,9 @@ is = setmetatable(is, {
     elseif isType(object, 'number', 'boolean', 'userdata', 'function') then
       return true
     elseif isType(object, 'string') then
-      return #object > 0
+      return rawlen(object) > 0
     elseif isType(object, 'table') then
-      local size = #object
+      local size = rawlen(object)
       if size == 0 then
         for i, v in pairs(object) do
           size = size + 1

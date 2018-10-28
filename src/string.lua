@@ -19,7 +19,7 @@ function metafuncs.add(s, other) return s .. other end
 --- x{1, -2, 3} => 'adc'
 function metafuncs.call(s,i,j)
   if isType(i, 'number') then 
-    return string.sub(s, i, j or #s) 
+    return string.sub(s, i, j or rawlen(s)) 
   elseif isType(i, 'table') then
     local t = {}
     for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
@@ -35,7 +35,7 @@ end
 --- x.<command> == function or nil
 function metafuncs.index(s, i) 
   if isType(i, 'number') then 
-    if i < 0 then i = #s + 1 + i end
+    if i < 0 then i = rawlen(s) + 1 + i end
     return string.sub(s, i, i) 
   end 
   return string[i] 
@@ -59,7 +59,7 @@ end
 ---     2, b
 function metafuncs.pairs(s)
   local function _iter(s, idx)
-    if idx < #s then return idx + 1, s[idx + 1] end
+    if idx < rawlen(s) then return idx + 1, s[idx + 1] end
   end
   return _iter, s, 0
 end
@@ -68,7 +68,7 @@ end
 -- @tparam string s
 -- @tparam string value
 -- @treturn boolean
-function string.endswith(s, value) return s(-#value, -1) == value end
+function string.endswith(s, value) return s(-rawlen(value), -1) == value end
 
 ---- Concatenate a list/table of strings with another string as the delimiter
 -- @tparam string s
@@ -97,10 +97,10 @@ function string.split(s, delim)
   local idx = 1
   local values = {}
 
-  while i <= #s do
+  while i <= rawlen(s) do
     if is.Nil(delim) then values[i] = s[i]; i = i + 1
     else
-      if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
+      if s(i, i + rawlen(delim) - 1) == delim then idx = idx + 1; i = i + rawlen(delim) - 1
     else 
         if is.Nil(values[idx]) then values[idx] = '' end
         values[idx] = values[idx] .. s[i] 
@@ -116,7 +116,7 @@ end
 -- @tparam string s
 -- @tparam string value
 -- @treturn boolean
-function string.startswith(s, value) return s(1, #value) == value end
+function string.startswith(s, value) return s(1, rawlen(value)) == value end
 
 ---- Strip characters from the beginning and end of a string
 -- @tparam string s
@@ -124,9 +124,9 @@ function string.startswith(s, value) return s(1, #value) == value end
 -- @treturn string
 function string.strip(s, remove) 
   local start=1
-  local _end = #s
-  for i=1, #s do if isnotin(s[i], remove) then start = i break end end
-  for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
+  local _end = rawlen(s)
+  for i=1, rawlen(s) do if isnotin(s[i], remove) then start = i break end end
+  for i=rawlen(s), start, -1 do if isnotin(s[i], remove) then _end = i break end end
   return s(start, _end)
 end
 

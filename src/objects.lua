@@ -133,23 +133,25 @@ function list:__call(start, _end, step)
       return value
     end
   else -- arguments -> slice
-    _end = _end or #self
-    if _end < 0 and not step then _end = #self + 1 + _end end
-    if is.table(start) then for i, v in pairs(start) do slice:append(self[v]) end
-    else for i=start, _end, step or 1 do slice:append(self[i]) end end
+    _end = _end or rawlen(self)
+    if _end < 0 and not step then _end = rawlen(self) + 1 + _end end
+    if is.table(start) then 
+      for i, v in pairs(start) do slice:append(self[v]) end
+    else 
+      for i=start, _end, step or 1 do slice:append(self[i]) end 
+    end
     return slice  
   end
 end
 
 function list:__eq(other) return namedRequality('list')(self, other) end
 
-function list:__len() return len(self) end
+function list:__len() return rawlen(self) end
 
 function list:__getitem(value) 
-  if is.str(value) then return rawget(list, value) 
-  else 
-    if sign(value) < 0 then value = #self + 1 + value end
-    return rawget(self, value) end
+  if is.str(value) then return rawget(list, value) end
+  if sign(value) < 0 then value = rawlen(self) + 1 + value end
+  return rawget(self, value) 
 end
 
 function list:__mul(n)
@@ -160,7 +162,7 @@ end
 
 ---- Append a value to the list
 -- @param value the value to append
-function list:append(value) rawset(self, #self + 1, value) end
+function list:append(value) rawset(self, rawlen(self) + 1, value) end
 
 --- Clear the list of all values
 function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
@@ -186,7 +188,7 @@ function list:index(value) for i, v in pairs(self) do if requal(v, value) then r
 -- @param index the index at which to insert value
 -- @param value value to insert
 function list:insert(index, value) 
-  for i=#self, index, -1 do rawset(self, i + 1, rawget(self, i)) end
+  for i=rawlen(self), index, -1 do rawset(self, i + 1, rawget(self, i)) end
   rawset(self, index, value)
 end
 
@@ -195,13 +197,13 @@ end
 -- @return value
 function list:pop(index) 
   local value = rawget(self, index or 1)
-  for i=index or 1, #self do rawset(self, i, rawget(self, i + 1)) end
+  for i=index or 1, rawlen(self) do rawset(self, i, rawget(self, i + 1)) end
   return value
 end
 
 ---- Remove a value from list
 -- @param value value to remove
-function list:remove(value) local _ = self:pop(self:index(value)) end
+function list:remove(value) self:pop(self:index(value)) end
 
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
@@ -290,6 +292,6 @@ function set:update(other) for _, v in pairs(other) do self:add(v) end end
 --- List of the values in the set
 function set:values() 
   local result = {}
-  for v in self() do result[#result + 1] = v end
+  for v in self() do result[rawlen(result) + 1] = v end
   return result
 end

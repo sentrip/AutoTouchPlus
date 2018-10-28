@@ -201,7 +201,7 @@ end
 --- )
 function parametrize(names, parameters, f)
     local fields = {}
-    names:gsub("([^,]+)", function(c) fields[#fields+1] = c end)
+    names:gsub("([^,]+)", function(c) fields[rawlen(fields)+1] = c end)
     local arg_names = _test_utils.get_arg_names(f.f)
     local _args = {}
     for _, k in pairs(arg_names) do
@@ -370,7 +370,7 @@ end
 -- function _test_utils.get_line_stripped(lineno)  
 --   if #_lines_of_this_file == 0 then 
 --     for l in io.lines(debug.getinfo(1, 'S').short_src) do 
---       _lines_of_this_file[#_lines_of_this_file + 1] = l 
+--       _lines_of_this_file[rawlen(_lines_of_this_file) + 1] = l 
 --     end
 --   end
 --   return _lines_of_this_file[lineno]:gsub('[ \t]*', '')

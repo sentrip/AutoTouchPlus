@@ -414,7 +414,7 @@ if is.str(main) then
 return Not.Nil(main:find(sub))
 
 elseif is.table(main) then
-for i=1, #main do
+for i=1, rawlen(main) do
 if requal(sub, main[i]) then
 return true
 end
@@ -429,7 +429,7 @@ function isnotin(sub, main) return not isin(sub, main) end
 
 function isType(object, ...)
 local types = {...}
-if #types == 1 then return type(object) == types[1] end
+if rawlen(types) == 1 then return type(object) == types[1] end
 local is_type = false
 for i, v in pairs(types) do
 is_type = is_type or type(object) == (type_index[v] or v)
@@ -454,9 +454,9 @@ return false
 elseif isType(object, 'number', 'boolean', 'userdata', 'function') then
 return true
 elseif isType(object, 'string') then
-return #object > 0
+return rawlen(object) > 0
 elseif isType(object, 'table') then
-local size = #object
+local size = rawlen(object)
 if size == 0 then
 for i, v in pairs(object) do
 size = size + 1
@@ -1684,23 +1684,25 @@ key, value =  next(self, key, value)
 return value
 end
 else -- arguments -> slice
-_end = _end or #self
-if _end < 0 and not step then _end = #self + 1 + _end end
-if is.table(start) then for i, v in pairs(start) do slice:append(self[v]) end
-else for i=start, _end, step or 1 do slice:append(self[i]) end end
+_end = _end or rawlen(self)
+if _end < 0 and not step then _end = rawlen(self) + 1 + _end end
+if is.table(start) then
+for i, v in pairs(start) do slice:append(self[v]) end
+else
+for i=start, _end, step or 1 do slice:append(self[i]) end
+end
 return slice
 end
 end
 
 function list:__eq(other) return namedRequality('list')(self, other) end
 
-function list:__len() return len(self) end
+function list:__len() return rawlen(self) end
 
 function list:__getitem(value)
-if is.str(value) then return rawget(list, value)
-else
-if sign(value) < 0 then value = #self + 1 + value end
-return rawget(self, value) end
+if is.str(value) then return rawget(list, value) end
+if sign(value) < 0 then value = rawlen(self) + 1 + value end
+return rawget(self, value)
 end
 
 function list:__mul(n)
@@ -1709,7 +1711,7 @@ for i=1, n do result:extend(self) end
 return result
 end
 
-function list:append(value) rawset(self, #self + 1, value) end
+function list:append(value) rawset(self, rawlen(self) + 1, value) end
 
 function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
 
@@ -1723,17 +1725,17 @@ function list:extend(values) for i, v in pairs(values) do self:append(v) end end
 function list:index(value) for i, v in pairs(self) do if requal(v, value) then return i end end end
 
 function list:insert(index, value)
-for i=#self, index, -1 do rawset(self, i + 1, rawget(self, i)) end
+for i=rawlen(self), index, -1 do rawset(self, i + 1, rawget(self, i)) end
 rawset(self, index, value)
 end
 
 function list:pop(index)
 local value = rawget(self, index or 1)
-for i=index or 1, #self do rawset(self, i, rawget(self, i + 1)) end
+for i=index or 1, rawlen(self) do rawset(self, i, rawget(self, i + 1)) end
 return value
 end
 
-function list:remove(value) local _ = self:pop(self:index(value)) end
+function list:remove(value) self:pop(self:index(value)) end
 
 
 set = class('set')
@@ -1803,7 +1805,7 @@ function set:update(other) for _, v in pairs(other) do self:add(v) end end
 
 function set:values()
 local result = {}
-for v in self() do result[#result + 1] = v end
+for v in self() do result[rawlen(result) + 1] = v end
 return result
 end
 
@@ -2696,7 +2698,7 @@ function metafuncs.add(s, other) return s .. other end
 
 function metafuncs.call(s,i,j)
 if isType(i, 'number') then
-return string.sub(s, i, j or #s)
+return string.sub(s, i, j or rawlen(s))
 elseif isType(i, 'table') then
 local t = {}
 for k, v in ipairs(i) do t[k] = string.sub(s, v, v) end
@@ -2706,7 +2708,7 @@ end
 
 function metafuncs.index(s, i)
 if isType(i, 'number') then
-if i < 0 then i = #s + 1 + i end
+if i < 0 then i = rawlen(s) + 1 + i end
 return string.sub(s, i, i)
 end
 return string[i]
@@ -2720,12 +2722,12 @@ end
 
 function metafuncs.pairs(s)
 local function _iter(s, idx)
-if idx < #s then return idx + 1, s[idx + 1] end
+if idx < rawlen(s) then return idx + 1, s[idx + 1] end
 end
 return _iter, s, 0
 end
 
-function string.endswith(s, value) return s(-#value, -1) == value end
+function string.endswith(s, value) return s(-rawlen(value), -1) == value end
 
 function string.join(s, other) return table.concat(other, s) end
 
@@ -2740,10 +2742,10 @@ local i = 1
 local idx = 1
 local values = {}
 
-while i <= #s do
+while i <= rawlen(s) do
 if is.Nil(delim) then values[i] = s[i]; i = i + 1
 else
-if s(i, i + #delim - 1) == delim then idx = idx + 1; i = i + #delim - 1
+if s(i, i + rawlen(delim) - 1) == delim then idx = idx + 1; i = i + rawlen(delim) - 1
 else
 if is.Nil(values[idx]) then values[idx] = '' end
 values[idx] = values[idx] .. s[i]
@@ -2755,13 +2757,13 @@ for i, v in pairs(values) do if is.Nil(v) then values[i] = '' end end
 return list(values)
 end
 
-function string.startswith(s, value) return s(1, #value) == value end
+function string.startswith(s, value) return s(1, rawlen(value)) == value end
 
 function string.strip(s, remove)
 local start=1
-local _end = #s
-for i=1, #s do if isnotin(s[i], remove) then start = i break end end
-for i=#s, start, -1 do if isnotin(s[i], remove) then _end = i break end end
+local _end = rawlen(s)
+for i=1, rawlen(s) do if isnotin(s[i], remove) then start = i break end end
+for i=rawlen(s), start, -1 do if isnotin(s[i], remove) then _end = i break end end
 return s(start, _end)
 end
 
@@ -2789,7 +2791,7 @@ local f = assert(io.popen(cmd, 'r'))
 local data = os.read_lines(f)
 local success, status, code = f:close()
 if split_output then
-if #data == 1 then data = data[1] end
+if len(data) == 1 then data = data[1] end
 else
 data = table.concat(data, '\n')
 end
@@ -3029,7 +3031,7 @@ end
 
 function parametrize(names, parameters, f)
 local fields = {}
-names:gsub("([^,]+)", function(c) fields[#fields+1] = c end)
+names:gsub("([^,]+)", function(c) fields[rawlen(fields)+1] = c end)
 local arg_names = _test_utils.get_arg_names(f.f)
 local _args = {}
 for _, k in pairs(arg_names) do
