@@ -1,6 +1,13 @@
 History
 -----------
 
+* 0.2.3 (2018-10-28)
+  
+  * FileHandler logger no longer opens file on each log record
+  * Fixed nested iter calls
+  
+|
+
 * 0.2.2 (2018-10-27)
 
   * Refactored string functions out of global namespace
