@@ -1,10 +1,3 @@
----- AutoTouchPlus stuff and things.
--- @module AutoTouchPlus
--- @author Djordje Pepic
--- @license Apache 2.0
--- @copyright Djordje Pepic 2018
--- @usage require("AutoTouchPlus")
--- @release 0.2.2
 AUTOTOUCHPLUS_VERSION = "0.2.2"
 
 unpack = table.unpack
