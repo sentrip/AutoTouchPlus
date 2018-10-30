@@ -1,6 +1,14 @@
 History
 -----------
 
+* 0.3.0 (2018-10-30)
+  
+  * Replaced wget with cURL as backend for requests
+  * Fixed bug when executing command with exe that returns an error
+  * Added test coverage for core functions
+  
+|
+
 * 0.2.3 (2018-10-28)
   
   * FileHandler logger no longer opens file on each log record

@@ -8,8 +8,9 @@ local _string_converters = {}
 local _metamethods = {
   '__add', '__sub', '__mul', '__div', '__idiv', '__pow', 
   '__mod', '__concat', '__index', '__newindex', '__call',
-  '__pairs', '__ipairs', '__tostring', '__len', 
-  '__mode', '__metatable', '__gc'
+  '__pairs', '__ipairs', '__tostring', '__len', '__unm',
+  '__mode', '__metatable', '__gc', '__eq', '__lt', '__gt',
+  '__band', '__bor', '__bxor', '__bnot', '__shl', '__shr'
 }
 
 --Index of class names
@@ -211,14 +212,14 @@ function isinstance(klass, other)
 end
 
 --defaults to log in AutoTouch, otherwise print in IDEs or terminal for developement
-local _print = log or print
+____print = log or print
 ---- Write a string to stdout (or to log.txt in AutoTouch)
 -- @param ... 
 -- @return
 function print(...) 
   local strings = {}
   for i, v in pairs({...}) do strings[#strings + 1] = str(v) end
-  _print(table.concat(strings, '\t')) 
+  return ____print(table.concat(strings, '\t')) 
 end
 
 ---- Pretty print a table
@@ -271,10 +272,12 @@ end
 --@local
 --slight improvement of tostring(<table>)
 function _string_converters.class_repr(cls)
-  local obj_name, value = 'class', tostring(cls)
+  local obj_name, value
   if getmetatable(cls) and getmetatable(cls).__name then 
     obj_name = 'instance'
     value = cls.__base_repr or tostring(getmetatable(cls))
+  else
+    obj_name, value = 'class', tostring(cls)
   end
   return '<'..string.gsub(value, 'table:', cls.__name..' '..obj_name..' at')..'>'
 end
@@ -282,11 +285,10 @@ end
 --@local
 --custom strings for dict, list and set
 function _string_converters.class_str(cls)
-  if list{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
+  if set{'dict', 'list', 'set'}:contains(getmetatable(cls).__name) then
     return _string_converters.table2string(cls)
-  else
-    return _string_converters.class_repr(cls)
   end
+  return _string_converters.class_repr(cls)
 end
 
 
@@ -295,12 +297,10 @@ end
 function _string_converters.table2string(input)
   local m = getmetatable(input)
   local function idxstr(idx, val, custom_type) 
-    if custom_type then return str(val) 
-    elseif is.str(val) then val = '"'..val..'"'
-    else val = str(val) end
-    if is.str(idx) then idx = '"'..idx..'"'
-    else idx = str(idx) end
-    return string.format('%s: %s', idx, val)
+    if custom_type then return str(val) end
+    if is.str(val) then  val = '"'..val..'"'  end
+    if is.str(idx) then idx = '"'..idx..'"' end
+    return string.format('%s: %s', str(idx), str(val))
   end
   
   local custom = m and m.__name and list{'list', 'set'}:contains(m.__name)
@@ -327,9 +327,10 @@ end
 
 
 --@local
---pretty printing code modified from
---https://github.com/Anaminus/lua-pretty-print/blob/master/PrettyPrint.lua
-function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
+--pretty printing code modified from https://github.com/Anaminus/lua-pretty-print/blob/master/PrettyPrint.lua
+--TODO: write my own pprint function that is short and well tested
+-- luacov: disable
+function _string_converters.traverseTable(dataTable,tableRef,indent,delim)  
   delim = delim or ','
   local output = ""
   local indentStr = string.rep("\t",indent)
@@ -345,7 +346,6 @@ function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
     ['userdata'] = 7;
     ['nil']      = 8;
   }
-  
   
   local function isPrimitiveArray(array)
     local max,n = 0,0
@@ -382,7 +382,7 @@ function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
       return "[" .. tostring(key) .. "] = "
     end
   end
-
+  
   local keyList = {}
   for k,v in pairs(dataTable) do
     if isPrimitiveType[type(k)] then
@@ -457,3 +457,4 @@ function _string_converters.traverseTable(dataTable,tableRef,indent,delim)
   end
   return output
 end
+-- luacov: enable

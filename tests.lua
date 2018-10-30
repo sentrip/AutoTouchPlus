@@ -1,15 +1,6 @@
--------------------------------AutoTouch mocking ---------------------------
-alert = alert or print
-tap = tap or function(x, y) print('tapping', x, y) end
-usleep = usleep or function(t) sleep(t / 1000000) end
-function intToRgb(i) return 0, 0, 0 end
-function rgbToInt(r,g,b) return 0 end
-----------------------------------------------------------------------------
 require("AutoTouchPlus")
---check for wget
-assert(is(exe('dpkg-query -W wget')),
-  'wget not installed. Either install it or remove this check from test.lua (4-5)')
-----------------------------------------------------------------------------
+assert(is(exe('dpkg-query -W curl')),
+  'cURL not installed. Either install it or remove this check from tests.lua (2-3)')
 
 
 
@@ -542,12 +533,7 @@ describe('core',
     assert(a2.run, 'Class instance does not have required methods')
     assertEqual(a:run(), 5, 'Class instance method returns incorrect result')
     assertEqual(a2:run(), 1, 'Class instance method returns incorrect result')
-    --private tables
-    local p1, p2 = a.__private, a2.__private
-    assert(p1, 'Class instance does not have private table')
-    assert(p1, 'Class instance does not have private table')
-    assertNotEqual(p1, p2, 'Unique instance private tables are equal')
-    
+    --string representation
     local class_loc = repr(A):match('<%w+ class at (.*)')
     assert(str(A):startswith('<A class at'), 'str(class) is incorrect '..str(A))
     assert(repr(A):startswith('<A class at'), 'repr(class) is incorrect '..repr(A))
@@ -555,6 +541,23 @@ describe('core',
     local instance_loc = repr(a):match('<%w+ instance at (.*)')
     assert(repr(a):startswith('<A instance at'), 'repr(instance) is incorrect '..repr(a))
     assert(class_loc ~= instance_loc, 'class and instance memory locations are the same')
+    local B = class('B')
+    local b = B()
+    assert(tostring(b) == repr(b), 'Default class __tostring does not return the same as __repr')
+    assert(tostring(b):startswith('<B instance at'), 'repr(instance) is incorrect '..repr(b))
+    -- __private table
+    local p1, p2 = a.__private, a2.__private
+    assert(p1, 'Class instance does not have private table')
+    assert(p1, 'Class instance does not have private table')
+    assertNotEqual(p1, p2, 'Unique instance private tables are equal')
+    a.__private['specialKey'] = 1
+    assert(a.__private['specialKey'] == 1, 'Did not set key in __private table')
+    for k, v in pairs(a) do 
+      assert(k ~= 'specialKey', 'Key in __private table publicly visible') 
+    end
+    assertRaises('Cannot set __private table', function() 
+      a.__private = {}
+    end, 'Allowed to set __private table')
   end),
 
   it('class_single_inheritance', function()
@@ -666,11 +669,16 @@ describe('core',
     function A:__init()
       self.val = 5
     end
+    A.__getters['getter_value'] = function(self) 
+      return self.val * 2
+    end
     local a = A()
     assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
     assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
     assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-    -- TODO: __getters test
+    assert(a.getter_value == 10, 'Did not get value from __getters')
+    a.val = 10
+    assert(a.getter_value == 20, 'Did not get value from __getters')
     -- TODO: __getitem test
   end),
 
@@ -679,11 +687,13 @@ describe('core',
     function A:__init()
       self.val = 5
     end
+    A.__setters['setter_value'] = function(self, v) self.val = v * 2 end
     local a = A()
     setattr(a, 'val', 3)
     assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
     assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-    -- TODO: __setters test
+    a.setter_value = 10
+    assert(a.val == 20, 'Did not set value from __setters')
     -- TODO: __setitem test
   end),
   
@@ -706,7 +716,25 @@ describe('core',
   end),
 
   it('isinstance', function() 
-    -- TODO: isinstance test
+    local A = class("A")
+    local B = class("B", A)
+    local C = class("C", B)
+    local a, b, c = A(1), B(2), C(1)
+    assert(isinstance('', 'string'), 'string not instance of string')
+    assert(isinstance({}, {}), 'table not instance of table')
+    assert(isinstance({}, 'table'), 'table not instance of table - string')
+    assert(isinstance(a, A), 'Class not instance of itself')
+    assert(isinstance(a, a), 'Class not instance of itself - instance')
+    assert(isinstance(a, 'A'), 'Class not instance of itself - string')
+    assert(not isinstance(a, {}), 'Class is instance of table')
+    assert(not isinstance(a, 'table'), 'Class is instance of table - string')
+    assert(isinstance(b, B), 'Class not instance of itself')
+    assert(isinstance(c, C), 'Class not instance of itself')
+    assert(isinstance(b, A), 'Derived class not instance of base class')
+    assert(isinstance(c, A), 'Derived class not instance of base class')
+    assert(isinstance(c, B), 'Derived class not instance of base class')
+    assert(not isinstance(a, B), 'Base class is instance of derived class')
+    assert(not isinstance(a, C), 'Base class is instance of derived class')
   end),
 
   it('pprint', function(monkeypatch) 
@@ -733,8 +761,14 @@ describe('core',
     assert(text:match(expected), 'pprint did not print correctly')
   end),
 
-  it('print', function() 
-    -- TODO: print test
+  it('print', function(monkeypatch) 
+    monkeypatch.setattr('____print', function(...) return ... end)
+    assertEqual(print(1), '1', 'print number failed')
+    assertEqual(print('1'), '1', 'print string failed')
+    assertEqual(print({1,2}), '{1, 2}', 'print table number failed')
+    assertEqual(print(list{1,2}), '[1, 2]', 'print list failed')
+    assertEqual(print(list{1,list{1,2}}), '[1, [1, 2]]', 'print recursive failed')
+    assertEqual(print('a', 'b', 'c'), 'a\tb\tc', 'print multiple arguments failed')
   end),
 
   it('property', function() 
@@ -756,7 +790,7 @@ describe('core',
   it('str', function()
     assertEqual(str(1), '1', 'str number failed')
     assertEqual(str('1'), '1', 'str string failed')
-    assertEqual(str({1,2}), '{1, 2}', 'table number failed')
+    assertEqual(str({1,2}), '{1, 2}', 'str table[number] failed')
     assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
     assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
   end)
@@ -2002,46 +2036,32 @@ describe('pixel - Region',
 
 
 
-fixture('patched_wget', function(monkeypatch, request) 
+fixture('patched_curl', function(monkeypatch, request) 
   local old_exe = exe
-  local output
   monkeypatch.setattr('exe', function(...) 
-    if (...)[1] == 'wget' then
-      local next_is_output = false
+    if (...)[1] == 'curl' then
       local url
       for k, v in pairs(...) do 
         if v:startswith("'http") then url = v:strip("'") end
-        if next_is_output then output = v; break end
-        if v:startswith('--output-document') then next_is_output = true end
       end
       local path = url:replace('http://httpbin.org', ''):replace('https://httpbin.org', ''):split('?')[1]
-      local stdout, response_data
+      local response_data
       if path:startswith('/get') then
-        stdout = '--2018-10-20 04:17:13--  http://httpbin.org/get?stuff=1\nResolving httpbin.org (httpbin.org)... 52.44.144.199, 52.2.175.150, 52.0.94.50, ...\nConnecting to httpbin.org (httpbin.org)|52.44.144.199|:80... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 297 [application/json]\nSaving to: ‘_response.txt’\n\n     0K                                                       100% 28,1M=0s\n\n2018-10-20 04:17:13 (28,1 MB/s) - ‘_response.txt’ saved [297/297]'
-        response_data = '{\n  "args": {\n      "stuff": "1"\n    },\n    "headers": {\n      "Accept": "*/*",\n      "Accept-Encoding": "identity",\n      "Connection": "close",\n      "Host": "httpbin.org",\n      "User-Agent": "myAgent",\n      "X-Stuff": "abc"\n    },\n    "origin": "194.59.251.59",\n    "url": "http://httpbin.org/get?stuff=1"\n  }'
+        response_data = 'HTTP/1.1 200 OK\13\nConnection: keep-alive\13\nServer: gunicorn/19.9.0\13\nDate: Tue, 30 Oct 2018 03:42:19 GMT\13\nContent-Type: application/json\13\nContent-Length: 262\13\nAccess-Control-Allow-Origin: *\13\nAccess-Control-Allow-Credentials: true\13\nVia: 1.1 vegur\13\n\13\n{\n  "args": {\n      "stuff": "1"\n    },\n    "headers": {\n      "Accept": "*/*",\n      "Accept-Encoding": "identity",\n      "Connection": "close",\n      "Host": "httpbin.org",\n      "User-Agent": "myAgent",\n      "X-Stuff": "abc"\n    },\n    "origin": "194.59.251.59",\n    "url": "http://httpbin.org/get?stuff=1"\n  }'
       elseif path:startswith('/post') then 
-        stdout = '--2018-10-20 04:23:20--  http://httpbin.org/post\nResolving httpbin.org (httpbin.org)... 34.226.180.131, 34.231.150.116, 34.231.75.48, ...\nConnecting to httpbin.org (httpbin.org)|34.226.180.131|:80... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 434 [application/json]\nSaving to: ‘_response.txt’\n\n     0K                                                       100% 29,2M=0s\n\n2018-10-20 04:23:21 (29,2 MB/s) - ‘_response.txt’ saved [434/434]'
-        response_data = '{\n  "args": {},\n  "data": "",\n  "files": {},\n  "form": {\n    "amount": "10"\n  },\n  "headers": {\n    "Accept": "*/*",\n    "Accept-Encoding": "identity",\n    "Connection": "close",\n    "Content-Length": "9",\n    "Content-Type": "application/x-www-form-urlencoded",\n    "Host": "httpbin.org",\n    "User-Agent": "Wget/1.17.1 (linux-gnu)"\n  },\n  "json": null,\n  "origin": "194.59.251.59",\n  "url": "http://httpbin.org/post"\n}'
+        response_data = 'HTTP/1.1 200 OK\13\nConnection: keep-alive\13\nServer: gunicorn/19.9.0\13\nDate: Tue, 30 Oct 2018 03:42:20 GMT\13\nContent-Type: application/json\13\nContent-Length: 387\13\nAccess-Control-Allow-Origin: *\13\nAccess-Control-Allow-Credentials: true\13\nVia: 1.1 vegur\13\n\13\n{\n  "args": {},\n  "data": "",\n  "files": {},\n  "form": {\n    "amount": "10"\n  },\n  "headers": {\n    "Accept": "*/*",\n    "Accept-Encoding": "identity",\n    "Connection": "close",\n    "Content-Length": "9",\n    "Content-Type": "application/x-www-form-urlencoded",\n    "Host": "httpbin.org",\n    "User-Agent": "curl/7.47.0"\n  },\n  "json": null,\n  "origin": "194.59.251.59",\n  "url": "http://httpbin.org/post"\n}'
       elseif path:startswith('/base64') then 
-        stdout = '--2018-10-20 04:23:21--  https://httpbin.org/base64/SFRUUEJJTiBpcyBhd2Vzb21l\nResolving httpbin.org (httpbin.org)... 34.226.180.131, 34.231.150.116, 34.231.75.48, ...\nConnecting to httpbin.org (httpbin.org)|34.226.180.131|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 18 [text/html]\nSaving to: ‘_response.txt’\n\n     0K                                                       100% 3,59M=0s\n\n2018-10-20 04:23:22 (3,59 MB/s) - ‘_response.txt’ saved [18/18]'
-        response_data = 'HTTPBIN is awesome'
+        response_data = 'HTTP/1.1 200 OK\13\nConnection: keep-alive\13\nServer: gunicorn/19.9.0\13\nDate: Tue, 30 Oct 2018 03:42:21 GMT\13\nContent-Type: text/html; charset=utf-8\13\nContent-Length: 18\13\nAccess-Control-Allow-Origin: *\13\nAccess-Control-Allow-Credentials: true\13\nVia: 1.1 vegur\13\n\13\nHTTPBIN is awesome\n'
       elseif path:startswith('/basic-auth') then 
-        stdout = '--2018-10-20 04:29:38--  https://httpbin.org/basic-auth/name/password\nResolving httpbin.org (httpbin.org)... 52.44.92.122, 52.4.75.11, 52.45.111.123, ...\nConnecting to httpbin.org (httpbin.org)|52.44.92.122|:443... connected.\nHTTP request sent, awaiting response... 401 UNAUTHORIZED\nAuthentication selected: Basic realm=\"Fake Realm\"\nReusing existing connection to httpbin.org:443.\nHTTP request sent, awaiting response... 200 OK\nLength: 47 [application/json]\nSaving to: ‘_response.txt’\n     0K                                                       100% 8,17M=0s\n2018-10-20 04:29:39 (8,17 MB/s) - ‘_response.txt’ saved [47/47]'
-        response_data = '{\n          "authenticated": true,\n          "user": "name"\n        }'
+        response_data = 'HTTP/1.1 200 OK\13\nConnection: keep-alive\13\nServer: gunicorn/19.9.0\13\nDate: Tue, 30 Oct 2018 03:42:22 GMT\13\nContent-Type: application/json\13\nContent-Length: 47\13\nAccess-Control-Allow-Origin: *\13\nAccess-Control-Allow-Credentials: true\13\nVia: 1.1 vegur\13\n\13\n{\n          "authenticated": true,\n          "user": "name"\n        }'
+      elseif path:startswith('/doesntexist') then
+        response_data = 'HTTP/1.1 404 NOT FOUND\13\nConnection: keep-alive\13\nServer: gunicorn/19.9.0\13\nDate: Tue, 30 Oct 2018 12:19:14 GMT\13\nContent-Type: text/html\13\nContent-Length: 233\13\nAccess-Control-Allow-Origin: *\13\nAccess-Control-Allow-Credentials: true\13\nVia: 1.1 vegur\13\n\13\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>'
       end
-      local f = io.open(output, 'w')
-      f:write(response_data)
-      f:close()
-      return stdout:split('\n')
+      return response_data:split('\n')
 
       -- Use this to make requests over network
       -- local data = old_exe(...)
       -- pprint(data)
-      -- local f = io.open(output)
-      -- local stdout = f:read('*a')
-      -- f:close()
-      -- print('-' * 50)
-      -- print(stdout)
       -- return data
     end
     return old_exe(...)
@@ -2059,12 +2079,13 @@ end)
 
 describe('requests',
 
-  it('gets json', function(patched_wget)
+  it('gets json', function(patched_curl)
     local url = 'http://httpbin.org/get'
     local header_key = 'X-Stuff'
     local head, ua = {[header_key]='abc'}, 'myAgent'
     local resp = requests.get{url, params={stuff=1}, headers=head, user_agent=ua}
     assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp.reason == 'OK', 'Did not return correct reason')
     assert(resp, 'Json request did not return response')
     local j = resp:json()
     assert(j.headers, 'Incorrect json returned')
@@ -2075,24 +2096,40 @@ describe('requests',
     assert(j.headers[header_key] == head[header_key], 'Did not get correct custom header')
   end),
   
-  it('posts json', function(patched_wget)
+  it('posts json', function(patched_curl)
     local resp = requests.post{'http://httpbin.org/post', data={amount=10}}
     assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp.reason == 'OK', 'Did not return correct reason')
     assertEqual(str(resp:json().form.amount), '10', 'Did not post correct data')
   end),
   
-  it('gets text', function(patched_wget)
+  it('gets text', function(patched_curl)
     local resp = requests.get('https://httpbin.org/base64/SFRUUEJJTiBpcyBhd2Vzb21l')
     assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp.reason == 'OK', 'Did not return correct reason')
     assert(resp, 'Text request did not return response')
-    assertEqual(resp.text, 'HTTPBIN is awesome', 'Incorrect text returned')
+    assertEqual(resp.text:strip('\n'), 'HTTPBIN is awesome', 'Incorrect text returned')
   end),
 
-  it('makes request with auth', function(patched_wget) 
+  it('makes request with auth', function(patched_curl) 
     local resp = requests.get{'https://httpbin.org/basic-auth/name/password', auth={user='name', password='password'}, verify_ssl=true}
     assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp.reason == 'OK', 'Did not return correct reason')
     assert(resp:json().authenticated == true, 'Not authenticated with basic http auth')
     assert(resp:json().user == 'name', 'Did not get correct username')
+  end),
+
+  it('makes and parses failed request', function(patched_curl) 
+    local resp = requests.get('https://httpbin.org/doesntexist')
+    assert(resp.status_code == 404, 'Did not return 404 for unknown url')
+    assert(resp.reason == 'NOT FOUND', 'Did not return correct reason')
+    assert(is(resp.text), 'Did not return any text in failed response')
+  end),
+
+  it('returns empty response when curl fails', function(patched_curl) 
+    local resp = requests.get('https://httpbin.org/reallydoesntexist')
+    assert(resp.status_code == -1, 'Parsed status code for empty response')
+    assert(resp.text == '', 'Parsed text for empty response')
   end),
 
   it('Response tostring', function(response) 
@@ -2115,13 +2152,11 @@ describe('requests',
   end),
   
   it('Response raise_for_status', function(response) 
-    assertRaises(response.method..' request: '..response.status_code, function() 
+    assertRaises(response.method..' response: '..response.status_code, function() 
       response:raise_for_status()
     end, 'Did not raise error for response')
   end)
 )
-
--- TODO: Failed request tests
 
 
 
@@ -2478,7 +2513,6 @@ describe('string',
 
 
 fixture('filesystem', function(request) 
-  
   local cmd = ''
   if rootDir then cmd = 'cd '..rootDir()..' && ' end
   io.popen(cmd..'mkdir _tmp_tst'):close() 
@@ -2500,6 +2534,14 @@ describe('system',
     assertEqual(result, set{'t1.txt', 't.txt'}, 'ls returned incorrect files')
     assertRequal(exe('echo "1\n2"'), {'1', '2'}, 'Multi line output failed')
     assertEqual(exe('echo "1\n2"', false), '1\n2', 'Single output failed')
+  end),
+
+  it('failed exe', function(monkeypatch)
+    -- Patch popen and read_lines to prevent ugly sh not found message
+    monkeypatch.setattr(io, 'popen', function(...) return {close=function(...) return false, 'exit', 127 end} end) 
+    monkeypatch.setattr(os, 'read_lines', function(...) return {} end) 
+    local result, _, code = exe('command_that_doesnt_exist')
+    assert(code and code ~= 0, 'Failed exe did not return code')
   end),
 
   it('os.copy', function(filesystem)
@@ -2525,6 +2567,10 @@ describe('system',
   it('os.find', function(filesystem)
     assertEqual(os.find('tests.lua'), './tests.lua', 
       'os.find returned incorrect file path')
+    assertEqual(os.find{file='tests.lua'}, './tests.lua', 
+      'os.find returned incorrect file path')
+    assertEqual(os.find{dir='_tmp_tst'}, './_tmp_tst', 
+      'os.find returned incorrect directory path')
     assertEqual(os.find{dir='_tmp_tst'}, './_tmp_tst', 
       'os.find returned incorrect directory path')
     assertRaises('Incorrect table arguments', function() 
@@ -2619,7 +2665,7 @@ describe('system',
 
 
 
-if run_tests() == 0 then alert("All tests passed!") end 
+if run_tests() == 0 then (alert or print)("All tests passed!") end 
 
 
 

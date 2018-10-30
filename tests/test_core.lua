@@ -38,12 +38,7 @@ describe('core',
     assert(a2.run, 'Class instance does not have required methods')
     assertEqual(a:run(), 5, 'Class instance method returns incorrect result')
     assertEqual(a2:run(), 1, 'Class instance method returns incorrect result')
-    --private tables
-    local p1, p2 = a.__private, a2.__private
-    assert(p1, 'Class instance does not have private table')
-    assert(p1, 'Class instance does not have private table')
-    assertNotEqual(p1, p2, 'Unique instance private tables are equal')
-    
+    --string representation
     local class_loc = repr(A):match('<%w+ class at (.*)')
     assert(str(A):startswith('<A class at'), 'str(class) is incorrect '..str(A))
     assert(repr(A):startswith('<A class at'), 'repr(class) is incorrect '..repr(A))
@@ -51,6 +46,23 @@ describe('core',
     local instance_loc = repr(a):match('<%w+ instance at (.*)')
     assert(repr(a):startswith('<A instance at'), 'repr(instance) is incorrect '..repr(a))
     assert(class_loc ~= instance_loc, 'class and instance memory locations are the same')
+    local B = class('B')
+    local b = B()
+    assert(tostring(b) == repr(b), 'Default class __tostring does not return the same as __repr')
+    assert(tostring(b):startswith('<B instance at'), 'repr(instance) is incorrect '..repr(b))
+    -- __private table
+    local p1, p2 = a.__private, a2.__private
+    assert(p1, 'Class instance does not have private table')
+    assert(p1, 'Class instance does not have private table')
+    assertNotEqual(p1, p2, 'Unique instance private tables are equal')
+    a.__private['specialKey'] = 1
+    assert(a.__private['specialKey'] == 1, 'Did not set key in __private table')
+    for k, v in pairs(a) do 
+      assert(k ~= 'specialKey', 'Key in __private table publicly visible') 
+    end
+    assertRaises('Cannot set __private table', function() 
+      a.__private = {}
+    end, 'Allowed to set __private table')
   end),
 
   it('class_single_inheritance', function()
@@ -162,11 +174,16 @@ describe('core',
     function A:__init()
       self.val = 5
     end
+    A.__getters['getter_value'] = function(self) 
+      return self.val * 2
+    end
     local a = A()
     assertEqual(getattr(a, 'val'), 5, 'Did not get basic class attribute')
     assertEqual(getattr(a, 't'), nil, 'Did not get basic class attribute')
     assertEqual(getattr(a, 'isinstance'), A.isinstance, 'Getattr does not get inherited methods')
-    -- TODO: __getters test
+    assert(a.getter_value == 10, 'Did not get value from __getters')
+    a.val = 10
+    assert(a.getter_value == 20, 'Did not get value from __getters')
     -- TODO: __getitem test
   end),
 
@@ -175,11 +192,13 @@ describe('core',
     function A:__init()
       self.val = 5
     end
+    A.__setters['setter_value'] = function(self, v) self.val = v * 2 end
     local a = A()
     setattr(a, 'val', 3)
     assertEqual(getattr(a, 'val'), 3, 'Did not set basic class attribute')
     assertEqual(getattr(A, 'val'), nil, 'Did set class value on instance')
-    -- TODO: __setters test
+    a.setter_value = 10
+    assert(a.val == 20, 'Did not set value from __setters')
     -- TODO: __setitem test
   end),
   
@@ -202,7 +221,25 @@ describe('core',
   end),
 
   it('isinstance', function() 
-    -- TODO: isinstance test
+    local A = class("A")
+    local B = class("B", A)
+    local C = class("C", B)
+    local a, b, c = A(1), B(2), C(1)
+    assert(isinstance('', 'string'), 'string not instance of string')
+    assert(isinstance({}, {}), 'table not instance of table')
+    assert(isinstance({}, 'table'), 'table not instance of table - string')
+    assert(isinstance(a, A), 'Class not instance of itself')
+    assert(isinstance(a, a), 'Class not instance of itself - instance')
+    assert(isinstance(a, 'A'), 'Class not instance of itself - string')
+    assert(not isinstance(a, {}), 'Class is instance of table')
+    assert(not isinstance(a, 'table'), 'Class is instance of table - string')
+    assert(isinstance(b, B), 'Class not instance of itself')
+    assert(isinstance(c, C), 'Class not instance of itself')
+    assert(isinstance(b, A), 'Derived class not instance of base class')
+    assert(isinstance(c, A), 'Derived class not instance of base class')
+    assert(isinstance(c, B), 'Derived class not instance of base class')
+    assert(not isinstance(a, B), 'Base class is instance of derived class')
+    assert(not isinstance(a, C), 'Base class is instance of derived class')
   end),
 
   it('pprint', function(monkeypatch) 
@@ -229,8 +266,14 @@ describe('core',
     assert(text:match(expected), 'pprint did not print correctly')
   end),
 
-  it('print', function() 
-    -- TODO: print test
+  it('print', function(monkeypatch) 
+    monkeypatch.setattr('____print', function(...) return ... end)
+    assertEqual(print(1), '1', 'print number failed')
+    assertEqual(print('1'), '1', 'print string failed')
+    assertEqual(print({1,2}), '{1, 2}', 'print table number failed')
+    assertEqual(print(list{1,2}), '[1, 2]', 'print list failed')
+    assertEqual(print(list{1,list{1,2}}), '[1, [1, 2]]', 'print recursive failed')
+    assertEqual(print('a', 'b', 'c'), 'a\tb\tc', 'print multiple arguments failed')
   end),
 
   it('property', function() 
@@ -252,7 +295,7 @@ describe('core',
   it('str', function()
     assertEqual(str(1), '1', 'str number failed')
     assertEqual(str('1'), '1', 'str string failed')
-    assertEqual(str({1,2}), '{1, 2}', 'table number failed')
+    assertEqual(str({1,2}), '{1, 2}', 'str table[number] failed')
     assertEqual(str(list{1,2}), '[1, 2]', 'str list failed')
     assertEqual(str(list{1,list{1,2}}), '[1, [1, 2]]', 'str recursive failed')
   end)
