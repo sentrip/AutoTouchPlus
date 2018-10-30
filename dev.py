@@ -28,17 +28,20 @@ if __name__ == '__main__':
   command, ip_address, password, command_args = get_cli_args()
   if command == 'autotouch':
     assert len(command_args) > 0, 'Must provide script name'
-    os.system('wget -qO- http://%s:8080/control/start_playing?path=%s.lua' % (ip_address, command_args[0].replace('.lua', '')))
+    os.system('curl -s http://%s:8080/control/start_playing?path=%s.lua' % (ip_address, command_args[0].replace('.lua', '')))
     print('')
   elif command == 'dav':
+    # TODO: Add check for already connected server
     if not os.path.exists('mount/'):
       os.mkdir('mount/')
     print('\nConnecting to WebDAV server: %s\n' % ip_address)
     os.system('yes "" | sudo mount -t davfs -o noexec %s mount/' % ip_address)
+    os.system('sudo chmod ugo+rwx mount/*.lua')
   elif command == 'install':
     os.system("sshpass -p '%s' scp install.lua AutoTouchPlus.lua tests.lua root@%s:/var/mobile/Library/AutoTouch/Scripts/" % (password, ip_address))
     os.system("sshpass -p '%s' ssh root@%s 'chmod ugo+rwx /var/mobile/Library/AutoTouch/Scripts/*'" % (password, ip_address))
   elif command == 'stop-dav':
+    # TODO: Add check for disconnected server
     print('\nDisconnecting from WebDAV server: %s\n' % ip_address)
     os.system('sudo umount mount/')
   elif command == 'tail':

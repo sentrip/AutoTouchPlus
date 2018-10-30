@@ -35,6 +35,7 @@
 <li><a href="#Functions">Functions</a></li>
 <li><a href="#Class_Request">Class Request </a></li>
 <li><a href="#Class_Response">Class Response </a></li>
+<li><a href="#Class_Response___properties">Class Response - properties</a></li>
 </ul>
 
 
@@ -68,8 +69,8 @@
 
 <h1>Module <code>requests.lua</code></h1>
 <p>Web requests and data parsing.</p>
-<p> Mirrors basic methods and api of Python's 'requests' module.
- Requires wget to work, as <a href="../modules/requests.lua.html#">requests.lua</a> is simply a lua wrapper for the wget cli.</p>
+<p> Mimics basic api of Python's <a href="http://docs.python-requests.org/en/master/">requests</a> module.
+ Requires <a href="https://curl.haxx.se/">cURL</a> to work, as <a href="../modules/requests.lua.html#">requests.lua</a> is simply a lua wrapper for the cURL command line interface.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -99,15 +100,15 @@
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#Request:build">Request:build ()</a></td>
-	<td class="summary">Build command for wget from request</td>
+	<td class="summary">Build command for curl from request</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Request:send">Request:send (cmd)</a></td>
-	<td class="summary">Send wget command and return parsed response</td>
+	<td class="summary">Send curl command and return parsed response</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Request:verify">Request:verify ()</a></td>
-	<td class="summary">Verify request parameters (errors if parameters are invalid)</td>
+	<td class="summary">Verify request parameters</td>
 	</tr>
 </table>
 <h2><a href="#Class_Response">Class Response </a></h2>
@@ -122,7 +123,22 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Response:raise_for_status">Response:raise_for_status ()</a></td>
-	<td class="summary">Check if the request was successful</td>
+	<td class="summary">Check if the response was successful.</td>
+	</tr>
+</table>
+<h2><a href="#Class_Response___properties">Class Response - properties</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Response.content_length">Response.content_length</a></td>
+	<td class="summary">Content length of response</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Response.content_type">Response.content_type</a></td>
+	<td class="summary">Content type of response</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Response.encoding">Response.encoding</a></td>
+	<td class="summary">Encoding type of response</td>
 	</tr>
 </table>
 
@@ -145,11 +161,11 @@
     <ul>
         <li><span class="parameter">url</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         url to request
         </li>
         <li><span class="parameter">args</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         request arguments
         </li>
     </ul>
 
@@ -157,12 +173,14 @@
     <ol>
 
            <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
-
-
-
+        response to request
     </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/requests.lua.html#requests.request">requests.request</a>
+    </ul>
 
 
 </dd>
@@ -178,11 +196,11 @@
     <ul>
         <li><span class="parameter">url</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         url to request
         </li>
         <li><span class="parameter">args</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         request arguments
         </li>
     </ul>
 
@@ -190,12 +208,14 @@
     <ol>
 
            <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
-
-
-
+        response to request
     </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/requests.lua.html#requests.request">requests.request</a>
+    </ul>
 
 
 </dd>
@@ -211,11 +231,11 @@
     <ul>
         <li><span class="parameter">url</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         url to request
         </li>
         <li><span class="parameter">args</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         request arguments
         </li>
     </ul>
 
@@ -223,12 +243,14 @@
     <ol>
 
            <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
-
-
-
+        response to request
     </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/requests.lua.html#requests.request">requests.request</a>
+    </ul>
 
 
 </dd>
@@ -244,11 +266,11 @@
     <ul>
         <li><span class="parameter">url</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         url to request (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         url to request
         </li>
         <li><span class="parameter">args</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         request arguments (see <a href="../modules/requests.lua.html#requests.request">requests.request</a>)
+         request arguments
         </li>
     </ul>
 
@@ -256,12 +278,14 @@
     <ol>
 
            <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
-
-
-
+        response to request
     </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/requests.lua.html#requests.request">requests.request</a>
+    </ul>
 
 
 </dd>
@@ -293,9 +317,7 @@
     <ol>
 
            <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
-
-
-
+        response to request
     </ol>
 
 
@@ -314,14 +336,15 @@
     <strong>Request:build ()</strong>
     </dt>
     <dd>
-    Build command for wget from request
+    Build command for curl from request
 
 
 
     <h3>Returns:</h3>
     <ol>
 
-        wget command in list form
+           <span class="types"><a class="type" href="../modules/objects.html#list">objects.list</a></span>
+        curl command in list form
     </ol>
 
 
@@ -333,20 +356,22 @@
     <strong>Request:send (cmd)</strong>
     </dt>
     <dd>
-    Send wget command and return parsed response
+    Send curl command and return parsed response
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">cmd</span>
-         command list
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         list of commands
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        Reponse of request
+           <span class="types"><a class="type" href="../modules/requests.lua.html#Response">Response</a></span>
+        response to request
     </ol>
 
 
@@ -358,11 +383,13 @@
     <strong>Request:verify ()</strong>
     </dt>
     <dd>
-    Verify request parameters (errors if parameters are invalid)
+    Verify request parameters
 
 
 
 
+    <h3>Raises:</h3>
+    error with format described by following regex: <i><b>Invalid request: (.*)</b></i>
 
 
 
@@ -418,13 +445,60 @@
     <strong>Response:raise_for_status ()</strong>
     </dt>
     <dd>
-    Check if the request was successful
+    Check if the response was successful.
+ A successful response has a status_code between 200 and 399.
 
 
 
 
     <h3>Raises:</h3>
-    error if the response status code is not 200
+    error with format described by following regex: <i><b>error in ([^ ]+) response: ([0-9]+)</b></i>
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class_Response___properties"></a>Class Response - properties</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Response.content_length"></a>
+    <strong>Response.content_length</strong>
+    </dt>
+    <dd>
+    Content length of response
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Response.content_type"></a>
+    <strong>Response.content_type</strong>
+    </dt>
+    <dd>
+    Content type of response
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Response.encoding"></a>
+    <strong>Response.encoding</strong>
+    </dt>
+    <dd>
+    Encoding type of response
+
+
+
+
 
 
 
@@ -436,7 +510,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-28 16:40:04 </i>
+<i style="float:right;">Last updated 2018-10-30 14:40:06 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

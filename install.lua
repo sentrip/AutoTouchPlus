@@ -10,20 +10,18 @@
 local BASE_URL = "https://raw.githubusercontent.com/sentrip/AutoTouchPlus/master/"
 
 
--- Check wget is installed
-local _fcheck = io.popen('dpkg-query -W wget')
-local wget_not_installed = _fcheck:read('*a'):match('no packages found')
+-- Check that cURL is installed
+local _fcheck = io.popen('dpkg-query -W curl')
+local curl_not_installed = _fcheck:read('*a') == ''
 _fcheck:close()
-assert(not wget_not_installed, 'wget not installed')
+assert(not curl_not_installed, 'cURL required to install AutoTouchPlus (install cURL in Cydia)')
 
 
 -- Download fresh copy of a file from GitHub
 function get(name)
   local pth = string.format('%s/%s', rootDir(), name):gsub('/+', '/')
-  local _check = "if test -f "..pth.." ; then rm "..pth.."; fi;"
-  local _get = table.concat({"wget", "--no-check-certificate", "-O", pth, BASE_URL..name}, " ")  
-  io.popen(_check):close()
-  io.popen(_get):close()
+  io.popen("if test -f "..pth.." ; then rm "..pth.."; fi;"):close()
+  io.popen(table.concat({"curl", "-sk", "-o", pth, BASE_URL..name}, " ")):close()
 end
 
 
@@ -38,5 +36,5 @@ for _, name in pairs{"AutoTouchPlus.lua", "tests.lua"} do
 end
 
 
--- Tests were successful
+-- Install was successful
 if not failed then alert("Installation successful!\nNow run tests.lua to check if everything works, and you're ready to go!") end
