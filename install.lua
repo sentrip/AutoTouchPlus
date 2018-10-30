@@ -3,7 +3,7 @@
 -- TODO: Download from releases instead of from GitHub raw content
 -- You can change the version below to download another version if you want.
 -----------------------------------------
--- AUTOTOUCHPLUS_VERSION = '0.2.3'
+-- AUTOTOUCHPLUS_VERSION = '0.3.0'
 -----------------------------------------
 
 -- local BASE_URL = "https://github.com/sentrip/AutoTouchPlus/releases/download/v"..AUTOTOUCHPLUS_VERSION..'/'

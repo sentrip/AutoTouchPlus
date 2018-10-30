@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os, re
-boilerplate = """AUTOTOUCHPLUS_VERSION = "0.2.3"
+boilerplate = """AUTOTOUCHPLUS_VERSION = "0.3.0"
 """
 
 files = ['src/core.lua', 'src/logic.lua'] + sorted(['src/' + i for i in os.listdir('src') if i != 'core.lua' and i != 'logic.lua'])
