@@ -1,6 +1,12 @@
 History
 -----------
 
+* 0.3.1 (2018-10-31)
+  
+  * Unit tests can be skipped individually or in groups
+  
+|
+
 * 0.3.0 (2018-10-30)
   
   * Replaced wget with cURL as backend for requests

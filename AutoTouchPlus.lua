@@ -2949,15 +2949,12 @@ if _concatenated:match('\n') then print(_concatenated); _concatenated = '' end
 end
 end
 
-
 local function format_ne(msg, v1, v2)
-msg = msg or ''
-return msg..string.format(' ==> %s != %s', str(v1 or ''), str(v2 or ''))
+return (msg or '')..string.format(' ==> %s != %s', str(v1 or ''), str(v2 or ''))
 end
 
 local function format_ge(msg, more, less)
-msg = msg or ''
-return msg..string.format(' ==> %s is not greater than %s', tostring(more), tostring(less))
+return (msg or '')..string.format(' ==> %s is not greater than %s', tostring(more), tostring(less))
 end
 
 
@@ -2980,9 +2977,7 @@ function assertMoreThanEqual(more, less, msg) assert(more >= less, format_ge(msg
 -- @param exception
 function assertRaises(exception, func, msg)
 local success, result = pcall(func)
-if isNotType(exception, 'string') then
-exception = exception.type
-end
+if type(exception) ~= 'string' then exception = exception.type end
 assert(not success, 'No exception raised: '..msg)
 assert(string.find(result or '', tostring(exception)), 'Incorrect error raised: '..msg)
 end
@@ -2994,14 +2989,28 @@ table.insert(_tests, {description=description, func=function()
 for i, test_funcs in pairs(test_functions) do
 if test_funcs.func ~= nil then test_funcs = {test_funcs} end
 for _, test_obj in pairs(test_funcs) do
-local _, err = pcall(test_obj.func, test_obj.f, description)
-_test_utils.write_test_result(err, description, test_obj.description)
+local _, err
+if not test_obj.skip then _, err = pcall(test_obj.func, test_obj.f, description) end
+_test_utils.write_test_result(err, description, test_obj.description, test_obj.skip)
 _test_utils.destroy_all_fixtures('func', description, test_obj.description)
 end
 end
 end})
 end
 
+function sdescribe(description, ...)
+local test_functions = {...}
+local skipped_test_funcs = {}
+for k, v in pairs(test_functions) do
+if not skipped_test_funcs[k] then skipped_test_funcs[k] = {} end
+if v.func ~= nil then v = {v} end
+for d, f in pairs(v) do
+f.skip = true
+table.insert(skipped_test_funcs[k], f)
+end
+end
+describe(description, unpack(skipped_test_funcs))
+end
 
 function it(description, f)
 return {description=description, f=f, func=function(fn, group_description)
@@ -3014,6 +3023,11 @@ if not status then return {msg=err, args=arg_table} end
 end}
 end
 
+function sit(description, f)
+local test_obj = it(description, f)
+test_obj.skip = true
+return test_obj
+end
 
 function fixture(name, scope, f)
 if f then
@@ -3022,7 +3036,6 @@ else
 _fixtures[name] = {func=scope, scope='func'}
 end
 end
-
 
 function parametrize(names, parameters, f)
 local fields = {}
@@ -3043,14 +3056,15 @@ local parametrized = {}
 for _, params in pairs(parameters) do
 if type(params) ~= 'table' then params = {params} end
 local code = 'function(%s) f(unpack(params)%s) end'
+-- luacov: disable
 local pfunc = load('return '..code:format(args_string, args_inner), nil, "t", {
 f=f.f, params=params, unpack=unpack
 })()
+-- luacov: enable
 table.insert(parametrized, {description=f.description, func=f.func, f=pfunc})
 end
 return parametrized
 end
-
 
 function run_tests()
 _test_utils.write_began_tests()
@@ -3073,10 +3087,6 @@ _test_utils.write_errors()
 _test_utils.reset_internals()
 return exit_code
 end
-
-
-
-
 
 
 function _test_utils.ansi(c)
@@ -3155,14 +3165,8 @@ error("~~end~~")
 end, "c")
 -- luacov: enable
 local res, err = coroutine.resume(co)
-if res then
-error("The function provided defies the laws of the universe.", 2)
-elseif string.sub(tostring(err), -7) ~= "~~end~~" then
-error("The function failed with the error: "..tostring(err), 2)
-end
-
+-- if string.sub(tostring(err), -7) ~= "~~end~~" then error("The function failed with the error: "..tostring(err), 2) end
 return params
-
 end
 
 function _test_utils.get_fixture_args(func, scope, fix_name)
@@ -3180,7 +3184,6 @@ end
 end
 return arg_table
 end
-
 
 function _test_utils.get_system_time()
 local _time = os.time()
@@ -3221,6 +3224,9 @@ _count                     = {success=0, failed=0, skipped=0, errors=0}
 _current_fixtures.func     = {}
 _current_fixtures.group    = {}
 _current_fixtures.module   = {}
+_finalizers.func           = {}
+_finalizers.group          = {}
+_finalizers.module         = {}
 _errors                    = {}
 _fixtures                  = {}
 _tests                     = {}
@@ -3337,8 +3343,11 @@ end
 end
 end
 
-function _test_utils.write_test_result(err, group_desc, test_desc)
-if err == nil then
+function _test_utils.write_test_result(err, group_desc, test_desc, skip)
+if skip then
+io.write('s')
+_count.skipped = _count.skipped + 1
+elseif err == nil then
 io.write('.')
 _count.success = _count.success + 1
 elseif err.msg ~= nil then

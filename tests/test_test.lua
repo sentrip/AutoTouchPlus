@@ -269,4 +269,45 @@ assert(stdout:match('Failing fixture tests 2: %.EFE'), 'Incorrect success/fail/e
 assert(stdout:match('Failing fixture tests 3: EFEEFE'), 'Incorrect success/fail/error status written to stdout')
 
 
--- TODO: Skiped test tests
+
+--skipping with sit
+local value_to_set = 1
+_reset_stdout_and_run_tests(function()
+  describe('Skipped tests - sit', 
+    
+    it('can succeed', function() 
+    end),
+    
+    it('can fail', function() 
+      error('fail')
+    end),
+    
+    sit('can skip a test', function() 
+      value_to_set = 10
+    end)
+  )
+end)
+
+assert(value_to_set == 1, 'Did not skip test')
+assert(stdout:match('1 failed, 1 passed, 1 skipped in'), 'Skipped tests with it did not pass')
+assert(stdout:match('Skipped tests %- sit: %.Fs'), 'Incorrect success/fail/error status written to stdout')
+
+
+
+--skipping with sdescribe
+_reset_stdout_and_run_tests(function()
+  sdescribe('Skipped tests - sdescribe', 
+    
+    it('can skip regular test', function() 
+      value_to_set = 10
+    end),
+
+    sit('can skip skipped test', function() 
+      value_to_set = 20
+    end)
+  )
+end)
+
+assert(value_to_set == 1, 'Did not skip tests')
+assert(stdout:match('2 skipped in'), 'Skipped tests with it did not pass')
+assert(stdout:match('Skipped tests %- sdescribe: ss'), 'Incorrect success/fail/error status written to stdout')

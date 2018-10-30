@@ -1,6 +1,7 @@
 --- Basic unit-testing framework
 -- @module test
 require("src/core")
+require("src/builtins")
 
 local popen = io.popen
 
@@ -35,6 +36,7 @@ local _ansi_keys = {
   cyan      = 36,
   white     = 37,
 }
+-- luacov: disable
 local _concatenated = ''
 if rootDir then 
   io.write = function(s) 
@@ -43,16 +45,14 @@ if rootDir then
   end 
 end
 
-
 local function format_ne(msg, v1, v2)
-  msg = msg or ''
-  return msg..string.format(' ==> %s != %s', str(v1 or ''), str(v2 or ''))
+  return (msg or '')..string.format(' ==> %s != %s', str(v1 or ''), str(v2 or ''))
 end
 
 local function format_ge(msg, more, less)
-  msg = msg or ''
-  return msg..string.format(' ==> %s is not greater than %s', tostring(more), tostring(less))
+  return (msg or '')..string.format(' ==> %s is not greater than %s', tostring(more), tostring(less))
 end
+-- luacov: enable
 
 
 ---- Assert two values are equal
@@ -118,9 +118,7 @@ function assertMoreThanEqual(more, less, msg) assert(more >= less, format_ge(msg
 -- @param msg
 function assertRaises(exception, func, msg) 
   local success, result = pcall(func)
-  if isNotType(exception, 'string') then
-    exception = exception.type
-  end
+  if type(exception) ~= 'string' then exception = exception.type end
   assert(not success, 'No exception raised: '..msg)
   assert(string.find(result or '', tostring(exception)), 'Incorrect error raised: '..msg)
 end
@@ -134,20 +132,40 @@ end
 ---    assert(true)  
 ---  end)
 --- )
+--- run_tests()
 function describe(description, ...)
   local test_functions = {...}
   table.insert(_tests, {description=description, func=function()
     for i, test_funcs in pairs(test_functions) do
       if test_funcs.func ~= nil then test_funcs = {test_funcs} end
       for _, test_obj in pairs(test_funcs) do
-        local _, err = pcall(test_obj.func, test_obj.f, description)
-        _test_utils.write_test_result(err, description, test_obj.description)
+        local _, err
+        if not test_obj.skip then _, err = pcall(test_obj.func, test_obj.f, description) end
+        _test_utils.write_test_result(err, description, test_obj.description, test_obj.skip)
         _test_utils.destroy_all_fixtures('func', description, test_obj.description)
       end
     end
   end})
 end
 
+--- Define a group of tests that will be skipped.
+-- Works exactly like @{describe}, but skips all tests defined inside when @{run_tests} is called.
+-- @tparam string description description of test group
+-- @param ... tests defined with @{it}
+-- @see test.describe
+function sdescribe(description, ...)
+  local test_functions = {...}
+  local skipped_test_funcs = {}
+  for k, v in pairs(test_functions) do
+    if not skipped_test_funcs[k] then skipped_test_funcs[k] = {} end
+    if v.func ~= nil then v = {v} end
+    for d, f in pairs(v) do 
+      f.skip = true
+      table.insert(skipped_test_funcs[k], f)
+    end
+  end
+  describe(description, unpack(skipped_test_funcs))
+end
 
 --- Define a single test to be used in @{describe}
 -- @tparam string description description of test
@@ -163,6 +181,16 @@ function it(description, f)
     end}
 end
 
+--- Define a single test that will be skipped.
+-- Works exactly like @{it}, but will skip the test when @{run_tests} is called.
+-- @tparam string description description of test
+-- @tparam function f a test function (function that makes assertions)
+-- @see test.it
+function sit(description, f) 
+  local test_obj = it(description, f)
+  test_obj.skip = true
+  return test_obj
+end
 
 --- Define a fixture to be used in tests
 -- @tparam string name name of the fixture
@@ -183,7 +211,6 @@ function fixture(name, scope, f)
     _fixtures[name] = {func=scope, scope='func'}
   end
 end
-
 
 --- Run a single test with multiple parameters
 -- @tparam string names fixtures to parametrize (comma separated)
@@ -218,14 +245,15 @@ function parametrize(names, parameters, f)
     for _, params in pairs(parameters) do
         if type(params) ~= 'table' then params = {params} end
         local code = 'function(%s) f(unpack(params)%s) end'
+        -- luacov: disable
         local pfunc = load('return '..code:format(args_string, args_inner), nil, "t", {
           f=f.f, params=params, unpack=unpack
         })()
+        -- luacov: enable
         table.insert(parametrized, {description=f.description, func=f.func, f=pfunc})
     end
     return parametrized
 end
-
 
 --- Run all described tests and write results to stdout
 function run_tests()
@@ -249,13 +277,6 @@ function run_tests()
   _test_utils.reset_internals()
   return exit_code
 end
-
-
-
--- function skip() end
--- TODO: Skip tests
--- _test_utils.get_line_stripped(debug.getinfo(1).currentline - 1) == 'skip()'
-
 
 
 ---
@@ -339,14 +360,8 @@ function _test_utils.get_arg_names(f)
     end, "c")
   -- luacov: enable
   local res, err = coroutine.resume(co)
-  if res then 
-    error("The function provided defies the laws of the universe.", 2)
-  elseif string.sub(tostring(err), -7) ~= "~~end~~" then 
-    error("The function failed with the error: "..tostring(err), 2)
-  end
-
+  -- if string.sub(tostring(err), -7) ~= "~~end~~" then error("The function failed with the error: "..tostring(err), 2) end
   return params
-
 end
 
 ---
@@ -365,16 +380,6 @@ function _test_utils.get_fixture_args(func, scope, fix_name)
   end
   return arg_table
 end
-
---
--- function _test_utils.get_line_stripped(lineno)  
---   if #_lines_of_this_file == 0 then 
---     for l in io.lines(debug.getinfo(1, 'S').short_src) do 
---       _lines_of_this_file[rawlen(_lines_of_this_file) + 1] = l 
---     end
---   end
---   return _lines_of_this_file[lineno]:gsub('[ \t]*', '')
--- end
 
 --
 function _test_utils.get_system_time()
@@ -419,6 +424,9 @@ function _test_utils.reset_internals()
   _current_fixtures.func     = {}
   _current_fixtures.group    = {}
   _current_fixtures.module   = {}
+  _finalizers.func           = {}
+  _finalizers.group          = {}
+  _finalizers.module         = {}
   _errors                    = {}
   _fixtures                  = {}
   _tests                     = {}
@@ -543,8 +551,11 @@ function _test_utils.write_errors()
 end
 
 ---
-function _test_utils.write_test_result(err, group_desc, test_desc)
-  if err == nil then
+function _test_utils.write_test_result(err, group_desc, test_desc, skip)
+  if skip then
+    io.write('s')
+    _count.skipped = _count.skipped + 1
+  elseif err == nil then
     io.write('.')
     _count.success = _count.success + 1
   elseif err.msg ~= nil then
