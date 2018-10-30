@@ -1,4 +1,4 @@
-AUTOTOUCHPLUS_VERSION = "0.3.0"
+AUTOTOUCHPLUS_VERSION = "0.3.1"
 
 unpack = table.unpack
 local _string_converters = {}
