@@ -43,16 +43,21 @@ if __name__ == '__main__':
   ]
   data = json.loads(subprocess.check_output(github + ['-X', 'POST'] + form_args + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases']).decode())
   if not data.get('name', None):
-    print(red + 'Error creating release: %s - %s' % (data['message'], data.get('errors', [])))    
-    exit(1)
-  # data = json.loads(subprocess.check_output(github + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases/latest']).decode())
+    old_data = data
+    data = json.loads(subprocess.check_output(github + ['https://api.github.com/repos/sentrip/AutoTouchPlus/releases/latest']).decode())
+    if not data.get('name', None):
+      print(red + 'Error creating release: %s - %s' % (old_data.get('message', 'no message'), old_data.get('errors', 'no errors')))    
+      exit(1)
+  
   release_id = data['id']
 
   # Upload AutoTouchPlus.lua and tests.lua to latest release
   for fname in ['AutoTouchPlus.lua', 'tests.lua']:
     data = json.loads(subprocess.check_output(github + ['-X', 'POST', '-F', "file=@%s" % fname, '-H', "Content-Type: application/octet-stream", 'https://uploads.github.com/repos/sentrip/AutoTouchPlus/releases/%s/assets?name=%s' % (release_id, fname)]).decode())
     if not data.get('name', None):
-      print(red + 'Error uploading %s: %s - %s' % (fname, data['message'], data['errors']))    
-      exit(1)
+      print(red + 'Error uploading %s: %s - %s' % (fname, data.get('message', 'no message'), data.get('errors', 'no errors')))    
+      # Exit only if not re-uploading
+      if data.get('errors', {}).get('code', None) != 'already_exists':
+        exit(1)
   else:
     print(green + 'Success!' + reset)
