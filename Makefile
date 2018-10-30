@@ -1,4 +1,4 @@
-.PHONY: compile coverage docs release test test-single uncovered help
+.PHONY: compile coverage docs release test test-single todo uncovered help
 .DEFAULT_GOAL := help
 
 define PRINT_HELP
@@ -33,6 +33,9 @@ test:  ## Run tests
 test-single:  ## Run tests for a single module
 	@python3 .scripts/compile.py
 	@lua tests/test_$f.lua
+
+todo:  ## Show all todo items in the repository
+	@python3 .scripts/todo.py
 
 uncovered:  ## Show uncovered code
 	@python3 .scripts/uncovered.py $f
