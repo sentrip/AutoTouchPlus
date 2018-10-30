@@ -49,10 +49,12 @@ function os.copy(src, dest, overwrite, add_rootDir)
   local cmd = list{'cp'}
   if os.is_dir(src) then cmd:append('-R') end
   if not overwrite then cmd:append('-n') end
+  -- luacov: disable
   if add_rootDir ~= false and rootDir then 
     src = os.path_join(rootDir(), src) 
     dest = os.path_join(rootDir(), dest) 
   end
+  -- luacov: enable
   cmd:extend{src, dest}
   exe(cmd, true, true)
 end

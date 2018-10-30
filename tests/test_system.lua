@@ -10,7 +10,6 @@ require('src/system')
 
 
 fixture('filesystem', function(request) 
-  
   local cmd = ''
   if rootDir then cmd = 'cd '..rootDir()..' && ' end
   io.popen(cmd..'mkdir _tmp_tst'):close() 
@@ -32,6 +31,14 @@ describe('system',
     assertEqual(result, set{'t1.txt', 't.txt'}, 'ls returned incorrect files')
     assertRequal(exe('echo "1\n2"'), {'1', '2'}, 'Multi line output failed')
     assertEqual(exe('echo "1\n2"', false), '1\n2', 'Single output failed')
+  end),
+
+  it('failed exe', function(monkeypatch)
+    -- Patch popen and read_lines to prevent ugly sh not found message
+    monkeypatch.setattr(io, 'popen', function(...) return {close=function(...) return false, 'exit', 127 end} end) 
+    monkeypatch.setattr(os, 'read_lines', function(...) return {} end) 
+    local result, _, code = exe('command_that_doesnt_exist')
+    assert(code and code ~= 0, 'Failed exe did not return code')
   end),
 
   it('os.copy', function(filesystem)
@@ -57,6 +64,10 @@ describe('system',
   it('os.find', function(filesystem)
     assertEqual(os.find('tests.lua'), './tests.lua', 
       'os.find returned incorrect file path')
+    assertEqual(os.find{file='tests.lua'}, './tests.lua', 
+      'os.find returned incorrect file path')
+    assertEqual(os.find{dir='_tmp_tst'}, './_tmp_tst', 
+      'os.find returned incorrect directory path')
     assertEqual(os.find{dir='_tmp_tst'}, './_tmp_tst', 
       'os.find returned incorrect directory path')
     assertRaises('Incorrect table arguments', function() 
