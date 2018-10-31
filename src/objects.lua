@@ -55,7 +55,7 @@ function dict:clear() for k, v in pairs(self) do self:set(k, nil) end end
 
 --- Check if the dict contains a key
 -- @param key key to check for
--- @return (boolean) is the key in the dict
+-- @treturn boolean is the key in the dict
 function dict:contains(key) return Not.Nil(rawget(self, key)) end
 
 --- Get the value indexed by the given key in the dictionary
@@ -69,7 +69,7 @@ function dict:get(key, default) return rawget(self, key) or default end
 function dict:items() return pairs(self) end
 
 --- List all the keys in the dictionary
--- @return 'list' of keys
+-- @return @{list} of keys
 function dict:keys() 
   local ks = list()
   for k in self() do ks:append(k) end
@@ -96,12 +96,12 @@ end
 -- @param value value to set at given key
 function dict:set(key, value) rawset(self, key, value) end
 
---- Update current dictionary's keys and values with given dictionary's keys and values
--- @param other dictionary (or string indexed table) to use for update
+--- Update keys and values with keys and values in given iterable
+-- @param other dictionary to use for update
 function dict:update(other) for k, v in pairs(other) do self:set(k, v) end end
 
 --- List all the values in the dictionary
--- @return 'list' of values
+-- @return @{list} of values
 function dict:values() 
   local vs = list()
   for k, v in pairs(self) do vs:append(v) end
@@ -169,23 +169,23 @@ function list:clear() for k, _ in pairs(self) do rawset(self, k, nil) end end
 
 ---- Check if the list contains a value
 -- @param value value to check for
--- @return (boolean) is the value in the list
+-- @treturn boolean is the value in the list
 function list:contains(value)
   for i, v in pairs(self) do if requal(v, value) then return true end end
   return false
 end
 
 ---- Extend the list with the given values
--- @param values values to add (can be a table or a list)
+-- @tparam values values to add
 function list:extend(values) for i, v in pairs(values) do self:append(v) end end
 
 ---- Get index of the requested value in the list
 -- @param value the value to index
--- @return index of requested value
+-- @treturn int index of requested value
 function list:index(value) for i, v in pairs(self) do if requal(v, value) then return i end end end
 
 ---- Insert a value into the list at the given index
--- @param index the index at which to insert value
+-- @int index the index at which to insert value
 -- @param value value to insert
 function list:insert(index, value) 
   for i=rawlen(self), index, -1 do rawset(self, i + 1, rawget(self, i)) end
@@ -193,7 +193,7 @@ function list:insert(index, value)
 end
 
 ---- Pop a value out of the list at given index. If index is nil then returns first value in list
--- @param index the index of the value in the list
+-- @int index the index of the value in the list
 -- @return value
 function list:pop(index) 
   local value = rawget(self, index or 1)

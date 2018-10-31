@@ -115,7 +115,7 @@ end
 -- @tparam number radius distance from center_pixel in pixels to draw arc
 -- @tparam number start_angle angle where the arc begins (in degrees)
 -- @tparam number end_angle (optional) angle where the arc ends (in degrees)
--- @tparam Pixel center (optional) center pixel of arc
+-- @pixel center (optional) center pixel of arc
 -- @treturn Path|RelativePath desired path (@{RelativePath} if center argument omitted)
 function Path.arc(radius, start_angle, end_angle, center)
   
@@ -151,8 +151,8 @@ function Path.arc(radius, start_angle, end_angle, center)
 end
 
 ---- Linear path between two pixels
--- @tparam Pixel start_pixel beginning of path
--- @tparam Pixel end_pixel (optional) end of path
+-- @pixel start_pixel beginning of path
+-- @pixel end_pixel (optional) end of path
 -- @treturn Path|RelativePath desired path (@{RelativePath} if end_pixel argument omitted)
 function Path.linear(start_pixel, end_pixel)
   -- Relative path if only one pixel specified

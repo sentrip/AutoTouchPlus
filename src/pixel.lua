@@ -69,7 +69,7 @@ property(Pixel, 'color', function(self)
 end)
 
 ---- Returns a function that checks if the pixel's color has changed
--- @treturn function check whether the color has changed
+-- @treturn func check whether the color has changed
 function Pixel:color_changed()
   local old_color = self.color
   return function() 
@@ -95,7 +95,7 @@ end
 Pixels = class('Pixels')
 
 --- Create a Pixels object
--- @param pixels iterable of @{Pixel} objects
+-- @list pixels iterable of @{Pixel} objects
 -- @see core.class
 function Pixels:__init(pixels)
   self.pixels = list()
@@ -192,19 +192,19 @@ local function n_colors_changed(pixels, n)
 end
 
 ---- Returns a function that checks if any pixels have changed color
--- @treturn function check whether the colors have changed
+-- @treturn func check whether the colors have changed
 function Pixels:any_colors_changed()
   return n_colors_changed(self, 1)
 end
 
 ---- Returns a function that checks if all pixels have changed color
--- @treturn function check whether the colors have changed
+-- @treturn func check whether the colors have changed
 function Pixels:all_colors_changed()
   return n_colors_changed(self, len(self.pixels))
 end
 
 ---- Returns a function that checks if n pixels have changed color
--- @treturn function check whether the colors have changed
+-- @treturn func check whether the colors have changed
 function Pixels:n_colors_changed(n)
   return n_colors_changed(self, n)
 end

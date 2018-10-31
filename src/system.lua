@@ -13,8 +13,8 @@ end
 -- String commands are passed directly to the shell.
 -- Table commands are concatenated with the space character.
 -- So exe({'ls', 'mydir'}), exe{'ls', 'mydir'} and exe('ls mydir') are all equivalent.
--- @tparam boolean split_output if false then returns the entire stdout as a string, otherwise a table of lines  
--- @tparam boolean suppress_log supress logging of executed command
+-- @bool split_output if false then returns the entire stdout as a string, otherwise a table of lines  
+-- @bool suppress_log supress logging of executed command
 -- @treturn table|string result of command in stdout
 function exe(cmd, split_output, suppress_log)
   if is.Nil(split_output) then split_output = true end
@@ -39,10 +39,10 @@ function exe(cmd, split_output, suppress_log)
 end
 
 ---- Copy a file or directory
--- @tparam string src source to copy from (file or directory)
--- @tparam string dest desination to copy to (file or directory, but has to be a directory if src is a directory)
--- @tparam boolean overwrite whether to overwrite any existing files/directories 
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @string src source to copy from (file or directory)
+-- @string dest desination to copy to (file or directory, but has to be a directory if src is a directory)
+-- @bool overwrite whether to overwrite any existing files/directories 
+-- @bool add_rootDir should rootDir() be prepended to file name
 function os.copy(src, dest, overwrite, add_rootDir) 
   if is.Nil(overwrite) then overwrite = true end
   log.debug('Copying files from %s to %s', src, dest)
@@ -64,7 +64,7 @@ end
 -- If you wish to search for a directory then you must pass a table as name.
 -- If a table is passed then it must be of the format {type=name, start=starting_directory},
 -- where type is one of f, file, dir or d, and start is an optional value in the table.
--- @tparam string starting_directory directory in which to begin search (can drastically increase speed)
+-- @string starting_directory directory in which to begin search (can drastically increase speed)
 -- @treturn string absolute path if it exists, an empty string otherwise
 function os.find(name, starting_directory) 
   local _type = 'f'
@@ -84,27 +84,27 @@ function os.find(name, starting_directory)
 end
 
 --- Get the current working directory
--- @tparam string file (Optional) file name to append to end of path
+-- @string file (Optional) file name to append to end of path
 -- @treturn string path of current working directory
 function os.getcwd(file) return exe('pwd') end
 
 ---- Check if a path is a directory
--- @tparam string name path to check
+-- @string name path to check
 -- @treturn boolean is the path a directory
 function os.is_dir(name) return _getType(name) == 'DIR' end
 
 ---- Check if a path is a file
--- @tparam string name path to check
+-- @string name path to check
 -- @treturn boolean is the path a file
 function os.is_file(name) return _getType(name) == 'FILE' end
 
 ---- List the contents of a directory
--- @tparam string dirname path of the directory
+-- @string dirname path of the directory
 -- @treturn table sorted table of file names found in dirname
 function os.listdir(dirname) return sorted(exe{'ls', dirname}) end
 
 ---- Check if a path exists
--- @tparam string path path to check
+-- @string path path to check
 -- @treturn boolean does the path exist
 function os.path_exists(path) return _getType(path) ~= 'INVALID' end
 
@@ -121,7 +121,7 @@ end
 ---- Read a single line from a file
 -- @tparam file|string f file or filename (see @{os.read_lines})
 -- @tparam number n line number to read (starts at 1)
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @bool add_rootDir should rootDir() be prepended to file name
 -- @treturn string contents of line at n
 function os.read_line(f, n, add_rootDir) 
   local lines = os.read_lines(f, add_rootDir)
@@ -130,7 +130,7 @@ end
 
 ---- Read all the lines in a file
 -- @tparam file|string f file object or file name. If a file object is passed, then it is not closed.
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @bool add_rootDir should rootDir() be prepended to file name
 -- @treturn table strings of each line with the newline character removed
 function os.read_lines(f, add_rootDir) 
   local lines = list()
@@ -148,7 +148,7 @@ end
 
 ---- Get the size of a file or directory
 -- @param name path name to check size of
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @bool add_rootDir should rootDir() be prepended to file name
 -- @treturn number size of file/directory at path in bytes
 function os.sizeof(name, add_rootDir) 
   if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end
@@ -174,10 +174,10 @@ function os.sleep(seconds)
 end
 
 ---- Write a single line to a file
--- @tparam string line data to write to the file
+-- @string line data to write to the file
 -- @tparam number n line number at which to write the line
--- @tparam string name name of file to write to 
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @string name name of file to write to 
+-- @bool add_rootDir should rootDir() be prepended to file name
 function os.write_line(line, n, name, add_rootDir) 
   local lines = os.read_lines(name, add_rootDir)
   lines[n] = line
@@ -186,9 +186,9 @@ end
 
 ---- Write multiple lines to a file
 -- @tparam table lines strings of each line
--- @tparam string name name of file to write to
--- @tparam string mode write mode (uses same argument as io.open)
--- @tparam boolean add_rootDir should rootDir() be prepended to file name
+-- @string name name of file to write to
+-- @string mode write mode (uses same argument as io.open)
+-- @bool add_rootDir should rootDir() be prepended to file name
 function os.write_lines(lines, name, mode, add_rootDir) 
   log.debug('Writing lines: %s', name)
   if rootDir and add_rootDir ~= false then name = os.path_join(rootDir(), name) end

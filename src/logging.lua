@@ -46,8 +46,8 @@ log.stream_handler = StreamHandler
 function log.add_handler(handler) table.insert(log.handlers, handler) end
 
 ---- Add a logger that will log messages to stdout (or to log.txt in AutoTouch)
--- @tparam string level log level - one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
--- @tparam string fmt log format to use for all messages
+-- @string level log level - one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+-- @string fmt log format to use for all messages
 -- @usage -- log like AutoTouch's `log` function
 -- log.basic_config('DEBUG', '%(message)s') 
 -- -- log left-padded message with max length of 10
@@ -57,27 +57,27 @@ function log.add_handler(handler) table.insert(log.handlers, handler) end
 function log.basic_config(level, fmt) log.add_handler(log.stream_handler{level=level, fmt=fmt}) end
 
 ---- Log a DEBUG level message
--- @tparam string s log message
+-- @string s log message
 -- @param ... arguments to format string `s`
 function log.debug(s, ...) log('DEBUG', s, ...) end
 
 ---- Log an INFO level message
--- @tparam string s log message
+-- @string s log message
 -- @param ... arguments to format string `s`
 function log.info(s, ...) log('INFO', s, ...) end
 
 ---- Log a WARNING level message
--- @tparam string s log message
+-- @string s log message
 -- @param ... arguments to format string `s`
 function log.warning(s, ...) log('WARNING', s, ...) end
 
 ---- Log an ERROR level message
--- @tparam string s log message
+-- @string s log message
 -- @param ... arguments to format string `s`
 function log.error(s, ...) log('ERROR', s, ...) end
 
 ---- Log a CRITICAL level message
--- @tparam string s log message
+-- @string s log message
 -- @param ... arguments to format string `s`
 function log.critical(s, ...) log('CRITICAL', s, ...) end
 
@@ -99,8 +99,8 @@ function LogHandler:filter(level)
 end
 
 --- Create formatted log message
--- @tparam string level level of message
--- @tparam string s format string of message
+-- @string level level of message
+-- @string s format string of message
 -- @param ... (optional) arguments for format string `s`
 function LogHandler:format(level, s, ...)  
   local formatted = self.fmt
@@ -127,7 +127,7 @@ end
 
 --- Record the log message to an output.
 -- This can be overwritten to send log messages anywhere.
--- @tparam string s message to record
+-- @string s message to record
 function LogHandler:record(s) end
 
 

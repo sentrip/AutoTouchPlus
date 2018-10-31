@@ -6,8 +6,8 @@ local metafuncs = {}
 
 ---- Add strings together with `+` operator
 -- @within Metatable functions
--- @param s a thing
--- @param other athing
+-- @string s a thing
+-- @string other athing
 -- @usage "abc" + "cde" => "abccde"
 function metafuncs.add(s, other) return s .. other end 
 
@@ -65,20 +65,20 @@ function metafuncs.pairs(s)
 end
 
 ---- Check if a string ends with a value
--- @tparam string s
--- @tparam string value
+-- @string s
+-- @string value
 -- @treturn boolean
 function string.endswith(s, value) return s(-rawlen(value), -1) == value end
 
 ---- Concatenate a list/table of strings with another string as the delimiter
--- @tparam string s
+-- @string s
 -- @param other
 -- @treturn string
 function string.join(s, other) return table.concat(other, s) end
 
 ---- Replace occurrences of a substring in a string
--- @tparam string s
--- @tparam string sub
+-- @string s
+-- @string sub
 -- @param rep
 -- @int limit
 -- @treturn string
@@ -89,8 +89,8 @@ function string.replace(s, sub, rep, limit)
 end
 
 ---- Split a string by a delimiter into a table of strings
--- @tparam string s
--- @param delim
+-- @string s
+-- @string delim
 -- @treturn list
 function string.split(s, delim)
   local i = 1
@@ -113,14 +113,14 @@ function string.split(s, delim)
 end
 
 ---- Check if a string starts with a value
--- @tparam string s
--- @tparam string value
+-- @string s
+-- @string value
 -- @treturn boolean
 function string.startswith(s, value) return s(1, rawlen(value)) == value end
 
 ---- Strip characters from the beginning and end of a string
--- @tparam string s
--- @tparam string remove
+-- @string s
+-- @string remove
 -- @treturn string
 function string.strip(s, remove) 
   local start=1

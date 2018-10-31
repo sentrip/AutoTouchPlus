@@ -137,7 +137,7 @@ end)
 
 ---- Register a function to be run before an action (tap_if, tap_until, ...)
 -- @within Listeners
--- @tparam function func function to run before action (no arguments)
+-- @func func function to run before action (no arguments)
 function screen.before_action(func)
   screen.before_action_funcs:add(func)
 end
@@ -145,7 +145,7 @@ end
 
 ---- Register a function to be run after an action (tap_if, tap_until, ...)
 -- @within Listeners
--- @tparam function func function to run after action (no arguments)
+-- @func func function to run after action (no arguments)
 function screen.after_action(func)
   screen.after_action_funcs:add(func)
 end
@@ -153,7 +153,7 @@ end
 
 ---- Register a function to be run before the screen is checked for updates
 -- @within Listeners
--- @tparam function func function to run before check (no arguments)
+-- @func func function to run before check (no arguments)
 function screen.before_check(func)
   screen.before_check_funcs:add(func)
 end
@@ -161,7 +161,7 @@ end
 
 ---- Register a function to be run after the screen is checked for updates
 -- @within Listeners
--- @tparam function func function to run after check (no arguments)
+-- @func func function to run after check (no arguments)
 function screen.after_check(func)
   screen.after_check_funcs:add(func)
 end
@@ -169,7 +169,7 @@ end
 
 ---- Register a function to be run before each tap
 -- @within Listeners
--- @tparam function func function to run before tap (no arguments)
+-- @func func function to run before tap (no arguments)
 function screen.before_tap(func)
   screen.before_tap_funcs:add(func)
 end
@@ -177,7 +177,7 @@ end
 
 ---- Register a function to be run after each tap
 -- @within Listeners
--- @tparam function func function to run after tap (no arguments)
+-- @func func function to run after tap (no arguments)
 function screen.after_tap(func)
   screen.after_tap_funcs:add(func)
 end
@@ -186,7 +186,7 @@ end
 ---- Register a function to be run after a number of consecutive screen checks
 -- @within Listeners
 -- @tparam int|table n number of checks to execute before calling function
--- @tparam function func function to run after n consecutive checks
+-- @func func function to run after n consecutive checks
 function screen.on_nth_check(n, func)
   if type(n) == 'number' then n = {n} end
   if is.func(func) then func = {func} end
@@ -200,7 +200,7 @@ end
 
 
 ---- Check if the screen contains a pixel/set of pixels
--- @tparam Pixel|Pixels pixel Pixel(s) instance to check position(s) of
+-- @tparam pixel.Pixel|pixel.Pixels pixel Pixel(s) instance to check position(s) of
 -- @treturn boolean does the screen contain the pixel(s)
 function screen.contains(pixel)
   return pixel:visible()
@@ -208,7 +208,7 @@ end
 
 
 ---- Tap the screen
--- @tparam int|Pixel x x-position or pixel to tap
+-- @tparam pixel.Pixel|int x x-position or pixel to tap
 -- @int y (optional) y-position to tap
 -- @int times (optional) number of times to tap
 -- @tparam number interval (optional) interval (in secs) between taps
@@ -235,9 +235,10 @@ end
 
 
 ---- Tap the screen if a pixel/set of pixels is visible
--- @tparam Pixel|function condition pixel(s) to search for or an argumentless function that returns a boolean
+-- @tparam pixel.Pixel|func condition pixel(s) to search for or an argumentless function that returns a boolean
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
+-- @see screen.tap
 function screen.tap_if(condition, to_tap)
   _log_action(condition, 'Tap if', 'true')
   with(screen.action_context(condition), function(check) 
@@ -252,9 +253,10 @@ end
 
 
 ---- Tap the screen until a pixel/set of pixels is visible
--- @tparam Pixel|function condition see @{screen.tap_if}
+-- @tparam pixel.Pixel|func condition
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
+-- @see screen.tap_if
 function screen.tap_until(condition, to_tap)
   _log_action(condition, 'Tap until', 'true')
   with(screen.action_context(condition), function(check) 
@@ -270,9 +272,10 @@ end
 
 
 ---- Tap the screen while a pixel/set of pixels is visible
--- @tparam Pixel|function condition see @{screen.tap_if}
+-- @tparam pixel.Pixel|func condition
 -- @param to_tap arguments for @{screen.tap}
 -- @treturn screen screen for method chaining
+-- @see screen.tap_if
 function screen.tap_while(condition, to_tap)
   _log_action(condition, 'Tap while', 'false')
   with(screen.action_context(condition), function(check) 
@@ -288,8 +291,8 @@ end
 
 
 ---- Swipe the screen
--- @tparam Pixel|string start_ pixel at which to start the swipe
--- @tparam Pixel|string end_ pixel at which to end the swipe
+-- @tparam pixel.Pixel|string start_ pixel at which to start the swipe
+-- @tparam pixel.Pixel|string end_ pixel at which to end the swipe
 -- @int speed swipe speed (1-10)
 -----------------
 -- Possible string arguments for start_ and end_ are:
@@ -317,8 +320,9 @@ end
 
 
 ---- Wait until a pixel/set of pixels is visible
--- @tparam Pixel|function condition see @{screen.tap_if}
+-- @tparam pixel.Pixel|func condition
 -- @treturn screen screen for method chaining
+-- @see screen.tap_if
 function screen.wait(condition)
   _log_action(condition, 'Wait', 'true')
   with(screen.action_context(condition), function(check) 

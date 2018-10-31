@@ -125,7 +125,7 @@ end
 
 
 --- Define a group of tests
--- @tparam string description description of test group
+-- @string description description of test group
 -- @param ... tests defined with @{it}
 -- @usage describe('Example tests',
 ---  it('makes an assertion', function() 
@@ -150,7 +150,7 @@ end
 
 --- Define a group of tests that will be skipped.
 -- Works exactly like @{describe}, but skips all tests defined inside when @{run_tests} is called.
--- @tparam string description description of test group
+-- @string description description of test group
 -- @param ... tests defined with @{it}
 -- @see test.describe
 function sdescribe(description, ...)
@@ -168,8 +168,8 @@ function sdescribe(description, ...)
 end
 
 --- Define a single test to be used in @{describe}
--- @tparam string description description of test
--- @tparam function f a test function (function that makes assertions)
+-- @string description description of test
+-- @func f a test function (function that makes assertions)
 function it(description, f)
   return {description=description, f=f, func=function(fn, group_description)
       local arg_table = _test_utils.setup_teardown_test(
@@ -183,8 +183,8 @@ end
 
 --- Define a single test that will be skipped.
 -- Works exactly like @{it}, but will skip the test when @{run_tests} is called.
--- @tparam string description description of test
--- @tparam function f a test function (function that makes assertions)
+-- @string description description of test
+-- @func f a test function (function that makes assertions)
 -- @see test.it
 function sit(description, f) 
   local test_obj = it(description, f)
@@ -193,9 +193,9 @@ function sit(description, f)
 end
 
 --- Define a fixture to be used in tests
--- @tparam string name name of the fixture
--- @param scope (optional) scope in which to create fixture ('func', 'group', 'module')
--- @param f function that creates the fixture (if the 'scope' argument is omitted then 'scope' is treated as 'f')
+-- @string name name of the fixture
+-- @string scope (optional) scope in which to create fixture ('func', 'group', 'module')
+-- @func f function that creates the fixture (if the 'scope' argument is omitted then 'scope' is treated as 'f')
 -- @usage fixture('myFixture', 'func', function() 
 ---   return 1
 --- end)
@@ -213,9 +213,9 @@ function fixture(name, scope, f)
 end
 
 --- Run a single test with multiple parameters
--- @tparam string names fixtures to parametrize (comma separated)
+-- @string names fixtures to parametrize (comma separated)
 -- @param parameters table of parameters - if more than one parameter is specified this must be a table of tables
--- @tparam function f test function created with @{it}
+-- @func f test function created with @{it}
 -- @usage describe('Example tests',
 ---  parametrize('a,b,c', 
 ---  {

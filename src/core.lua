@@ -20,7 +20,7 @@ local classes = {}
 local private_tables = {}
   
 ---- Create a new class type
--- @tparam string name name of the class
+-- @string name name of the class
 -- @param ... base classes to inherit from
 -- @usage -- create class A
 -- A = class('A')
@@ -230,9 +230,9 @@ end
 
 ---- Create a property on a class
 -- @param klass class type to add the property to
--- @tparam string name name of the property
--- @tparam function getter function to get the value of the property
--- @tparam function setter function to set the value of the property
+-- @string name name of the property
+-- @func getter function to get the value of the property
+-- @func setter function to set the value of the property
 -- @usage A = class('A')
 -- function A:__init(value) 
 --   self._private = value
