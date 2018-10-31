@@ -267,11 +267,29 @@ Ellipse = class('Ellipse', 'Region')
 function Ellipse:__init(options)
   self.x = options.x or 0
   self.y = options.y or 0
-  self.width = options.width or 1
-  self.height =  options.height or 1
-  self.spacing = options.spacing or 1
-  local positions = list()
-  -- TODO: Ellipse creation
+  self.width = options.width or 10
+  self.height =  options.height or 10
+  self.spacing = options.spacing or 10
+  local max_d = max(self.width, self.height)
+  local min_d = min(self.width, self.height)
+  local max_w = max_d / max(self.width / self.height, self.height / self.width)
+  local steps = int(360 * (math.pi * (self.width + self.height)) / (2 * math.pi * 20))
+
+  local positions = set()
+  for w=0, int(max_w), self.spacing do
+    local theta, a, b = 0, int(w * min_d / max_d), int(w * min_d / max_d)
+    positions:add(Pixel(int(self.x + a * self.width / max_w), self.y))
+    if a > 0 and b > 0 then
+      for i=1, steps do 
+        theta = theta + 2 * math.pi / steps
+        positions:add(Pixel(
+          int(self.x + a * self.width / max_w * math.cos(theta)), 
+          int(self.y + b * self.height / max_w * math.sin(theta)))
+        )
+      end
+    end
+  end
+
   Region.__init(self, positions, options.color)
 end
 
@@ -292,9 +310,9 @@ Rectangle = class('Rectangle', 'Region')
 function Rectangle:__init(options)
   self.x = options.x or 0
   self.y = options.y or 0
-  self.width = options.width or 1
-  self.height =  options.height or 1
-  self.spacing = options.spacing or 1
+  self.width = options.width or 10
+  self.height =  options.height or 10
+  self.spacing = options.spacing or 10
   local positions = list()
   for i=self.x, self.x + self.width, self.spacing do
     for j=self.y, self.y + self.height, self.spacing do
