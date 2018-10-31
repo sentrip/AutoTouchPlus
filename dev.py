@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
-import argparse, os, subprocess, sys
+import argparse, os, subprocess, sys, textwrap
 
 def get_cli_args():
-  parser = argparse.ArgumentParser(usage='dev.py [-h] [-ip IP] [-p P] cmd: (autotouch | dav | install | stop_dav | tail) [cmd_args]')
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    description=textwrap.dedent('''\
+        cmd:
+          autotouch NAME : run an AutoTouch script on your device
+          dav            : connect to WebDAV server on your device
+          install        : copy AutoTouchPlus.lua and tests.lua to your device
+          stop-dav       : disconnect from WebDAV server on your device
+          tail [N]       : live-read from AutoTouch logs on your device
+        '''))
   parser.add_argument('-ip', type=str, help='ip address of device')
   parser.add_argument('-p', type=str, help='ssh password of device')
-  parser.add_argument('cmd', type=str, help='command to run (autotouch, dav, install, stop_dav, tail)')
+  parser.add_argument('cmd', type=str, help='command to run (autotouch, dav, install, stop-dav, tail)')
   parser.add_argument('cmd_args', nargs='*', help='(optional) arguments for command (only for: autotouch, tail)')
   args = parser.parse_args()
   ip_pass = {}
