@@ -1,6 +1,7 @@
 --- Basic logging utilities
 -- @module logging
 
+local _default_log_func = log or print
 local _level_str_to_int = {DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50}
 
 ---- Callable log object - improved `log` from AutoTouch
@@ -11,18 +12,32 @@ local _level_str_to_int = {DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50}
 -- log('INFO', '%s', 'message')
 -- log.info('message')
 -- log.info('%s', 'message')
+-- log.info('%s%s%s%s%s', 'message', '', '', '', '')
 -- --[INFO    ] message
 log = {}
 -- @local
-log._default_log_func = log or print
----- Default log format
+log._default_log_func = _default_log_func
+---- Default log format.
+-- The default format is <strong>[%(level)-8s] %(message)s</strong>
+-- @see log.basic_config
 log.default_format = '[%(level)-8s] %(message)s'
----- Default log level - levels: (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+---- Default log level.
+-- The default level is <strong>INFO</strong>. Levels: (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 log.default_level = 'INFO'
 log.handlers = {}
 ---- @{LogHandler} that logs messages to a file
+-- @tparam table options logging options <br>
+-- <br>
+-- <strong>file</strong>: name of file to log to <br>
+-- <strong>level</strong>: (optional) log level of log handler <br>
+-- <strong>fmt</strong>: (optional) log format of log handler <br>
+-- <strong>max_size</strong>: (optional) max size in bytes of log file (default is unlimited)
 log.file_handler = FileHandler
 ---- @{LogHandler} that logs messages to stdout (or to log.txt in AutoTouch)
+-- @tparam table options logging options <br>
+-- <br>
+-- <strong>level</strong>: (optional) log level of log handler <br>
+-- <strong>fmt</strong>: (optional) log format of log handler
 log.stream_handler = StreamHandler
 
 
@@ -33,6 +48,12 @@ function log.add_handler(handler) table.insert(log.handlers, handler) end
 ---- Add a logger that will log messages to stdout (or to log.txt in AutoTouch)
 -- @tparam string level log level - one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 -- @tparam string fmt log format to use for all messages
+-- @usage -- log like AutoTouch's `log` function
+-- log.basic_config('DEBUG', '%(message)s') 
+-- -- log left-padded message with max length of 10
+-- log.basic_config('DEBUG', '%(message)-10s') 
+-- -- log current date and time, level and message
+-- log.basic_config('DEBUG', '[ %(datetime)s ] %(level)-8s - %(message)s')
 function log.basic_config(level, fmt) log.add_handler(log.stream_handler{level=level, fmt=fmt}) end
 
 ---- Log a DEBUG level message
@@ -86,12 +107,18 @@ function LogHandler:format(level, s, ...)
   local _args = {...} 
   if not ... then _args = {} end
   local msg = string.format(s or '', unpack(_args))
-  for _, v in pairs({'level', 'message'}) do
+  for _, v in pairs({'level', 'message', 'datetime'}) do
     local reg = '%%%('..v..'%)([^s]*s)'
     local match = formatted:match(reg)
     if match then 
       local inner = ''
-      if v == 'level' then inner = level else inner = msg or inner end
+      if v == 'level' then 
+        inner = level 
+      elseif v == 'datetime' then
+        inner = os.date('%x %X')
+      else 
+        inner = msg or inner 
+      end
       formatted = formatted:gsub(reg, string.format('%'..match, inner))
     end
   end
@@ -116,6 +143,7 @@ FileHandler = class('FileHandler', 'LogHandler')
 function FileHandler:__init(options)
   LogHandler.__init(self, options)
   self.filename = options[1] or options.file
+  self.max_size = options.max_size or math.huge
   assert(self.filename, 'Must provide filename for FileHandler')
   if rootDir then self.filename = os.path_join(rootDir(), self.filename) end
   self._file = assert(io.open(self.filename, 'a'))
@@ -124,9 +152,34 @@ end
 function FileHandler:record(s) 
   self._file:write(s..'\n') 
   self._file:flush()
+  self:_roll_log()
 end
 
-function FileHandler:__gc() self._file:close() end
+function FileHandler:__gc() try(function() self._file:close() end) end
+
+function FileHandler:_roll_log()
+  local pos = self._file:seek()
+  local diff = self._file:seek('end') - self.max_size
+  if self.max_size > 0 and diff > 0 then
+    self._file:close()
+    self._file = assert(io.open(self.filename, 'r'))
+    local data = self._file:read('*a') or ''
+    local lines = data:split('\n')
+    local begin_index, total = 0, 0
+    for ln in iter(lines) do
+      begin_index = begin_index + 1
+      total = total + #ln + 1
+      if total >= diff then break end
+    end
+    self._file:close()
+    self._file = assert(io.open(self.filename, 'w'))
+    if data then self._file:write(('\n'):join(lines(begin_index, nil))..'\n') end
+    self._file:close()
+    self._file = assert(io.open(self.filename, 'a'))
+  else
+    self._file:seek('set', pos)
+  end
+end
 
 
 --allows for log('msg') and log.debug('msg') syntax

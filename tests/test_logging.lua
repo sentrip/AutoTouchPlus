@@ -20,6 +20,19 @@ fixture('patched_stdout', function(monkeypatch)
   return lines
 end)
 
+fixture('file_handler', function(request) 
+  local fn = 'log.txt'
+  local handler = FileHandler{fn}
+  log.handlers = {handler}
+  request.addfinalizer(function() 
+    local r
+    if rootDir then r = os.path_join(rootDir(), fn) else r = fn end
+    io.popen('rm '..r):close() 
+    log.handlers = {}
+  end)
+  return handler
+end)
+
 
 describe('logging', 
 
@@ -31,6 +44,12 @@ describe('logging',
     for _, ln in pairs(patched_stdout) do 
       assert(ln == '[INFO    ] test', 'Incorrect formatting for log')
     end
+  end),
+
+  it('can log datetime', function(patched_stdout) 
+    log.handlers = {StreamHandler{level='INFO', fmt='%(datetime)s'}}
+    log('')
+    assert(patched_stdout[1]:match('%d%d/%d%d/%d%d %d%d:%d%d:%d%d'), 'Did not log datetime')
   end),
 
   it('can log with multiple levels', function(patched_stdout)   
@@ -65,16 +84,15 @@ describe('logging',
     assert(len(patched_stdout) == 2, 'Did not send logs to all handlers')
   end),
 
-  it('can log to a file', function(patched_stdout, request) 
-    local fn = 'log.txt'
-    log.handlers = {FileHandler{fn}}
-    request.addfinalizer(function() 
-      local r
-      if rootDir then r = os.path_join(rootDir(), fn) else r = fn end
-      io.popen('rm '..r):close() 
-    end)
+  it('can log to a file', function(file_handler) 
     log.info('test')
-    assert(requal(os.read_lines(fn), {'[INFO    ] test'}), 'FileHandler did not write to file')
+    assert(requal(os.read_lines('log.txt'), {'[INFO    ] test'}), 'FileHandler did not write to file')
+  end),
+
+  it('can rotate logs based on file size', function(file_handler) 
+    file_handler.max_size = 40
+    for i=1, 6 do log.info('test%d', i) end
+    assert(requal(os.read_lines('log.txt'), {'[INFO    ] test4', '[INFO    ] test5', '[INFO    ] test6'}), 'FileHandler did not write to file')
   end)
 )
 

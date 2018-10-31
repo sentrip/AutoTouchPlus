@@ -1,6 +1,13 @@
 History
 -----------
 
+* 0.3.2 (2018-10-31)
+  
+  * Added Ellipse Region
+  * Added file size limiting to log.file_handler for rotating logs
+  
+|
+
 * 0.3.1 (2018-10-31)
   
   * Unit tests can be skipped individually or in groups

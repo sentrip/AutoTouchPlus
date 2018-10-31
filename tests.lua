@@ -1139,6 +1139,19 @@ fixture('patched_stdout', function(monkeypatch)
   return lines
 end)
 
+fixture('file_handler', function(request) 
+  local fn = 'log.txt'
+  local handler = FileHandler{fn}
+  log.handlers = {handler}
+  request.addfinalizer(function() 
+    local r
+    if rootDir then r = os.path_join(rootDir(), fn) else r = fn end
+    io.popen('rm '..r):close() 
+    log.handlers = {}
+  end)
+  return handler
+end)
+
 
 describe('logging', 
 
@@ -1150,6 +1163,12 @@ describe('logging',
     for _, ln in pairs(patched_stdout) do 
       assert(ln == '[INFO    ] test', 'Incorrect formatting for log')
     end
+  end),
+
+  it('can log datetime', function(patched_stdout) 
+    log.handlers = {StreamHandler{level='INFO', fmt='%(datetime)s'}}
+    log('')
+    assert(patched_stdout[1]:match('%d%d/%d%d/%d%d %d%d:%d%d:%d%d'), 'Did not log datetime')
   end),
 
   it('can log with multiple levels', function(patched_stdout)   
@@ -1184,16 +1203,15 @@ describe('logging',
     assert(len(patched_stdout) == 2, 'Did not send logs to all handlers')
   end),
 
-  it('can log to a file', function(patched_stdout, request) 
-    local fn = 'log.txt'
-    log.handlers = {FileHandler{fn}}
-    request.addfinalizer(function() 
-      local r
-      if rootDir then r = os.path_join(rootDir(), fn) else r = fn end
-      io.popen('rm '..r):close() 
-    end)
+  it('can log to a file', function(file_handler) 
     log.info('test')
-    assert(requal(os.read_lines(fn), {'[INFO    ] test'}), 'FileHandler did not write to file')
+    assert(requal(os.read_lines('log.txt'), {'[INFO    ] test'}), 'FileHandler did not write to file')
+  end),
+
+  it('can rotate logs based on file size', function(file_handler) 
+    file_handler.max_size = 40
+    for i=1, 6 do log.info('test%d', i) end
+    assert(requal(os.read_lines('log.txt'), {'[INFO    ] test4', '[INFO    ] test5', '[INFO    ] test6'}), 'FileHandler did not write to file')
   end)
 )
 
@@ -1973,7 +1991,7 @@ describe('pixel - Pixels',
   end)
 )
 
--- TODO: Ellipse and Triangle tests
+-- TODO: Triangle tests
 
 describe('pixel - Region',
 
@@ -2002,6 +2020,8 @@ describe('pixel - Region',
   end),
   
   it('can create Ellipse', function() 
+    local ellipse = Ellipse{x=0, y=0, width=20, height=20, spacing=20}
+    assert(tostring(ellipse) == '<Ellipse(0, 0, width=20, height=20, spacing=20, color=16777215, pixels=152)>', 'Did not create correct ellipse')
   end),
   
   it('can create Rectangle', function() 
@@ -2012,7 +2032,7 @@ describe('pixel - Region',
       height=100,
       spacing=10
     }
-    assert(rect.x == 10, 'Rectangle has incorrect ')
+    assert(rect.x == 10, 'Rectangle has incorrect x')
     assert(rect.y == 10, 'Rectangle has incorrect y')
     assert(rect.width == 100, 'Rectangle has incorrect width')
     assert(rect.height == 100, 'Rectangle has incorrect height')
@@ -2020,9 +2040,12 @@ describe('pixel - Region',
     assert(len(rect.pixels) == 121, 'Incorrect number of pixels in Rectangle')
     assert(rect.pixels[1].x == rect.x and rect.pixels[1].y == rect.y, 'Incorrect first pixel location')
     assert(rect.pixels[-1].x == rect.x + rect.width and rect.pixels[-1].y == rect.y + rect.height, 'Incorrect last pixel location')
+    assert(tostring(rect) == '<Rectangle(10, 10, width=100, height=100, spacing=10, color=16777215, pixels=121)>', 'Did not create correct rectangle')
   end),
   
-  it('can create Triangle', function() 
+  sit('can create Triangle', function() 
+    local triangle = Triangle{x=0, y=0}
+    assert(tostring(triangle) == '<Triangle(0, 0, spacing=, color=16777215, pixels=)>', 'Did not create correct triangle')
   end)
   
 )

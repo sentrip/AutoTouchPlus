@@ -1409,10 +1409,11 @@ end
 return ( parse(str, next_char(str, 1, space_chars, true)) )
 end
 
+local _default_log_func = log or print
 local _level_str_to_int = {DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50}
 
 log = {}
-log._default_log_func = log or print
+log._default_log_func = _default_log_func
 log.default_format = '[%(level)-8s] %(message)s'
 log.default_level = 'INFO'
 log.handlers = {}
@@ -1451,12 +1452,18 @@ local formatted = self.fmt
 local _args = {...}
 if not ... then _args = {} end
 local msg = string.format(s or '', unpack(_args))
-for _, v in pairs({'level', 'message'}) do
+for _, v in pairs({'level', 'message', 'datetime'}) do
 local reg = '%%%('..v..'%)([^s]*s)'
 local match = formatted:match(reg)
 if match then
 local inner = ''
-if v == 'level' then inner = level else inner = msg or inner end
+if v == 'level' then
+inner = level
+elseif v == 'datetime' then
+inner = os.date('%x %X')
+else
+inner = msg or inner
+end
 formatted = formatted:gsub(reg, string.format('%'..match, inner))
 end
 end
@@ -1474,6 +1481,7 @@ FileHandler = class('FileHandler', 'LogHandler')
 function FileHandler:__init(options)
 LogHandler.__init(self, options)
 self.filename = options[1] or options.file
+self.max_size = options.max_size or math.huge
 assert(self.filename, 'Must provide filename for FileHandler')
 if rootDir then self.filename = os.path_join(rootDir(), self.filename) end
 self._file = assert(io.open(self.filename, 'a'))
@@ -1482,9 +1490,34 @@ end
 function FileHandler:record(s)
 self._file:write(s..'\n')
 self._file:flush()
+self:_roll_log()
 end
 
-function FileHandler:__gc() self._file:close() end
+function FileHandler:__gc() try(function() self._file:close() end) end
+
+function FileHandler:_roll_log()
+local pos = self._file:seek()
+local diff = self._file:seek('end') - self.max_size
+if self.max_size > 0 and diff > 0 then
+self._file:close()
+self._file = assert(io.open(self.filename, 'r'))
+local data = self._file:read('*a') or ''
+local lines = data:split('\n')
+local begin_index, total = 0, 0
+for ln in iter(lines) do
+begin_index = begin_index + 1
+total = total + #ln + 1
+if total >= diff then break end
+end
+self._file:close()
+self._file = assert(io.open(self.filename, 'w'))
+if data then self._file:write(('\n'):join(lines(begin_index, nil))..'\n') end
+self._file:close()
+self._file = assert(io.open(self.filename, 'a'))
+else
+self._file:seek('set', pos)
+end
+end
 
 
 log = setmetatable(log, {
@@ -2186,11 +2219,29 @@ Ellipse = class('Ellipse', 'Region')
 function Ellipse:__init(options)
 self.x = options.x or 0
 self.y = options.y or 0
-self.width = options.width or 1
-self.height =  options.height or 1
-self.spacing = options.spacing or 1
-local positions = list()
--- TODO: Ellipse creation
+self.width = options.width or 10
+self.height =  options.height or 10
+self.spacing = options.spacing or 10
+local max_d = max(self.width, self.height)
+local min_d = min(self.width, self.height)
+local max_w = max_d / max(self.width / self.height, self.height / self.width)
+local steps = int(360 * (math.pi * (self.width + self.height)) / (2 * math.pi * 20))
+
+local positions = set()
+for w=0, int(max_w), self.spacing do
+local theta, a, b = 0, int(w * min_d / max_d), int(w * min_d / max_d)
+positions:add(Pixel(int(self.x + a * self.width / max_w), self.y))
+if a > 0 and b > 0 then
+for i=1, steps do
+theta = theta + 2 * math.pi / steps
+positions:add(Pixel(
+int(self.x + a * self.width / max_w * math.cos(theta)),
+int(self.y + b * self.height / max_w * math.sin(theta)))
+)
+end
+end
+end
+
 Region.__init(self, positions, options.color)
 end
 
@@ -2206,9 +2257,9 @@ Rectangle = class('Rectangle', 'Region')
 function Rectangle:__init(options)
 self.x = options.x or 0
 self.y = options.y or 0
-self.width = options.width or 1
-self.height =  options.height or 1
-self.spacing = options.spacing or 1
+self.width = options.width or 10
+self.height =  options.height or 10
+self.spacing = options.spacing or 10
 local positions = list()
 for i=self.x, self.x + self.width, self.spacing do
 for j=self.y, self.y + self.height, self.spacing do
