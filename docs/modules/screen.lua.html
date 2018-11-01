@@ -78,12 +78,16 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#screen.contains">screen.contains (pixel)</a></td>
+	<td class="name" nowrap><a href="#screen.contains">screen.contains (pix)</a></td>
 	<td class="summary">Check if the screen contains a pixel/set of pixels</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.tap">screen.tap (x, y, times, interval)</a></td>
 	<td class="summary">Tap the screen</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_fast">screen.tap_fast (x, y, times, fingers)</a></td>
+	<td class="summary">Tap the screen quickly with multiple fingers.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.tap_if">screen.tap_if (condition, to_tap)</a></td>
@@ -121,15 +125,19 @@
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#screen.check_interval">screen.check_interval</a></td>
-	<td class="summary">Number milliseconds after which the screen is checked for updates</td>
+	<td class="summary">Number microseconds after which the screen is checked for updates</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#screen.tap_interval">screen.tap_interval</a></td>
+	<td class="summary">Number microseconds between each consecutive tap</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.wait_before_action">screen.wait_before_action</a></td>
-	<td class="summary">Number of seconds to wait before each action (tap<em>if, tap</em>until, ...)</td>
+	<td class="summary">Number of seconds to wait before each action (<em>tap_if</em>, <em>tap_until</em>, ...)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.wait_after_action">screen.wait_after_action</a></td>
-	<td class="summary">Number of seconds to wait after each action (tap<em>if, tap</em>until, ...)</td>
+	<td class="summary">Number of seconds to wait after each action (<em>tap_if</em>, <em>tap_until</em>, ...)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.wait_before_tap">screen.wait_before_tap</a></td>
@@ -145,11 +153,11 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.width">screen.width</a></td>
-	<td class="summary">Width of screen from getScreenResolution() (not writable)</td>
+	<td class="summary">Width of screen from getScreenResolution (not writable)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.height">screen.height</a></td>
-	<td class="summary">Height of screen from getScreenResolution() (not writable)</td>
+	<td class="summary">Height of screen from getScreenResolution (not writable)</td>
 	</tr>
 </table>
 <h2><a href="#Contexts">Contexts</a></h2>
@@ -167,11 +175,11 @@
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#screen.before_action">screen.before_action (func)</a></td>
-	<td class="summary">Register a function to be run before an action (tap<em>if, tap</em>until, ...)</td>
+	<td class="summary">Register a function to be run before an action (<em>tap_if</em>, <em>tap_until</em>, ...)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.after_action">screen.after_action (func)</a></td>
-	<td class="summary">Register a function to be run after an action (tap<em>if, tap</em>until, ...)</td>
+	<td class="summary">Register a function to be run after an action (<em>tap_if</em>, <em>tap_until</em>, ...)</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#screen.before_check">screen.before_check (func)</a></td>
@@ -204,7 +212,7 @@
     <dl class="function">
     <dt>
     <a name = "screen.contains"></a>
-    <strong>screen.contains (pixel)</strong>
+    <strong>screen.contains (pix)</strong>
     </dt>
     <dd>
     Check if the screen contains a pixel/set of pixels
@@ -212,7 +220,7 @@
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">pixel</span>
+        <li><span class="parameter">pix</span>
             <span class="types"><a class="type" href="../modules/pixel.html#Pixel">pixel.Pixel</a> or <a class="type" href="../modules/pixel.html#Pixels">pixel.Pixels</a></span>
          Pixel(s) instance to check position(s) of
         </li>
@@ -253,7 +261,7 @@
         </li>
         <li><span class="parameter">interval</span>
             <span class="types"><span class="type">number</span></span>
-         (optional) interval (in secs) between taps
+         (optional) interval (in seconds) between taps
         </li>
     </ul>
 
@@ -266,6 +274,66 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- tap x=10, y=10 twice and wait 1 second between taps
+</span>screen.tap(<span class="number">10</span>, <span class="number">10</span>, <span class="number">2</span>, <span class="number">1</span>)
+<span class="comment">-- or
+</span>screen.tap(Pixel(<span class="number">10</span>, <span class="number">10</span>), <span class="number">2</span>, <span class="number">1</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "screen.tap_fast"></a>
+    <strong>screen.tap_fast (x, y, times, fingers)</strong>
+    </dt>
+    <dd>
+    Tap the screen quickly with multiple fingers.
+ With multitouch, more fingers mean more taps/sec.<br>
+ <strong>Tap speed: approx. 50 taps/sec per finger</strong>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">number</span>, <a class="type" href="../modules/pixel.html#Pixel">pixel.Pixel</a> or <a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         x-position/pixel(s) to tap
+        </li>
+        <li><span class="parameter">y</span>
+            <span class="types"><span class="type">int</span></span>
+         (optional) y position to tap (not required if x is not a number)
+        </li>
+        <li><span class="parameter">times</span>
+            <span class="types"><span class="type">int</span></span>
+         (optional) number of taps per finger (total taps: n * fingers)
+        </li>
+        <li><span class="parameter">fingers</span>
+            <span class="types"><span class="type">int</span></span>
+         (optional) number of fingers to use
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">screen</span></span>
+        screen for method chaining
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- tap x=10, y=10 twice with 2 fingers (4 total taps)
+</span>screen.tap_fast(<span class="number">10</span>, <span class="number">10</span>, <span class="number">2</span>, <span class="number">2</span>)
+<span class="comment">-- or
+</span>screen.tap_fast(Pixel(<span class="number">10</span>, <span class="number">10</span>), <span class="number">2</span>, <span class="number">2</span>)
+
+<span class="comment">-- tap each position with a unique finger twice (4 total taps)
+</span>screen.tap_fast({{x=<span class="number">10</span>, y=<span class="number">10</span>}, {x=<span class="number">20</span>, y=<span class="number">20</span>}}, <span class="number">2</span>)
+<span class="comment">-- or
+</span>screen.tap_fast(Pixels{{<span class="number">10</span>, <span class="number">10</span>}, {<span class="number">20</span>, <span class="number">20</span>}}, <span class="number">2</span>)</pre>
+    </ul>
 
 </dd>
     <dt>
@@ -283,7 +351,7 @@
          pixel(s) to search for or an argumentless function that returns a boolean
         </li>
         <li><span class="parameter">to_tap</span>
-         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+         (optional) pixel to tap
         </li>
     </ul>
 
@@ -319,7 +387,7 @@
 
         </li>
         <li><span class="parameter">to_tap</span>
-         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+         (optional) pixel to tap
         </li>
     </ul>
 
@@ -355,7 +423,7 @@
 
         </li>
         <li><span class="parameter">to_tap</span>
-         arguments for <a href="../modules/screen.lua.html#screen.tap">screen.tap</a>
+         (optional) pixel to tap
         </li>
     </ul>
 
@@ -526,7 +594,21 @@
     <strong>screen.check_interval</strong>
     </dt>
     <dd>
-    Number milliseconds after which the screen is checked for updates
+    Number microseconds after which the screen is checked for updates
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "screen.tap_interval"></a>
+    <strong>screen.tap_interval</strong>
+    </dt>
+    <dd>
+    Number microseconds between each consecutive tap
 
 
 
@@ -540,7 +622,7 @@
     <strong>screen.wait_before_action</strong>
     </dt>
     <dd>
-    Number of seconds to wait before each action (tap<em>if, tap</em>until, ...)
+    Number of seconds to wait before each action (<em>tap_if</em>, <em>tap_until</em>, ...)
 
 
 
@@ -554,7 +636,7 @@
     <strong>screen.wait_after_action</strong>
     </dt>
     <dd>
-    Number of seconds to wait after each action (tap<em>if, tap</em>until, ...)
+    Number of seconds to wait after each action (<em>tap_if</em>, <em>tap_until</em>, ...)
 
 
 
@@ -610,7 +692,7 @@
     <strong>screen.width</strong>
     </dt>
     <dd>
-    Width of screen from getScreenResolution() (not writable)
+    Width of screen from getScreenResolution (not writable)
 
 
 
@@ -624,7 +706,7 @@
     <strong>screen.height</strong>
     </dt>
     <dd>
-    Height of screen from getScreenResolution() (not writable)
+    Height of screen from getScreenResolution (not writable)
 
 
 
@@ -681,7 +763,7 @@
     <strong>screen.before_action (func)</strong>
     </dt>
     <dd>
-    Register a function to be run before an action (tap<em>if, tap</em>until, ...)
+    Register a function to be run before an action (<em>tap_if</em>, <em>tap_until</em>, ...)
 
 
     <h3>Parameters:</h3>
@@ -702,7 +784,7 @@
     <strong>screen.after_action (func)</strong>
     </dt>
     <dd>
-    Register a function to be run after an action (tap<em>if, tap</em>until, ...)
+    Register a function to be run after an action (<em>tap_if</em>, <em>tap_until</em>, ...)
 
 
     <h3>Parameters:</h3>
@@ -834,7 +916,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-10-31 18:31:21 </i>
+<i style="float:right;">Last updated 2018-11-01 21:12:52 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

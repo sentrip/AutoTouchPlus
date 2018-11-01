@@ -52,10 +52,9 @@ Run the following commands on your computer (requires scp installed on your devi
 
 .. code-block:: shell
 
-  PHONE_IP=<YOUR.PHONES.IP.ADDRESS>
   git clone https://github.com/sentrip/AutoTouchPlus.git
   cd AutoTouchPlus
-  ./dev.py install -ip $PHONE_IP
+  ./dev.py install -ip YOUR.PHONES.IP.ADDRESS
 
 
 Install with manual file copy:
@@ -75,5 +74,20 @@ To use AutoTouchPlus, simply import it at the beginning of your script:
   -- lets print some nested objects!
   print(str(list{1, 2, (','):join{'a', 'b'}, sorted(list{5, 4, 3})}))
 
+
+Contributing
+-----------------------------
+
+Make a pull request
+~~~~~~~~~~~~~~~~~~~
+
+.. Buy me a coffee☕
+.. ~~~~~~~~~~~~~~~~
+.. If you think AutoTouchPlus is awesome, feel free to drop a donation!
+.. 
+.. * PayPal
+.. * Bitcoin
+.. * Ethereum
+.. * Litecoin
 
 .. include:: HISTORY.rst

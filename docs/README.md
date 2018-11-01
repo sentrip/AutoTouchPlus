@@ -51,10 +51,35 @@ To use AutoTouchPlus in a script, just import it:
 ## Screen interaction
 
 
+### Basic interaction
+
+
+### Contexts
+
+
+### Listeners
+
+
+### Method chaining
+You can chain screen methods together to combine multiple actions into a single chained call. So the following code
+
+    screen.tap(10, 10)
+    screen.tap(20, 20)
+    screen.tap(30, 30)
+    screen.tap(40, 40)
+
+can be reduced to:
+
+    screen.tap(10, 10).tap(20, 20).tap(30, 30).tap(40, 40)
+
+
+
+
 
 
 
 ## HTTP requests
+
 
 
 
@@ -66,11 +91,55 @@ To use AutoTouchPlus in a script, just import it:
 
 
 
-## Testing
-
-
-
-
 
 ## Logging
 
+
+
+
+
+## Testing
+
+
+### Writing tests
+
+
+### Fixtures
+
+
+### Parametrization
+
+
+
+
+## Developing AutoTouch scripts
+
+
+### Development script
+
+
+### Recommendations
+
+
+
+
+
+
+## Developing AutoTouchPlus
+
+
+### Guidelines
+
+
+### Making a pull request
+
+
+### Releasing a new version
+
+
+<!-- ## Buy me a coffee☕
+If you think AutoTouchPlus is awesome, feel free to drop a donation!
+* PayPal
+* Bitcoin
+* Ethereum
+* Litecoin -->
