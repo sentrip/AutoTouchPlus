@@ -10,6 +10,7 @@ screen = {
   after_tap_funcs = set(),
   nth_check_funcs = dict()
 }
+-- TODO: mock and test with all AutoTouch functions (rootDir, usleep, ...)
 -- luacov: disable
 local _width, _height
 if Not.Nil(getScreenResolution) then
@@ -19,11 +20,13 @@ else
 end
 -- luacov: enable
 
----- Number milliseconds after which the screen is checked for updates
+---- Number microseconds after which the screen is checked for updates
 screen.check_interval = 150000
----- Number of seconds to wait before each action (tap_if, tap_until, ...)
+---- Number microseconds between each consecutive tap
+screen.tap_interval = 10000
+---- Number of seconds to wait before each action (_tap\_if_, _tap\_until_, ...)
 screen.wait_before_action = 0
----- Number of seconds to wait after each action (tap_if, tap_until, ...)
+---- Number of seconds to wait after each action (_tap\_if_, _tap\_until_, ...)
 screen.wait_after_action = 0
 ---- Number of seconds to wait before each tap
 screen.wait_before_tap = 0
@@ -31,9 +34,9 @@ screen.wait_before_tap = 0
 screen.wait_after_tap = 0
 ---- Print detailed information about taps, swipes and checks
 screen.debug = false
----- Width of screen from getScreenResolution() (not writable)
+---- Width of screen from getScreenResolution (not writable)
 screen.width = _width
----- Height of screen from getScreenResolution() (not writable)
+---- Height of screen from getScreenResolution (not writable)
 screen.height = _height
 
 
@@ -135,7 +138,7 @@ screen.tap_context = contextmanager(function()
 end)
 ---
 
----- Register a function to be run before an action (tap_if, tap_until, ...)
+---- Register a function to be run before an action (_tap\_if_, _tap\_until_, ...)
 -- @within Listeners
 -- @func func function to run before action (no arguments)
 function screen.before_action(func)
@@ -143,7 +146,7 @@ function screen.before_action(func)
 end
 
 
----- Register a function to be run after an action (tap_if, tap_until, ...)
+---- Register a function to be run after an action (_tap\_if_, _tap\_until_, ...)
 -- @within Listeners
 -- @func func function to run after action (no arguments)
 function screen.after_action(func)
@@ -200,10 +203,10 @@ end
 
 
 ---- Check if the screen contains a pixel/set of pixels
--- @tparam pixel.Pixel|pixel.Pixels pixel Pixel(s) instance to check position(s) of
+-- @tparam pixel.Pixel|pixel.Pixels pix Pixel(s) instance to check position(s) of
 -- @treturn boolean does the screen contain the pixel(s)
-function screen.contains(pixel)
-  return pixel:visible()
+function screen.contains(pix)
+  return pix:visible()
 end
 
 
@@ -211,8 +214,12 @@ end
 -- @tparam pixel.Pixel|int x x-position or pixel to tap
 -- @int y (optional) y-position to tap
 -- @int times (optional) number of times to tap
--- @tparam number interval (optional) interval (in secs) between taps
+-- @number interval (optional) interval (in seconds) between taps
 -- @treturn screen screen for method chaining
+-- @usage -- tap x=10, y=10 twice and wait 1 second between taps
+-- screen.tap(10, 10, 2, 1)
+-- -- or
+-- screen.tap(Pixel(10, 10), 2, 1)
 function screen.tap(x, y, times, interval)
   local pixel
   if isType(x, 'number') then
@@ -225,8 +232,8 @@ function screen.tap(x, y, times, interval)
     for i=1, times or 1 do
       _log('Tap \t%5s, %5s', pixel.x, pixel.y)
       tap(pixel.x, pixel.y)
-      usleep(10000)
-      if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
+      usleep(screen.tap_interval)
+      if interval then usleep(max(0, interval * 10 ^ 6 - screen.tap_interval)) end
     end
     end)
     
@@ -234,9 +241,88 @@ function screen.tap(x, y, times, interval)
 end
 
 
+local function create_coro_and_repeat(f, times)
+  return coroutine.create(function() 
+    local c = 0
+    while c < times do 
+      local coro = coroutine.create(f)
+      coroutine.resume(coro)
+      yield() 
+      coroutine.resume(coro)
+      c = c + 1
+    end
+  end)
+end
+
+local function execute_concurrently(fs, times)
+  
+  local coros = list()
+  for f in iter(fs) do 
+    coros:append(create_coro_and_repeat(f, times)) 
+  end
+
+  local running = true
+  while running do
+    running = false
+    for co in iter(coros) do 
+      coroutine.resume(co)
+      running = running or coroutine.status(co) ~= 'dead'
+    end
+  end
+end
+
+local function get_positions(positions, x, y, n)
+  if positions then return positions end
+  -- TODO: tap multiple adjacent pixels in spiral when single position passed
+  return list{{x=x, y=y}} * n
+end
+
+---- Tap the screen quickly with multiple fingers.
+-- With multitouch, more fingers mean more taps/sec.<br>
+-- <strong>Tap speed: approx. 50 taps/sec per finger</strong>
+-- @tparam number|pixel.Pixel|table x x-position/pixel(s) to tap
+-- @int y (optional) y position to tap (not required if x is not a number)
+-- @int times (optional) number of taps per finger (total taps: n * fingers)
+-- @int fingers (optional) number of fingers to use
+-- @treturn screen screen for method chaining
+-- @usage -- tap x=10, y=10 twice with 2 fingers (4 total taps)
+-- screen.tap_fast(10, 10, 2, 2)
+-- -- or
+-- screen.tap_fast(Pixel(10, 10), 2, 2)
+-- 
+-- -- tap each position with a unique finger twice (4 total taps)
+-- screen.tap_fast({{x=10, y=10}, {x=20, y=20}}, 2)
+-- -- or
+-- screen.tap_fast(Pixels{{10, 10}, {20, 20}}, 2)
+function screen.tap_fast(x, y, times, fingers)
+  -- Get positions to tap
+  local positions
+  if isinstance(x, Pixel) then 
+    x, y, times, fingers = x.x, x.y, y, times
+  elseif isType(x, 'table') then
+    fingers, positions, times = len(x), list(x), y
+  end
+  positions = get_positions(positions, x, y, fingers)
+  -- Create tap functions
+  local tap_funcs = list()
+  for i=1, (fingers or 1) do 
+    tap_funcs:append(function() 
+      touchDown(i, positions[i].x, positions[i].y)
+      yield(usleep(8000))
+      touchUp(i, positions[i].x, positions[i].y)
+      usleep(1000)
+    end)
+  end
+  -- Run tap functions concurrently until all are done
+  if times == 0 then times = math.huge else times = times or 1 end
+  execute_concurrently(tap_funcs, times)
+  return screen
+end
+
+
 ---- Tap the screen if a pixel/set of pixels is visible
 -- @tparam pixel.Pixel|func condition pixel(s) to search for or an argumentless function that returns a boolean
--- @param to_tap arguments for @{screen.tap}
+-- @param to_tap (optional) pixel to tap
 -- @treturn screen screen for method chaining
 -- @see screen.tap
 function screen.tap_if(condition, to_tap)
@@ -254,7 +340,7 @@ end
 
 ---- Tap the screen until a pixel/set of pixels is visible
 -- @tparam pixel.Pixel|func condition
--- @param to_tap arguments for @{screen.tap}
+-- @param to_tap (optional) pixel to tap
 -- @treturn screen screen for method chaining
 -- @see screen.tap_if
 function screen.tap_until(condition, to_tap)
@@ -273,7 +359,7 @@ end
 
 ---- Tap the screen while a pixel/set of pixels is visible
 -- @tparam pixel.Pixel|func condition
--- @param to_tap arguments for @{screen.tap}
+-- @param to_tap (optional) pixel to tap
 -- @treturn screen screen for method chaining
 -- @see screen.tap_if
 function screen.tap_while(condition, to_tap)

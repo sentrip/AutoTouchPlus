@@ -92,6 +92,13 @@ describe('builtins',
     assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
   end),
 
+  it('range', function() 
+    assert(requal(range(5), {1, 2, 3, 4, 5}), 'Range incorrect')
+    assert(requal(range(0, 2), {0, 1, 2}), 'Range with start incorrect')
+    assert(requal(range(0, 9, 2), {0, 2, 4, 6, 8}), 'Range incorrect')
+    assert(requal(range(5, 1, -1), {5, 4, 3, 2, 1}), 'Reversed range incorrect')
+  end),
+
   it('requal', function()
     assert(requal({'a'}, {'a'}), 'Basic tables not requal')
     assert(requal(
@@ -1938,6 +1945,13 @@ describe('pixel - Pixels',
     assert(Pixels{Pixel(0, 10)} ~= Pixels{Pixel(10, 10)}, 'Not equal Pixels objects are equal')
   end),
 
+  it('can iterate over each pixel in Pixels', function() 
+    local pixels = Pixels{{1, 1}, {2, 2}, {3, 3}, {4, 4}}
+    for i, pix in pairs(pixels) do 
+      assert(pix.x == i, 'Did not get correct position for pixel')
+    end
+  end),
+
   it('can stringify Pixels', function() 
     local pixels = Pixels{Pixel(10, 10), Pixel(20, 20)}
     assert(tostring(pixels) == string.format('<Pixels(n=%d)>', len(pixels.pixels)))
@@ -2293,6 +2307,21 @@ describe('screen',
     screen.tap_while(pixels[1])
     assert(len(calls) == 2, 'Did not call on_nth_check correct number of times')
     assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
+  end),
+
+  it('can tap_fast a single position', function(pixels, taps, touches) 
+    screen.tap_fast(10, 10, 2, 2)
+    local ex = {{'down', 1, 10, 10}, {'down', 2, 10, 10}, {'up', 1, 10, 10}, {'down', 1, 10, 10}, {'up', 2, 10, 10}, {'down', 2, 10, 10}, {'up', 1, 10, 10}, {'up', 2, 10, 10}}
+    assert(requal(touches, ex), 'Did not tap_fast single number position in correct order')
+    touches:clear()
+    screen.tap_fast(pixels[1], 2, 2)
+    assert(requal(touches, ex), 'Did not tap_fast single table position in correct order')
+  end),
+
+  it('can tap_fast multiple positions', function(pixels, taps, touches) 
+    screen.tap_fast(pixels(1,2), 2, 2)
+    local ex = {{'down', 1, 10, 10}, {'down', 2, 20, 20}, {'up', 1, 10, 10}, {'down', 1, 10, 10}, {'up', 2, 20, 20}, {'down', 2, 20, 20}, {'up', 1, 10, 10}, {'up', 2, 20, 20}}
+    assert(requal(touches, ex), 'Did not tap_fast multiple positions in correct order')
   end),
 
   it('can swipe between pixels', function(touches) 

@@ -95,6 +95,13 @@ describe('builtins',
     assertEqual(math.min(unpack(t)), min(s), 'set min not same as math.min')
   end),
 
+  it('range', function() 
+    assert(requal(range(5), {1, 2, 3, 4, 5}), 'Range incorrect')
+    assert(requal(range(0, 2), {0, 1, 2}), 'Range with start incorrect')
+    assert(requal(range(0, 9, 2), {0, 2, 4, 6, 8}), 'Range incorrect')
+    assert(requal(range(5, 1, -1), {5, 4, 3, 2, 1}), 'Reversed range incorrect')
+  end),
+
   it('requal', function()
     assert(requal({'a'}, {'a'}), 'Basic tables not requal')
     assert(requal(

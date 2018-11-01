@@ -168,6 +168,22 @@ function num(input) return tonumber(input) end
 
 -- luacov: enable
 
+---- Create an array of ordered numbers (range of numbers)
+-- @int r If multiple arguments r is start of range, otherwise r is end of range (inclusive)
+-- @int stop (optional) Final number in the range (inclusive)
+-- @int step (optional) Distance between each number in the range (can be negative)
+-- @treturn table array of numbers
+-- @usage -- range(5)        -- {1, 2, 3, 4, 5}
+-- range(0, 2)     -- {0, 1, 2}
+-- range(0, 9, 2)  -- {0, 2, 4, 6, 8}
+-- range(5, 1, -1) -- {5, 4, 3, 2, 1}
+function range(r, stop, step)
+  if not stop then r, stop = 1, r end
+  local values = {}
+  for i=r, stop, (step or 1) do values[rawlen(values) + 1] = i end
+  return values
+end
+
 ---- Simple string representation of an object
 -- @param input
 -- @return 

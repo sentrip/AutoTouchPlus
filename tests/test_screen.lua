@@ -118,6 +118,21 @@ describe('screen',
     assert(requal(calls, {5, 10}), 'Did not execute nth check funcs in correct order')
   end),
 
+  it('can tap_fast a single position', function(pixels, taps, touches) 
+    screen.tap_fast(10, 10, 2, 2)
+    local ex = {{'down', 1, 10, 10}, {'down', 2, 10, 10}, {'up', 1, 10, 10}, {'down', 1, 10, 10}, {'up', 2, 10, 10}, {'down', 2, 10, 10}, {'up', 1, 10, 10}, {'up', 2, 10, 10}}
+    assert(requal(touches, ex), 'Did not tap_fast single number position in correct order')
+    touches:clear()
+    screen.tap_fast(pixels[1], 2, 2)
+    assert(requal(touches, ex), 'Did not tap_fast single table position in correct order')
+  end),
+
+  it('can tap_fast multiple positions', function(pixels, taps, touches) 
+    screen.tap_fast(pixels(1,2), 2, 2)
+    local ex = {{'down', 1, 10, 10}, {'down', 2, 20, 20}, {'up', 1, 10, 10}, {'down', 1, 10, 10}, {'up', 2, 20, 20}, {'down', 2, 20, 20}, {'up', 1, 10, 10}, {'up', 2, 20, 20}}
+    assert(requal(touches, ex), 'Did not tap_fast multiple positions in correct order')
+  end),
+
   it('can swipe between pixels', function(touches) 
     local start_pix = Pixel(10, 10)
     local end_pix = Pixel(100, 100)

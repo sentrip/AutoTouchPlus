@@ -123,6 +123,13 @@ describe('pixel - Pixels',
     assert(Pixels{Pixel(0, 10)} ~= Pixels{Pixel(10, 10)}, 'Not equal Pixels objects are equal')
   end),
 
+  it('can iterate over each pixel in Pixels', function() 
+    local pixels = Pixels{{1, 1}, {2, 2}, {3, 3}, {4, 4}}
+    for i, pix in pairs(pixels) do 
+      assert(pix.x == i, 'Did not get correct position for pixel')
+    end
+  end),
+
   it('can stringify Pixels', function() 
     local pixels = Pixels{Pixel(10, 10), Pixel(20, 20)}
     assert(tostring(pixels) == string.format('<Pixels(n=%d)>', len(pixels.pixels)))

@@ -1,6 +1,15 @@
 History
 -----------
 
+* 0.3.3 (2018-11-01)
+  
+  * Added range function to builtins
+  * Added configurable tap interval to screen
+  * Added tap_fast function to screen
+  * Added iteration over each pixel in Pixels object
+
+|
+
 * 0.3.2 (2018-10-31)
   
   * Added Ellipse Region

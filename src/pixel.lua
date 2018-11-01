@@ -140,6 +140,10 @@ function Pixels:__eq(other)
   return true
 end
 
+function Pixels:__pairs() 
+  return pairs(self.pixels) 
+end
+
 function Pixels:__tostring()
   return string.format('<Pixels(n=%d)>', len(self.pixels))
 end

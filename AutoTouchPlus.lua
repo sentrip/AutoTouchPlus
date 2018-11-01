@@ -582,6 +582,13 @@ end
 function num(input) return tonumber(input) end
 
 
+function range(r, stop, step)
+if not stop then r, stop = 1, r end
+local values = {}
+for i=r, stop, (step or 1) do values[rawlen(values) + 1] = i end
+return values
+end
+
 function repr(input)
 local m = getmetatable(input)
 if m and m.__repr then return input:__repr()
@@ -2115,6 +2122,10 @@ end
 return true
 end
 
+function Pixels:__pairs()
+return pairs(self.pixels)
+end
+
 function Pixels:__tostring()
 return string.format('<Pixels(n=%d)>', len(self.pixels))
 end
@@ -2500,6 +2511,7 @@ _width, _height = 200, 400
 end
 
 screen.check_interval = 150000
+screen.tap_interval = 10000
 screen.wait_before_action = 0
 screen.wait_after_action = 0
 screen.wait_before_tap = 0
@@ -2639,8 +2651,8 @@ end
 end
 
 
-function screen.contains(pixel)
-return pixel:visible()
+function screen.contains(pix)
+return pix:visible()
 end
 
 
@@ -2656,11 +2668,73 @@ with(screen.tap_context(), function()
 for i=1, times or 1 do
 _log('Tap \t%5s, %5s', pixel.x, pixel.y)
 tap(pixel.x, pixel.y)
-usleep(10000)
-if interval then usleep(max(0, interval * 10 ^ 6 - 10000)) end
+usleep(screen.tap_interval)
+if interval then usleep(max(0, interval * 10 ^ 6 - screen.tap_interval)) end
 end
 end)
 
+return screen
+end
+
+
+local function create_coro_and_repeat(f, times)
+return coroutine.create(function()
+local c = 0
+while c < times do
+local coro = coroutine.create(f)
+coroutine.resume(coro)
+yield()
+coroutine.resume(coro)
+c = c + 1
+end
+end)
+end
+
+local function execute_concurrently(fs, times)
+
+local coros = list()
+for f in iter(fs) do
+coros:append(create_coro_and_repeat(f, times))
+end
+
+local running = true
+while running do
+running = false
+for co in iter(coros) do
+coroutine.resume(co)
+running = running or coroutine.status(co) ~= 'dead'
+end
+end
+end
+
+local function get_positions(positions, x, y, n)
+if positions then return positions end
+-- TODO: tap multiple adjacent pixels in spiral when single position passed
+return list{{x=x, y=y}} * n
+end
+
+function screen.tap_fast(x, y, times, fingers)
+-- Get positions to tap
+local positions
+if isinstance(x, Pixel) then
+x, y, times, fingers = x.x, x.y, y, times
+elseif isType(x, 'table') then
+fingers, positions, times = len(x), list(x), y
+end
+positions = get_positions(positions, x, y, fingers)
+-- Create tap functions
+local tap_funcs = list()
+for i=1, (fingers or 1) do
+tap_funcs:append(function()
+touchDown(i, positions[i].x, positions[i].y)
+yield(usleep(8000))
+touchUp(i, positions[i].x, positions[i].y)
+usleep(1000)
+end)
+end
+-- Run tap functions concurrently until all are done
+if times == 0 then times = math.huge else times = times or 1 end
+execute_concurrently(tap_funcs, times)
 return screen
 end
 
