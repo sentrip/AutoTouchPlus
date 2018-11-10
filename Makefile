@@ -27,15 +27,15 @@ docs:  ## Create and render docs
 release:  ## Release new version to GitHub
 	@python3 .scripts/release.py 
 
-test:  ## Run tests
+test:  ## Run all tests
 	@python3 .scripts/test.py 
 
-test-single:  ## Run tests for a single module
+test-single:  ## Run tests for only one module - `make test-single f=core`
 	@python3 .scripts/compile.py
 	@lua tests/test_$f.lua
 
 todo:  ## Show all todo items in the repository
 	@python3 .scripts/todo.py
 
-uncovered:  ## Show uncovered code
+uncovered:  ## Show coverage - `make uncovered` - or uncovered code - `make uncovered f=core`
 	@python3 .scripts/uncovered.py $f
