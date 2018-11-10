@@ -66,6 +66,7 @@ end)
 
 
 fixture('touches', function(monkeypatch)
+  screen.hold_duration = 0.001
   local touches = list()
   monkeypatch.setattr('usleep', function(...) end)
   monkeypatch.setattr('touchDown', function(i, x, y) touches:append({'down', i, x, y}) end)
@@ -75,8 +76,7 @@ fixture('touches', function(monkeypatch)
 end)
 
 
-describe('screen',
-
+describe('screen - Basic', 
   it('can run functions after consecutive checks', function(monkeypatch, pixels, taps)
     
     local calls = list()
@@ -133,6 +133,21 @@ describe('screen',
     assert(requal(touches, ex), 'Did not tap_fast multiple positions in correct order')
   end),
 
+  it('can cancel tap_fast', function(pixels, touches) 
+    local c = 0
+    local function cancel()
+      c = c + 1
+      return c >= 3
+    end
+    screen.tap_fast(pixels[1], cancel)
+    assert(len(touches) == 5, 'Did not touch correct number of times')
+    assert(touches[1][1] == 'down', 'Did not touch down to start')
+    touches:clear()
+    screen.tap_fast(pixels[1], pixels[1])
+    assert(len(touches) == 1, 'Did not touch correct number of times')
+    assert(touches[1][1] == 'down', 'Did not touch down to start')
+  end),
+
   it('can swipe between pixels', function(touches) 
     local start_pix = Pixel(10, 10)
     local end_pix = Pixel(100, 100)
@@ -162,6 +177,118 @@ describe('screen',
     end
   end),
 
+  it('can wait for a pixel', function(taps, pixels, do_after) 
+    local checks = 0
+    local pix = Pixel(100, 100)
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() pixels:append(pix) end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(pix)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end),
+  
+  it('can wait for a condition', function(taps, do_after) 
+    local checks = 0
+    local cond = false
+    local required_checks = 3
+    screen.before_check(do_after(required_checks, 
+      function() cond = true end,
+      function() checks = checks + 1 end
+    ))
+    screen.wait(function() return cond end)
+    assert(checks == required_checks, 'Checked less than required amount')
+  end)
+)
+
+describe('screen - Hold',
+
+  it('can hold a position', function(touches) 
+    local x, y, seconds = 10, 10, 0.001
+    screen.hold(x, y, seconds)
+    assert(len(touches) == 2, 'Did not hold screen at position')
+    assert(touches[1][3] == x, 'Did not hold screen at correct position')
+  end),
+  
+  it('can hold a pixel', function(touches) 
+    local pix, seconds = Pixel(10, 10), 0.001
+    screen.hold(pix, seconds)
+    assert(len(touches) == 2, 'Did not hold screen at pixel')
+    assert(touches[1][3] == pix.x, 'Did not hold screen at correct pixel position')
+  end),
+  
+  it('can hold with context', function(touches, do_after) 
+    local action_calls = list()
+    local check_calls = list()
+    local hold_calls = list()
+    screen.before_action(function() action_calls:append('begin') end)
+    screen.after_action(function() action_calls:append('end') end)
+    screen.before_check(function() check_calls:append('begin') end)
+    screen.after_check(function() check_calls:append('end') end)
+    screen.before_tap(function() hold_calls:append('begin') end)
+    screen.after_tap(function() hold_calls:append('end') end)
+    
+    local count = 0
+    screen.hold_while(function() count = count + 1; return count < 3 end, Pixel(100, 100))
+    
+    assertRequal(action_calls, {'begin', 'end'}, 'action calls order incorrect')
+    assertRequal(check_calls, {'begin', 'end', 'begin', 'end', 'begin', 'end'}, 'check calls order incorrect')
+    assertRequal(hold_calls, {'begin', 'end'}, 'hold calls order incorrect')
+  end),
+  
+  it('can hold if a pixel is visible', function(touches, pixels) 
+    local pix = Pixel(100, 100)
+    screen.hold_if(pix)
+    assert(len(touches) == 0, 'Held when pixel is not visible')
+    pixels:append(pix)
+    screen.hold_if(pix)
+    assert(len(touches) == 2, 'Did not hold when pixel is visible')
+    assert(touches[-1][3] == 100, 'Did not hold correct position')
+    screen.hold_if(pix, Pixel(200, 200))
+    assert(touches[-1][3] == 200, 'Did not hold correct position')
+  end),
+  
+  it('can hold while a pixel is visible', function(touches, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    pixels:append(pix)
+    screen.before_tap(do_after(1, function() pixels:remove(pix) end))
+    screen.hold_while(pix)
+    assert(len(touches) == 2, 'Held less than required amount')
+  end),
+  
+  it('can hold until a pixel is visible', function(touches, pixels, do_after) 
+    local pix = Pixel(100, 100)
+    screen.before_tap(do_after(1, function() pixels:append(pix) end))
+    screen.hold_until(pix)
+    assert(len(touches) == 2, 'Held less than required amount')
+  end),
+  
+  it('can hold if a condition is met', function(touches) 
+    screen.hold_if(function() return false end, Pixel(100, 100))
+    assert(len(touches) == 0, 'Held when condition not met')
+    screen.hold_if(function() return true end, Pixel(100, 100))
+    
+    assert(len(touches) == 2, 'Did not hold when condition is met')
+    -- assert(touches[-1][3] == 100, 'Did not hold correct position')
+  end),
+  
+  it('can hold while a condition is met', function(touches, do_after) 
+    local cond = true
+    screen.before_tap(do_after(1, function() cond = false end))
+    screen.hold_while(function() return cond end, Pixel(100, 100))
+    assert(len(touches) == 2, 'Held less than required amount')
+  end),
+  
+  it('can hold until a condition is met', function(touches, do_after) 
+    local cond = false
+    screen.before_tap(do_after(1, function() cond = true end))
+    screen.hold_until(function() return cond end, Pixel(100, 100))
+    assert(len(touches) == 2, 'Held less than required amount')
+  end)
+)
+
+describe('screen - Tap',
   it('can tap a position', function(taps) 
     local x, y, times = 10, 10, 5
     screen.tap(x, y, times)
@@ -254,32 +381,7 @@ describe('screen',
     ))
     screen.tap_until(function() return cond end, Pixel(100, 100))
     assert(len(taps) == required_taps, 'Tapped less than required amount')
-  end),
-  
-  it('can wait for a pixel', function(taps, pixels, do_after) 
-    local checks = 0
-    local pix = Pixel(100, 100)
-    local required_checks = 3
-    screen.before_check(do_after(required_checks, 
-      function() pixels:append(pix) end,
-      function() checks = checks + 1 end
-    ))
-    screen.wait(pix)
-    assert(checks == required_checks, 'Checked less than required amount')
-  end),
-  
-  it('can wait for a condition', function(taps, do_after) 
-    local checks = 0
-    local cond = false
-    local required_checks = 3
-    screen.before_check(do_after(required_checks, 
-      function() cond = true end,
-      function() checks = checks + 1 end
-    ))
-    screen.wait(function() return cond end)
-    assert(checks == required_checks, 'Checked less than required amount')
   end)
-
 )
 
 
