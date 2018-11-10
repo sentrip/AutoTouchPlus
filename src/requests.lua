@@ -11,7 +11,7 @@ requests = {}
 -- @tparam string url url to request
 -- @tparam table args request arguments
 -- @treturn Response response to request
--- @see requests.request
+-- @see requests.post
 function requests.delete(url, args) return requests.request("DELETE", url, args) end
 
 ---- Make a GET request
@@ -19,26 +19,41 @@ function requests.delete(url, args) return requests.request("DELETE", url, args)
 -- @tparam table args request arguments
 -- @treturn Response response to request
 -- @see requests.request
+-- @usage -- Send GET request to https://example.com
+--  local response = requests.get('https://example.com')
+-- -- Send GET request to http://example.com?value=1
+--  local response = requests.get{'http://example.com', params={value=1}}
 function requests.get(url, args) return requests.request("GET", url, args) end
 
 ---- Make a POST request
 -- @tparam string url url to request
 -- @tparam table args request arguments
 -- @treturn Response response to request
--- @see requests.request
+-- @see requests.get
+-- @usage -- POST json data '{"value":1}' to http://example.com
+--  local response = requests.post{'http://example.com', data={value=1}}
+-- -- OR
+--  local response = requests.post{'http://example.com', data='{"value":1}'}
 function requests.post(url, args) return requests.request("POST", url, args) end
 
 ---- Make a PUT request
 -- @tparam string url url to request
 -- @tparam table args request arguments
 -- @treturn Response response to request
--- @see requests.request
+-- @see requests.post
 function requests.put(url, args) return requests.request("PUT", url, args) end
 
 ---- Make an HTTP request
 -- @tparam string method one of GET, POST, PUT, DELETE
 -- @tparam string url url to request
--- @tparam table args request arguments
+-- @tparam table args Possible request arguments:<ul>
+-- <li><strong>auth</strong>: (<i>@{table}</i>) http-auth credentials {user, pass}</li>
+-- <li><strong>data</strong>: (<i>@{table} or @{string}</i>) data to be sent in request</li>
+-- <li><strong>files</strong>: (<i>@{table}</i>) files to be sent in request data {field\_name=file\_path,...}</li>
+-- <li><strong>headers</strong>: (<i>@{table}</i>) http-headers to be sent in request</li>
+-- <li><strong>user_agent</strong>: (<i>@{string}</i>) user agent to be sent in request</li>
+-- <li><strong>verify_ssl</strong>: (<i><strong>bool</strong></i>) verify SSL certificate of response</li>
+-- </ul>
 -- @treturn Response response to request
 function requests.request(method, url, args)
   local _req = args or {}
@@ -114,7 +129,7 @@ function Request:build()
   if is(self.params) then
     self.url = self.url .. '?' .. urlencode(self.params)
   end
-  for k in iter{'auth', 'data', 'headers', 'proxies', 'ssl', 'user_agent'} do
+  for k in iter{'auth', 'data', 'files', 'headers', 'proxies', 'ssl', 'user_agent'} do
     cmd:extend(getattr(self, '_add_'..k)(self) or {})
   end
   cmd:append("'"..self.url.."'")
@@ -161,11 +176,19 @@ function Request:_add_data()
   end
 end
 
+function Request:_add_files()
+  if is(self.files) then
+    for k, v in pairs(self.files) do 
+      return {"-F", string.format("'%s=@%s'", k, v)}
+    end
+  end
+end
+
 function Request:_add_headers()
   local cmd = list()
   if is(self.headers) then
     for k, v in pairs(self.headers) do 
-      cmd:extend{"--header", "'"..k..': '..str(v).."'"}
+      return {"--header", "'"..k..': '..str(v).."'"}
     end
   end
   return cmd

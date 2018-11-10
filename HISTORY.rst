@@ -1,6 +1,14 @@
 History
 -----------
 
+* 0.4.0 (2018-11-10)
+
+  * Added hold_context to screen
+  * Added hold, hold_until and hold_while to screen
+  * Added raw file uploading to requests
+
+|
+
 * 0.3.3 (2018-11-01)
   
   * Added range function to builtins

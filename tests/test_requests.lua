@@ -72,6 +72,12 @@ describe('requests',
     assert(j.headers[header_key] == head[header_key], 'Did not get correct custom header')
   end),
   
+  it('posts file', function(patched_curl) 
+    local resp = requests.post{'http://httpbin.org/post', files={file='t.txt'}}
+    assert(resp.status_code == 200, 'Did not return 200')
+    assert(resp.reason == 'OK', 'Did not return correct reason')
+  end),
+
   it('posts json', function(patched_curl)
     local resp = requests.post{'http://httpbin.org/post', data={amount=10}}
     assert(resp.status_code == 200, 'Did not return 200')

@@ -2378,7 +2378,7 @@ local cmd = list{'curl', '-si', '-X', self.method:upper()}
 if is(self.params) then
 self.url = self.url .. '?' .. urlencode(self.params)
 end
-for k in iter{'auth', 'data', 'headers', 'proxies', 'ssl', 'user_agent'} do
+for k in iter{'auth', 'data', 'files', 'headers', 'proxies', 'ssl', 'user_agent'} do
 cmd:extend(getattr(self, '_add_'..k)(self) or {})
 end
 cmd:append("'"..self.url.."'")
@@ -2420,11 +2420,19 @@ return {'--data', "'"..self.data.."'"}
 end
 end
 
+function Request:_add_files()
+if is(self.files) then
+for k, v in pairs(self.files) do
+return {"-F", string.format("'%s=@%s'", k, v)}
+end
+end
+end
+
 function Request:_add_headers()
 local cmd = list()
 if is(self.headers) then
 for k, v in pairs(self.headers) do
-cmd:extend{"--header", "'"..k..': '..str(v).."'"}
+return {"--header", "'"..k..': '..str(v).."'"}
 end
 end
 return cmd
@@ -2511,6 +2519,7 @@ _width, _height = 200, 400
 end
 
 screen.check_interval = 150000
+screen.hold_duration = 0.75
 screen.tap_interval = 10000
 screen.wait_before_action = 0
 screen.wait_after_action = 0
@@ -2609,6 +2618,17 @@ with(ctx, function() yield() end)
 
 end)
 
+screen.hold_context = contextmanager(function(x, y)
+if isNotType(x, 'number') then x, y = x.x, x.y end
+with(screen.tap_context(), function()
+touchDown(0, x, y)
+usleep(8000)
+yield(check)
+usleep(8000)
+touchUp(0, x, y)
+end)
+end)
+
 function screen.before_action(func)
 screen.before_action_funcs:add(func)
 end
@@ -2656,6 +2676,54 @@ return pix:visible()
 end
 
 
+
+function screen.hold(x, y, seconds)
+if isNotType(x, 'number') then
+x, y, seconds = x.x, x.y, y
+end
+with(screen.hold_context(x, y), function()
+usleep((seconds or screen.hold_duration) * 1000000)
+end)
+return screen
+end
+
+
+function screen.hold_if(condition, to_hold)
+_log_action(condition, 'Hold if', 'true')
+with(screen.action_context(condition), function(check)
+
+if check() then
+screen.hold(to_hold or condition)
+end
+
+end)
+return screen
+end
+
+
+function screen.hold_until(condition, to_hold)
+_log_action(condition, 'Hold until', 'true')
+
+with(screen.action_context(condition), function(check)
+with(screen.hold_context(to_hold or condition), function()
+repeat usleep(screen.check_interval) until check()
+end)
+end)
+return screen
+end
+
+
+function screen.hold_while(condition, to_hold)
+_log_action(condition, 'Hold while', 'false')
+with(screen.action_context(condition), function(check)
+with(screen.hold_context(to_hold or condition), function()
+while check() do usleep(screen.check_interval) end
+end)
+end)
+return screen
+end
+
+
 function screen.tap(x, y, times, interval)
 local pixel
 if isType(x, 'number') then
@@ -2690,7 +2758,8 @@ end
 end)
 end
 
-local function execute_concurrently(fs, times)
+local function execute_concurrently(fs, times, stop)
+stop = stop or function() return false end
 
 local coros = list()
 for f in iter(fs) do
@@ -2704,20 +2773,21 @@ for co in iter(coros) do
 coroutine.resume(co)
 running = running or coroutine.status(co) ~= 'dead'
 end
+if stop() then break end
 end
 end
 
 local function get_positions(positions, x, y, n)
 if positions then return positions end
--- TODO: tap multiple adjacent pixels in spiral when single position passed
+-- TODO: tap multiple adjacent pixels in spiral when single position given
 return list{{x=x, y=y}} * n
 end
 
 function screen.tap_fast(x, y, times, fingers)
 -- Get positions to tap
 local positions
-if isinstance(x, Pixel) then
-x, y, times, fingers = x.x, x.y, y, times
+if isinstance(x, 'Pixel') then
+x, y, times, fingers = x.x, x.y, y, (times or 1)
 elseif isType(x, 'table') then
 fingers, positions, times = len(x), list(x), y
 end
@@ -2732,9 +2802,18 @@ touchUp(i, positions[i].x, positions[i].y)
 usleep(1000)
 end)
 end
+-- Get number of taps and optional stop condition from times argument
+local condition
+local n = math.huge -- tap forever by default
+if isinstance(times, 'Pixel') then
+condition = function() return screen.contains(times) end
+elseif isinstance(times, 'function') then
+condition = times
+elseif times ~= 0 then
+n = times or 1
+end
 -- Run tap functions concurrently until all are done
-if times == 0 then times = math.huge else times = times or 1 end
-execute_concurrently(tap_funcs, times)
+execute_concurrently(tap_funcs, n, condition)
 return screen
 end
 
